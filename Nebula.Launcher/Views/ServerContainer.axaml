@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Nebula.Launcher.Views.ServerContainer">
+    <Grid ColumnDefinitions="*,70" RowDefinitions="*,*" Margin="0,5,0,5">
+        <Border Grid.Row="0" Grid.Column="0"
+                Padding="5">
+            <TextBlock>Server name</TextBlock>
+        </Border>
+        <Border Grid.Row="0" Grid.Column="1"
+                BorderThickness="2,0,0,0"
+                CornerRadius="0"
+                Padding="5">
+            <TextBlock HorizontalAlignment="Center">15/15</TextBlock>
+        </Border>
+                
+        <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                Height="50"
+                CornerRadius="0,0,10,10">
+            <Border.Background>
+                <ImageBrush Stretch="UniformToFill"
+                            asyncImageLoader:ImageBrushLoader.Source="https://t4.ftcdn.net/jpg/00/81/55/69/360_F_81556974_8sF8cKszJaRfBGd5sDt1RXE2QbzDtQqs.jpg">
+                </ImageBrush>
+            </Border.Background>
+        </Border>
+                
+        <Panel Grid.Row="1" Grid.Column="1">
+            <Button VerticalAlignment="Stretch" CornerRadius="0 0 10 0" BorderThickness="0,0,0,0">
+                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5">Play</TextBlock>
+            </Button>
+        </Panel>
+    </Grid>
+</UserControl>

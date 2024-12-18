@@ -1,0 +1,39 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Nebula.Launcher.App"
+             xmlns:local="using:Nebula.Launcher"
+             RequestedThemeVariant="Default">
+             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+
+    <Application.DataTemplates>
+        <local:ViewLocator/>
+    </Application.DataTemplates>
+  
+    <Application.Styles>
+        <Style Selector="Window">
+            <Setter Property="Background" Value="#121212"/>
+        </Style>
+        <Style Selector="Border">
+            <Setter Property="BorderBrush" Value="#343334"/>
+            <Setter Property="Background" Value="#222222"/>
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="#f7f7ff"/>
+        </Style>
+        
+        <Style Selector="Button.ViewSelectButton">
+            <Setter Property="CornerRadius" Value="0,8,8,0"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Background" Value="#00000000"/>
+        </Style>
+        <Style Selector="Button.ViewSelectButton:pressed">
+            <Setter Property="Background" Value="#e63462"/>
+        </Style>
+        
+        <Style Selector="Button">
+            <Setter Property="Background" Value="#e63462"/>
+            <Setter Property="BorderBrush" Value="#343334"/>
+        </Style>
+    </Application.Styles>
+</Application>

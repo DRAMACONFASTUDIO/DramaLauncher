@@ -1,0 +1,52 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Nebula.Launcher.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+        xmlns:views="clr-namespace:Nebula.Launcher.Views"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="Nebula.Launcher.Views.MainWindow"
+        x:DataType="vm:TestViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="Nebula.Launcher">
+    
+    
+
+    <Grid ColumnDefinitions="60,*" RowDefinitions="*,40"  Margin="0">
+        <Border Grid.Row="0" Grid.Column="0"
+                BorderThickness="0,0,2,0"
+                CornerRadius="0,8,8,0"
+                Padding="0" Margin="0,0,5,0">
+            <StackPanel>
+                <Button Classes="ViewSelectButton">
+                    <Image Source="../Assets/account.png"/>
+                </Button>
+                <Button Classes="ViewSelectButton">
+                    <Image Source="../Assets/list.png"/>
+                </Button>
+            </StackPanel>
+        </Border>
+        
+        <StackPanel Grid.Column="1" Grid.Row="0">
+            <ScrollViewer 
+                HorizontalScrollBarVisibility="Visible" 
+                VerticalScrollBarVisibility="Disabled"
+                Padding="5">
+                <views:ServerList/>
+            </ScrollViewer>
+        </StackPanel>
+        
+        <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                BorderThickness="0,2,0,0"
+                CornerRadius="0,0,0,0"
+                Padding="5" 
+                Margin="0,0,0,0">
+            <Panel>
+                <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center">Site: ssilka | Discord: lala</TextBlock>
+                <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center">v1.5</TextBlock>
+            </Panel>
+        </Border>
+    </Grid>
+
+</Window>
