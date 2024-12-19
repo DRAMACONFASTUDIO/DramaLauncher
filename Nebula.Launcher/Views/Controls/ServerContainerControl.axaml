@@ -4,10 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Nebula.Launcher.Views.ServerContainer">
+             x:Class="Nebula.Launcher.Views.Controls.ServerContainerControl">
     <Grid ColumnDefinitions="*,70" RowDefinitions="*,*" Margin="0,5,0,5">
-        <Border Grid.Row="0" Grid.Column="0"
-                Padding="5">
+        <Border Grid.Row="0" Grid.Column="0" BorderThickness="2,0,0,0"
+                Padding="10">
             <TextBlock>Server name</TextBlock>
         </Border>
         <Border Grid.Row="0" Grid.Column="1"
@@ -17,7 +17,7 @@
             <TextBlock HorizontalAlignment="Center">15/15</TextBlock>
         </Border>
                 
-        <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+        <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" BorderThickness="2,0,0,0"
                 Height="50"
                 CornerRadius="0,0,10,10">
             <Border.Background>

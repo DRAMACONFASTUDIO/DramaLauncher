@@ -27,4 +27,15 @@
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\Controls\ServerContainerControl.axaml.cs">
+        <DependentUpon>ServerContainerControl.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\Tabs\ServerListTab.axaml.cs">
+        <DependentUpon>ServerListTab.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
 </Project>

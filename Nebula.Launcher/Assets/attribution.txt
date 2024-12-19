@@ -1,2 +1,3 @@
 account.png Icon by Icon Desai
 list.png Icon by Vector Stall
+settings.png Icon by Smashicons

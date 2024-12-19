@@ -2,11 +2,11 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace Nebula.Launcher.Views;
+namespace Nebula.Launcher.Views.Tabs;
 
-public partial class ServerList : UserControl
+public partial class AccountInfoTab : UserControl
 {
-    public ServerList()
+    public AccountInfoTab()
     {
         InitializeComponent();
     }
