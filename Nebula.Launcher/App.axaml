@@ -1,46 +1,60 @@
-<Application xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="Nebula.Launcher.App"
-             xmlns:local="using:Nebula.Launcher"
-             RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+<Application
+    RequestedThemeVariant="Default"
+    x:Class="Nebula.Launcher.App"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:local="using:Nebula.Launcher"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Application.DataTemplates>
-        <local:ViewLocator/>
+        <local:ViewLocator />
     </Application.DataTemplates>
-  
+
     <Application.Styles>
+        <FluentTheme />
         <Style Selector="Window">
-            <Setter Property="Background" Value="#121212"/>
+            <Setter Property="Background" Value="#121212" />
         </Style>
         <Style Selector="Border">
-            <Setter Property="BorderBrush" Value="#343334"/>
-            <Setter Property="Background" Value="#222222"/>
+            <Setter Property="BorderBrush" Value="#343334" />
+            <Setter Property="Background" Value="#222222" />
+            <Setter Property="BorderThickness" Value="0" />
         </Style>
-        <Style Selector="TextBlock">
-            <Setter Property="Foreground" Value="#f7f7ff"/>
-            <Setter Property="FontSize" Value="14"/>
+        <Style Selector="Label">
+            <Setter Property="Foreground" Value="#f7f7ff" />
         </Style>
-        
+
         <Style Selector="Button">
-            <Setter Property="Background" Value="#e63462"/>
-            <Setter Property="BorderBrush" Value="#343334"/>
-            <Setter Property="Padding" Value="5"/>
-            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="BorderBrush" Value="#343334" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="5" />
+            <Setter Property="CornerRadius" Value="10" />
         </Style>
-        
+
         <Style Selector="Button:pressed">
-            <Setter Property="Background" Value="#b82a4e"/>
+            <Setter Property="RenderTransform" Value="{x:Null}" />
         </Style>
-        
+
+        <Style Selector="Border.ButtonBack">
+            <Setter Property="Background" Value="#e63462" />
+            <Setter Property="CornerRadius" Value="0,0,10,0" />
+        </Style>
+
         <Style Selector="Button.ViewSelectButton">
-            <Setter Property="CornerRadius" Value="0,8,8,0"/>
-            <Setter Property="Margin" Value="0,0,0,5"/>
-            <Setter Property="Padding" Value="8"/>
-            <Setter Property="Background" Value="#00000000"/>
+            <Setter Property="CornerRadius" Value="0,8,8,0" />
+            <Setter Property="Margin" Value="0,0,0,5" />
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="Background" Value="#00000000" />
         </Style>
+
         <Style Selector="Button.ViewSelectButton:pressed">
-            <Setter Property="Background" Value="#e63462"/>
+            <Setter Property="BorderThickness" Value="0,0,0,0" />
+        </Style>
+
+        <Style Selector="TextBox">
+            <Setter Property="Foreground" Value="#f7f7ff" />
+            <Setter Property="SelectionForegroundBrush" Value="#f7f7ff" />
+            <Setter Property="BorderThickness" Value="0,0,0,1" />
+            <Setter Property="BorderBrush" Value="#f7f7ff" />
         </Style>
     </Application.Styles>
 </Application>

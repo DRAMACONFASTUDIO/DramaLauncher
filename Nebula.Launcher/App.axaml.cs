@@ -1,9 +1,11 @@
+using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
+using Microsoft.Extensions.DependencyInjection;
 using Nebula.Launcher.ViewModels;
 using Nebula.Launcher.Views;
 
@@ -11,6 +13,8 @@ namespace Nebula.Launcher;
 
 public partial class App : Application
 {
+    private IServiceProvider _serviceProvider = null!;
+    
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -18,10 +22,20 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        var services = new ServiceCollection();
+        services.AddServices();
+        
+        _serviceProvider = services.BuildServiceProvider();
+        
+        switch (ApplicationLifetime)
         {
-            DisableAvaloniaDataAnnotationValidation();
-            desktop.MainWindow = new MainWindow();
+            case IClassicDesktopStyleApplicationLifetime desktop:
+                DisableAvaloniaDataAnnotationValidation();
+                desktop.MainWindow = _serviceProvider.GetService<MainWindow>();
+                break;
+            case ISingleViewApplicationLifetime singleViewPlatform:
+                singleViewPlatform.MainView = _serviceProvider.GetRequiredService<MainView>();
+                break;
         }
 
         base.OnFrameworkInitializationCompleted();

@@ -1,6 +1,5 @@
 ﻿using Avalonia;
 using System;
-using Avalonia.ReactiveUI;
 
 namespace Nebula.Launcher;
 
@@ -18,6 +17,5 @@ sealed class Program
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()
-            .UseReactiveUI()
             .LogToTrace();
 }
