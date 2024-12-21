@@ -4,14 +4,14 @@ using Nebula.Launcher.ViewModels;
 namespace Nebula.Launcher.Views.Pages;
 
 public interface ITab;
-public partial class AccountInfoPage : UserControl
+public partial class AccountInfoView : UserControl
 {
-    public AccountInfoPage()
+    public AccountInfoView()
     {
         InitializeComponent();
     }
     
-    public AccountInfoPage(AccountInfoViewModel viewModel)
+    public AccountInfoView(ViewModels.AccountInfoViewModel viewModel)
         : this()
     {
         DataContext = viewModel;

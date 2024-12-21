@@ -8,16 +8,27 @@ using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Nebula.Launcher.Models;
+using Nebula.Launcher.ViewHelper;
+using Nebula.Launcher.Views;
+using Nebula.Launcher.Views.Pages;
 
 namespace Nebula.Launcher.ViewModels;
 
-
+[ViewRegister(typeof(MainView))]
 public partial class MainViewModel : ViewModelBase
 {
-    public MainViewModel(AccountInfoViewModel accountInfoViewModel, IServiceProvider serviceProvider)
+    public MainViewModel()
+    {
+        TryGetViewModel(typeof(AccountInfoViewModel), out var model);
+        _currentPage = model!;
+        Items = new ObservableCollection<ListItemTemplate>(_templates);
+
+        SelectedListItem = Items.First(vm => vm.ModelType == typeof(AccountInfoViewModel));
+    }
+    
+    public MainViewModel(AccountInfoViewModel accountInfoViewModel, IServiceProvider serviceProvider): base(serviceProvider)
     {
         _currentPage = accountInfoViewModel;
-        _serviceProvider = serviceProvider;
         Items = new ObservableCollection<ListItemTemplate>(_templates);
 
         SelectedListItem = Items.First(vm => vm.ModelType == typeof(AccountInfoViewModel));
@@ -26,6 +37,7 @@ public partial class MainViewModel : ViewModelBase
     private readonly List<ListItemTemplate> _templates =
     [
         new ListItemTemplate(typeof(AccountInfoViewModel), "HomeRegular", "Account"),
+        new ListItemTemplate(typeof(ServerListViewModel), "List", "Servers")
     ];
 
     [ObservableProperty]
@@ -34,21 +46,20 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private ViewModelBase _currentPage;
 
-    private readonly IServiceProvider _serviceProvider;
-
     [ObservableProperty]
     private ListItemTemplate? _selectedListItem;
 
     partial void OnSelectedListItemChanged(ListItemTemplate? value)
     {
+        Console.WriteLine("FUCKED " + value?.ModelType);
         if (value is null) return;
 
-        var vm = Design.IsDesignMode
-            ? Activator.CreateInstance(value.ModelType)
-            : _serviceProvider.GetService(value.ModelType);
-
-        if (vm is not ViewModelBase vmb) return;
-
+        if(!TryGetViewModel(value.ModelType, out var vmb))
+        {
+            Console.WriteLine("FUCKCCC");
+            return;
+        }
+ 
         CurrentPage = vmb;
     }
 

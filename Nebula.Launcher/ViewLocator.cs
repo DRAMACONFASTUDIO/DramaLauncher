@@ -1,6 +1,8 @@
 using System;
+using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
+using Nebula.Launcher.ViewHelper;
 using Nebula.Launcher.ViewModels;
 
 namespace Nebula.Launcher;
@@ -11,16 +13,15 @@ public class ViewLocator : IDataTemplate
     {
         if (param is null)
             return null;
-
-        var name = param.GetType().FullName!.Replace("ViewModel", "View", StringComparison.Ordinal);
-        var type = Type.GetType(name);
+        
+        var type = param.GetType().GetCustomAttribute<ViewRegisterAttribute>()?.Type;
 
         if (type != null)
         {
             return (Control)Activator.CreateInstance(type)!;
         }
 
-        return new TextBlock { Text = "Not Found: " + name };
+        return new TextBlock { Text = "Not Found: " + param.GetType()};
     }
 
     public bool Match(object? data)

@@ -39,7 +39,8 @@ public static class ServiceCollectionExtensions
     {
         services.AddTransient<MainWindow>();
         services.AddView<MainView, MainViewModel>();
-        services.AddView<AccountInfoPage, AccountInfoViewModel>();
+        services.AddView<AccountInfoView, AccountInfoViewModel>();
+        services.AddView<ServerListView, ServerListViewModel>();
     }
 
     private static void AddView<TView, TViewModel>(this IServiceCollection services)
