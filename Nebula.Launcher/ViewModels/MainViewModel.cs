@@ -36,8 +36,8 @@ public partial class MainViewModel : ViewModelBase
 
     private readonly List<ListItemTemplate> _templates =
     [
-        new ListItemTemplate(typeof(AccountInfoViewModel), "HomeRegular", "Account"),
-        new ListItemTemplate(typeof(ServerListViewModel), "List", "Servers")
+        new ListItemTemplate(typeof(AccountInfoViewModel), "Account", "Account"),
+        new ListItemTemplate(typeof(ServerListViewModel), "HomeRegular", "Servers")
     ];
 
     [ObservableProperty]
@@ -51,12 +51,10 @@ public partial class MainViewModel : ViewModelBase
 
     partial void OnSelectedListItemChanged(ListItemTemplate? value)
     {
-        Console.WriteLine("FUCKED " + value?.ModelType);
         if (value is null) return;
 
         if(!TryGetViewModel(value.ModelType, out var vmb))
         {
-            Console.WriteLine("FUCKCCC");
             return;
         }
  

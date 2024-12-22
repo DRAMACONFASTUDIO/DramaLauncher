@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
+using Nebula.Launcher.ViewHelper;
 using Nebula.Launcher.ViewModels;
 using Nebula.Launcher.Views;
 using Nebula.Launcher.Views.Pages;
@@ -38,9 +41,24 @@ public static class ServiceCollectionExtensions
     private static void AddViews(this IServiceCollection services)
     {
         services.AddTransient<MainWindow>();
-        services.AddView<MainView, MainViewModel>();
-        services.AddView<AccountInfoView, AccountInfoViewModel>();
-        services.AddView<ServerListView, ServerListViewModel>();
+
+        foreach (var (viewModel, view) in GetTypesWithHelpAttribute(Assembly.GetExecutingAssembly()))
+        {
+            services.AddTransient(viewModel);
+            services.AddTransient(view);
+        }
+
+        foreach (var (type, inference) in GetServicesWithHelpAttribute(Assembly.GetExecutingAssembly()))
+        {
+            if (inference is null)
+            {
+                services.AddSingleton(type);
+            }
+            else
+            {
+                services.AddSingleton(inference, type);
+            }
+        }
     }
 
     private static void AddView<TView, TViewModel>(this IServiceCollection services)
@@ -49,5 +67,35 @@ public static class ServiceCollectionExtensions
     {
         services.AddTransient<TViewModel>();
         services.AddTransient<TView>();
+    }
+    
+    private static IEnumerable<(Type,Type)> GetTypesWithHelpAttribute(Assembly assembly) {
+        foreach(Type type in assembly.GetTypes())
+        {
+            var attr = type.GetCustomAttribute<ViewRegisterAttribute>();
+            if (attr is not null) {
+                yield return (type, attr.Type);
+            }
+        }
+    }
+    
+    private static IEnumerable<(Type,Type?)> GetServicesWithHelpAttribute(Assembly assembly) {
+        foreach(Type type in assembly.GetTypes())
+        {
+            var attr = type.GetCustomAttribute<ServiceRegisterAttribute>();
+            if (attr is not null) {
+                yield return (type, attr.Inference);
+            }
+        }
+    }
+}
+
+public sealed class ServiceRegisterAttribute : Attribute
+{
+    public Type? Inference { get; }
+
+    public ServiceRegisterAttribute(Type? inference = null)
+    {
+        Inference = inference;
     }
 }
