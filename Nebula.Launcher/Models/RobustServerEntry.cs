@@ -4,9 +4,9 @@ using System.Text.Json.Serialization;
 
 namespace Nebula.Launcher.Models;
 
-public sealed record Auth(string Mode, string PublicKey);
+public sealed record AuthInfo(string Mode, string PublicKey);
 
-public sealed record Build(
+public sealed record BuildInfo(
     string EngineVersion,
     string ForkId,
     string Version,
@@ -16,38 +16,16 @@ public sealed record Build(
     string Hash,
     string ManifestHash);
 
-public sealed record Link(string Name, string Icon, string Url);
-public sealed record Info(string ConnectAddress, Auth Auth, Build Build, string Desc, List<Link> Links);
+public sealed record ServerLink(string Name, string Icon, string Url);
+public sealed record ServerInfo(string ConnectAddress, AuthInfo Auth, BuildInfo Build, string Desc, List<ServerLink> Links);
 
-public sealed record Status(
-    string Name,
-    int Players,
-    List<object> Tags,
-    string Map,
-    int RoundId,
-    int SoftMaxPlayer,
-    bool PanicBunker,
-    int RunLevel,
-    string Preset);
-
-public enum ContentCompressionScheme
-{
-    None = 0,
-    Deflate = 1,
-
-    /// <summary>
-    ///     ZStandard compression. In the future may use SS14 specific dictionary IDs in the frame header.
-    /// </summary>
-    ZStd = 2
-}
-
-public sealed record VersionInfo(
+public sealed record EngineVersionInfo(
     bool Insecure,
     [property: JsonPropertyName("redirect")]
     string? RedirectVersion,
-    Dictionary<string, BuildInfo> Platforms);
+    Dictionary<string, EngineBuildInfo> Platforms);
 
-public sealed class BuildInfo
+public sealed class EngineBuildInfo
 {
     [JsonInclude] [JsonPropertyName("sha256")]
     public string Sha256 = default!;
@@ -59,9 +37,9 @@ public sealed class BuildInfo
     public string Url = default!;
 }
 
-public sealed record ServerInfo(string Address, StatusData StatusData, List<string> InferredTags);
+public sealed record ServerHubInfo(string Address, ServerStatus StatusData, List<string> InferredTags);
 
-public sealed record StatusData(
+public sealed record ServerStatus(
     string Map,
     string Name,
     List<string> Tags,
@@ -70,11 +48,11 @@ public sealed record StatusData(
     int RoundId,
     int RunLevel, 
     bool PanicBunker, 
-    DateTime RoundStartTime, 
-    int SoftMaxPlayer);
+    DateTime? RoundStartTime, 
+    int SoftMaxPlayers);
 
 public sealed record ModulesInfo(Dictionary<string, Module> Modules);
 
 public sealed record Module(Dictionary<string, ModuleVersionInfo> Versions);
 
-public sealed record ModuleVersionInfo(Dictionary<string, BuildInfo> Platforms);
+public sealed record ModuleVersionInfo(Dictionary<string, EngineBuildInfo> Platforms);

@@ -11,7 +11,7 @@ public partial class AccountInfoView : UserControl
         InitializeComponent();
     }
     
-    public AccountInfoView(ViewModels.AccountInfoViewModel viewModel)
+    public AccountInfoView(AccountInfoViewModel viewModel)
         : this()
     {
         DataContext = viewModel;

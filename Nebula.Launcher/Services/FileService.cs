@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.Runtime.InteropServices;
 using Nebula.Launcher.FileApis;
 using Nebula.Launcher.FileApis.Interfaces;
+using Nebula.Launcher.Models;
 using Nebula.Launcher.Utils;
 using Robust.LoaderApi;
 

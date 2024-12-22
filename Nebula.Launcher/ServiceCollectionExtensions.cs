@@ -44,7 +44,7 @@ public static class ServiceCollectionExtensions
 
         foreach (var (viewModel, view) in GetTypesWithHelpAttribute(Assembly.GetExecutingAssembly()))
         {
-            services.AddTransient(viewModel);
+            services.AddSingleton(viewModel);
             services.AddTransient(view);
         }
 
@@ -59,14 +59,6 @@ public static class ServiceCollectionExtensions
                 services.AddSingleton(inference, type);
             }
         }
-    }
-
-    private static void AddView<TView, TViewModel>(this IServiceCollection services)
-        where TView : class
-        where TViewModel : class
-    {
-        services.AddTransient<TViewModel>();
-        services.AddTransient<TView>();
     }
     
     private static IEnumerable<(Type,Type)> GetTypesWithHelpAttribute(Assembly assembly) {

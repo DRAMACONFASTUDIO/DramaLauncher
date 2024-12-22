@@ -11,18 +11,22 @@ namespace Nebula.Launcher.ViewModels;
 [ViewRegister(typeof(ServerListView))]
 public partial class ServerListViewModel : ViewModelBase
 {
-    public ObservableCollection<ServerInfo> ServerInfos { get; }
+    public ObservableCollection<ServerHubInfo> ServerInfos { get; }
     
     [ObservableProperty]
-    private ServerInfo? _selectedListItem;
-
+    private ServerHubInfo? _selectedListItem;
+    
+    //Design think
     public ServerListViewModel()
     {
-        ServerInfos = new ObservableCollection<ServerInfo>();
+        ServerInfos = new ObservableCollection<ServerHubInfo>();
+        ServerInfos.Add(new ServerHubInfo("ss14://localhost",new ServerStatus("","TestCraft", [], "super", 12,55,1,false,DateTime.Now, 20),[]));
     }
+    
+    //real think
     public ServerListViewModel(IServiceProvider serviceProvider, HubService hubService) : base(serviceProvider)
     {
-        ServerInfos = new ObservableCollection<ServerInfo>();
+        ServerInfos = new ObservableCollection<ServerHubInfo>();
         hubService.HubServerChangedEventArgs += HubServerChangedEventArgs;
     }
 

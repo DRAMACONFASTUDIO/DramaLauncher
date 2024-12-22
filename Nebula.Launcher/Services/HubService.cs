@@ -16,7 +16,7 @@ public class HubService
     
     public readonly ObservableCollection<string> HubList = new();
 
-    private readonly Dictionary<string, List<ServerInfo>> _servers = new();
+    private readonly Dictionary<string, List<ServerHubInfo>> _servers = new();
     
     
     public HubService(ConfigurationService configurationService, RestService restService)
@@ -37,7 +37,7 @@ public class HubService
             foreach (var hubUri in e.NewItems)
             {
                 var urlStr = (string)hubUri;
-                var servers = await _restService.GetAsyncDefault<List<ServerInfo>>(new Uri(urlStr), [], CancellationToken.None);
+                var servers = await _restService.GetAsyncDefault<List<ServerHubInfo>>(new Uri(urlStr), [], CancellationToken.None);
                 _servers[urlStr] = servers;
                 HubServerChangedEventArgs?.Invoke(new HubServerChangedEventArgs(servers, HubServerChangeAction.Add));
             }
@@ -61,9 +61,9 @@ public class HubService
 public class HubServerChangedEventArgs : EventArgs
 {
     public HubServerChangeAction Action;
-    public List<ServerInfo> Items;
+    public List<ServerHubInfo> Items;
 
-    public HubServerChangedEventArgs(List<ServerInfo> items, HubServerChangeAction action)
+    public HubServerChangedEventArgs(List<ServerHubInfo> items, HubServerChangeAction action)
     {
         Items = items;
         Action = action;

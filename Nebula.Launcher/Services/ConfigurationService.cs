@@ -54,7 +54,7 @@ public class ConfigurationService
         return value != null;
     }
 
-    public void SetValue(ConVar conVar, object value)
+    public void SetConfigValue(ConVar conVar, object value)
     {
         if(conVar.Type != value.GetType()) 
             return;

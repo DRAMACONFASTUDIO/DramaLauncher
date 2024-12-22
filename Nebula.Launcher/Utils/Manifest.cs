@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
+using Nebula.Launcher.Models;
 
 namespace Nebula.Launcher.Utils;
 

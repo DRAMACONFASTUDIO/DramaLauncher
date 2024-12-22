@@ -5,11 +5,13 @@
     x:Class="Nebula.Launcher.Views.Pages.AccountInfoView"
     x:DataType="viewModels:AccountInfoViewModel"
     xmlns="https://github.com/avaloniaui"
-    xmlns:controls="clr-namespace:Nebula.Launcher.Views.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels">
+    xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels" IsEnabled="{Binding PageEnabled}">
+    <Design.DataContext>
+        <viewModels:AccountInfoViewModel />
+    </Design.DataContext>
     <Grid ColumnDefinitions="*,1.5*" RowDefinitions="*">
         <StackPanel Grid.Column="0" Grid.Row="0">
             <Border
@@ -23,21 +25,28 @@
                         Source="/Assets/account.png" />
                     <Grid ColumnDefinitions="120, 100" RowDefinitions="Auto, Auto, Auto">
                         <Label Grid.Column="0" Grid.Row="0">Login:</Label>
-                        <TextBox Grid.Column="1" Grid.Row="0" />
+                        <TextBox 
+                            Grid.Column="1" 
+                            Grid.Row="0" 
+                            Text="{Binding CurrentLogin}"/>
                         <Label Grid.Column="0" Grid.Row="1">Password:</Label>
                         <TextBox
                             Grid.Column="1"
                             Grid.Row="1"
                             PasswordChar="#"
-                            Text="Sas" />
+                            Text="{Binding CurrentPassword}" />
                         <Label Grid.Column="0" Grid.Row="2">Auth server:</Label>
-                        <TextBox Grid.Column="1" Grid.Row="2" />
+                        <TextBox 
+                            Grid.Column="1" 
+                            Grid.Row="2" 
+                            Text="{Binding CurrentAuthServer}"/>
                     </Grid>
                     <StackPanel
                         HorizontalAlignment="Center"
-                        Margin="5"
+                        Margin="5" Spacing="5"
                         Orientation="Horizontal">
-                        <Button>Save profile</Button>
+                        <Button Command="{Binding OnSaveProfile}"><Label>Save profile</Label></Button>
+                        <Button Command="{Binding DoAuth}"><Label>Auth</Label></Button>
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -51,10 +60,40 @@
                 <Label HorizontalAlignment="Center">Profiles:</Label>
             </Border>
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <controls:PlayerContainerControl />
-                    <controls:PlayerContainerControl />
-                </StackPanel>
+                <ListBox
+                    Background="#00000000"
+                    ItemsSource="{Binding Accounts}"
+                    Padding="0" Classes="AccountSelector">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type viewModels:AuthLoginPasswordModel}">
+                            <Border Margin="5,5,5,0"
+                                CornerRadius="0,10,0,10"
+                                VerticalAlignment="Center">
+                                <Panel>
+                                    <StackPanel Margin="10,5,5,5" Orientation="Horizontal">
+                                        <Label>Name:</Label>
+                                        <Label><TextBlock Text="{Binding Login}"/></Label>
+                                    </StackPanel>
+                                    <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                        <Button CornerRadius="0,0,0,10" Padding="5" Command="{Binding OnSelect}">
+                                            <Label>
+                                                Select
+                                            </Label>
+                                        </Button>
+                                        <Button
+                                            BorderThickness="2,0,0,0"
+                                            CornerRadius="0,10,0,0"
+                                            Padding="5" Command="{Binding OnDelete}">
+                                            <Label>
+                                                Delete
+                                            </Label>
+                                        </Button>
+                                    </StackPanel>
+                                </Panel>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                    </ListBox>
             </ScrollViewer>
         </StackPanel>
     </Grid>
