@@ -20,7 +20,7 @@ public partial class ServerListViewModel : ViewModelBase
     public ServerListViewModel()
     {
         ServerInfos = new ObservableCollection<ServerHubInfo>();
-        ServerInfos.Add(new ServerHubInfo("ss14://localhost",new ServerStatus("","TestCraft", [], "super", 12,55,1,false,DateTime.Now, 20),[]));
+        ServerInfos.Add(new ServerHubInfo("ss14://localhost",new ServerStatus("Nebula","TestCraft", ["16+","RU"], "super", 12,55,1,false,DateTime.Now, 20),[]));
     }
     
     //real think

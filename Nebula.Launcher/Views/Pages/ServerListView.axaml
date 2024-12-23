@@ -5,12 +5,12 @@
     x:Class="Nebula.Launcher.Views.Pages.ServerListView"
     x:DataType="viewModels:ServerListViewModel"
     xmlns="https://github.com/avaloniaui"
+    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:Nebula.Launcher.Models"
     xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Design.DataContext>
         <viewModels:ServerListViewModel />
@@ -25,55 +25,115 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:ServerHubInfo}">
                         <Grid
-                                ColumnDefinitions="*,70"
-                                Margin="0,5,0,5"
-                                RowDefinitions="40,*">
+                            ColumnDefinitions="*,70"
+                            Margin="0,5,0,5"
+                            RowDefinitions="40,*">
+                            <Border
+                                BorderThickness="2,0,0,0"
+                                Grid.Column="0"
+                                Grid.Row="0"
+                                Padding="10">
+                                <Label>
+                                    <TextBlock Text="{Binding StatusData.Name}" />
+                                </Label>
+                            </Border>
+                            <Border
+                                BorderThickness="2,0,0,0"
+                                CornerRadius="0"
+                                Grid.Column="1"
+                                Grid.Row="0"
+                                Padding="5">
+                                <StackPanel
+                                    HorizontalAlignment="Center"
+                                    Orientation="Horizontal"
+                                    VerticalAlignment="Center">
+                                    <Label>
+                                        <TextBlock Text="{Binding StatusData.Players}" />
+                                    </Label>
+                                    <Label>/</Label>
+                                    <Label>
+                                        <TextBlock Text="{Binding StatusData.SoftMaxPlayers}" />
+                                    </Label>
+                                </StackPanel>
+                            </Border>
+
+                            <Border
+                                BorderThickness="2,0,0,0"
+                                CornerRadius="0,0,10,10"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Grid.Row="1"
+                                MinHeight="50">
+                                <Border.Background>
+                                    <ImageBrush Stretch="UniformToFill" asyncImageLoader:ImageBrushLoader.Source="https://t4.ftcdn.net/jpg/00/81/55/69/360_F_81556974_8sF8cKszJaRfBGd5sDt1RXE2QbzDtQqs.jpg" />
+                                </Border.Background>
                                 <Border
-                                    BorderThickness="2,0,0,0"
-                                    Grid.Column="0"
-                                    Grid.Row="0"
-                                    Padding="10">
-                                    <TextBlock Text="{Binding StatusData.Name}"/>
+                                    BorderThickness="0,2,2,0"
+                                    CornerRadius="0,10,10,10"
+                                    IsVisible="True"
+                                    Margin="0,0,5,0"
+                                    Opacity="40"
+                                    Padding="0">
+                                    <UniformGrid Margin="15,5,15,0">
+                                        <UniformGrid.Styles>
+                                            <Style Selector="Label">
+                                                <Setter Property="FontSize" Value="8" />
+                                            </Style>
+                                        </UniformGrid.Styles>
+                                        <Label>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Margin="0,0,5,0">RoundStart:</TextBlock>
+                                                <TextBlock Text="{Binding StatusData.RoundStartTime}" />
+                                            </StackPanel>
+                                        </Label>
+                                        <Label>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Margin="0,0,5,0">Map:</TextBlock>
+                                                <TextBlock Text="{Binding StatusData.Map}" />
+                                            </StackPanel>
+                                        </Label>
+                                        <Label>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Margin="0,0,5,0">Preset:</TextBlock>
+                                                <TextBlock Text="{Binding StatusData.Preset}" />
+                                            </StackPanel>
+                                        </Label>
+                                        <Label>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Margin="0,0,5,0">PanicBunker:</TextBlock>
+                                                <TextBlock Text="{Binding StatusData.PanicBunker}" />
+                                            </StackPanel>
+                                        </Label>
+                                        <Label>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Margin="0,0,5,0">Round Id:</TextBlock>
+                                                <TextBlock Text="{Binding StatusData.RoundId}" />
+                                            </StackPanel>
+                                        </Label>
+                                        <Label>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Margin="0,0,5,0">Run Level:</TextBlock>
+                                                <TextBlock Text="{Binding StatusData.RunLevel}" />
+                                            </StackPanel>
+                                        </Label>
+                                    </UniformGrid>
                                 </Border>
-                                <Border
-                                    BorderThickness="2,0,0,0"
-                                    CornerRadius="0"
-                                    Grid.Column="1"
-                                    Grid.Row="0"
-                                    Padding="5">
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding StatusData.Players}"/>
-                                        <TextBlock>/</TextBlock>
-                                        <TextBlock Text="{Binding StatusData.SoftMaxPlayers}"/>
-                                    </StackPanel>
+                            </Border>
+
+                            <Panel Grid.Column="1" Grid.Row="1">
+                                <Border Classes="ButtonBack" CornerRadius="0,0,10,0">
+                                    <Button
+                                        CornerRadius="0,0,10,0"
+                                        HorizontalAlignment="Stretch"
+                                        Padding="0"
+                                        VerticalAlignment="Stretch">
+                                        <Label HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            Play
+                                        </Label>
+                                    </Button>
                                 </Border>
-                        
-                                <Border
-                                    BorderThickness="2,0,0,0"
-                                    CornerRadius="0,0,10,10"
-                                    Grid.Column="0"
-                                    Grid.ColumnSpan="2"
-                                    Grid.Row="1"
-                                    MinHeight="50">
-                                    <Border.Background>
-                                        <ImageBrush Stretch="UniformToFill" asyncImageLoader:ImageBrushLoader.Source="https://t4.ftcdn.net/jpg/00/81/55/69/360_F_81556974_8sF8cKszJaRfBGd5sDt1RXE2QbzDtQqs.jpg" />
-                                    </Border.Background>
-                                </Border>
-                        
-                                <Panel Grid.Column="1" Grid.Row="1">
-                                    <Border Classes="ButtonBack" CornerRadius="0,0,10,0">
-                                        <Button
-                                            CornerRadius="0,0,10,0"
-                                            HorizontalAlignment="Stretch"
-                                            Padding="0"
-                                            VerticalAlignment="Stretch">
-                                            <Label HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                Play
-                                            </Label>
-                                        </Button>
-                                    </Border>
-                                </Panel>
-                            </Grid>
+                            </Panel>
+                        </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>

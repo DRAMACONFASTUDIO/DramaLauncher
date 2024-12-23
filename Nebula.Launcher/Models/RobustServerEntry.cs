@@ -45,10 +45,15 @@ public sealed record ServerStatus(
     List<string> Tags,
     string Preset,
     int Players,
+    [property: JsonPropertyName("round_id")]
     int RoundId,
+    [property: JsonPropertyName("run_level")]
     int RunLevel, 
+    [property: JsonPropertyName("panic_bunker")]
     bool PanicBunker, 
+    [property: JsonPropertyName("round_start_time")]
     DateTime? RoundStartTime, 
+    [property: JsonPropertyName("soft_max_players")]
     int SoftMaxPlayers);
 
 public sealed record ModulesInfo(Dictionary<string, Module> Modules);
