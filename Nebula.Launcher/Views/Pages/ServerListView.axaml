@@ -25,15 +25,15 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:ServerHubInfo}">
                         <Grid
-                            ColumnDefinitions="*,70"
+                            ColumnDefinitions="*,90"
                             Margin="0,5,0,5"
-                            RowDefinitions="40,*">
+                            RowDefinitions="30,*">
                             <Border
                                 BorderThickness="2,0,0,0"
                                 Grid.Column="0"
                                 Grid.Row="0"
-                                Padding="10">
-                                <Label>
+                                Padding="10,0,0,0">
+                                <Label VerticalAlignment="Center">
                                     <TextBlock Text="{Binding StatusData.Name}" />
                                 </Label>
                             </Border>

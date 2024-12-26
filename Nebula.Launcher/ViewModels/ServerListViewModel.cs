@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Nebula.Launcher.Models;
@@ -11,22 +12,22 @@ namespace Nebula.Launcher.ViewModels;
 [ViewRegister(typeof(ServerListView))]
 public partial class ServerListViewModel : ViewModelBase
 {
-    public ObservableCollection<ServerHubInfo> ServerInfos { get; }
+    public ObservableCollection<ServerHubInfo> ServerInfos { get; } = new ObservableCollection<ServerHubInfo>();
     
     [ObservableProperty]
     private ServerHubInfo? _selectedListItem;
+
+    private List<ServerHubInfo> UnsortedServers { get; } = new List<ServerHubInfo>();
     
     //Design think
     public ServerListViewModel()
     {
-        ServerInfos = new ObservableCollection<ServerHubInfo>();
         ServerInfos.Add(new ServerHubInfo("ss14://localhost",new ServerStatus("Nebula","TestCraft", ["16+","RU"], "super", 12,55,1,false,DateTime.Now, 20),[]));
     }
     
     //real think
     public ServerListViewModel(IServiceProvider serviceProvider, HubService hubService) : base(serviceProvider)
     {
-        ServerInfos = new ObservableCollection<ServerHubInfo>();
         hubService.HubServerChangedEventArgs += HubServerChangedEventArgs;
     }
 
@@ -36,15 +37,38 @@ public partial class ServerListViewModel : ViewModelBase
         {
             foreach (var info in obj.Items)
             {
-                ServerInfos.Add(info);
+                UnsortedServers.Add(info);
             }
         }
         else
         {
             foreach (var info in obj.Items)
             {
-                ServerInfos.Remove(info);
+                UnsortedServers.Remove(info);
             }
         }
+        
+        ServerInfos.Clear();
+        UnsortedServers.Sort(new ServerComparer());
+        foreach (var VARIABLE in UnsortedServers)
+        {
+            ServerInfos.Add(VARIABLE);
+        }
+    }
+}
+
+public class ServerComparer : IComparer<ServerHubInfo>
+{
+    public int Compare(ServerHubInfo? x, ServerHubInfo? y)
+    {
+        if (ReferenceEquals(x, y))
+            return 0;
+        if (ReferenceEquals(null, y))
+            return 1;
+        if (ReferenceEquals(null, x))
+            return -1;
+
+        return y.StatusData.Players.CompareTo(x.StatusData.Players);
+
     }
 }
