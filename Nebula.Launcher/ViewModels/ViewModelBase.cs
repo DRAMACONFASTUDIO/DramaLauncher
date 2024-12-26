@@ -30,6 +30,19 @@ public abstract class ViewModelBase : ObservableObject
         viewModelBase = vmb;
         return true;
     }
+    
+    public bool TryGetViewModel<T>([NotNullWhen(true)] out T? viewModelBase) where T: ViewModelBase
+    {
+        var success = TryGetViewModel(typeof(T), out var vmb);
+        viewModelBase = (T?)vmb;
+        return success;
+    }
+
+    public T GetViewModel<T>() where T: ViewModelBase
+    {
+        TryGetViewModel<T>(out var viewModelBase);
+        return viewModelBase!;
+    }
 
     public void AssertDesignMode()
     {

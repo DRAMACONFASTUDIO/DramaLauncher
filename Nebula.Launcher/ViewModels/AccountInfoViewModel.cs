@@ -85,12 +85,12 @@ public partial class AccountInfoViewModel : ViewModelBase
     }
 }
 
-internal class Ref<T>
+public class Ref<T>
 {
     public T Value = default!;
 }
 
-internal class DelegateCommand<T> : ICommand
+public class DelegateCommand<T> : ICommand
 {
     private readonly Action<T> _func;
     public readonly Ref<T> TRef = new();

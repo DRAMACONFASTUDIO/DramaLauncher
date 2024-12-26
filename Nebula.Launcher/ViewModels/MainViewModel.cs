@@ -21,17 +21,37 @@ public partial class MainViewModel : ViewModelBase
     {
         TryGetViewModel(typeof(AccountInfoViewModel), out var model);
         _currentPage = model!;
+        TryGetViewModel(typeof(MessagePopupViewModel), out var viewModelBase);
+        _messagePopupViewModel = (MessagePopupViewModel)viewModelBase!;
+        
         Items = new ObservableCollection<ListItemTemplate>(_templates);
 
         SelectedListItem = Items.First(vm => vm.ModelType == typeof(AccountInfoViewModel));
     }
     
-    public MainViewModel(AccountInfoViewModel accountInfoViewModel, IServiceProvider serviceProvider): base(serviceProvider)
+    public MainViewModel(AccountInfoViewModel accountInfoViewModel, MessagePopupViewModel messagePopupViewModel, 
+        IServiceProvider serviceProvider): base(serviceProvider)
     {
         _currentPage = accountInfoViewModel;
+        _messagePopupViewModel = messagePopupViewModel;
         Items = new ObservableCollection<ListItemTemplate>(_templates);
+        
+        _messagePopupViewModel.OnOpenRequired += () => OnOpenRequired();
+        _messagePopupViewModel.OnCloseRequired += () => OnCloseRequired();
 
         SelectedListItem = Items.First(vm => vm.ModelType == typeof(AccountInfoViewModel));
+    }
+
+    private void OnCloseRequired()
+    {
+        IsEnabled = true;
+        Popup = false;
+    }
+
+    private void OnOpenRequired()
+    {
+        IsEnabled = false;
+        Popup = true;
     }
 
     private readonly List<ListItemTemplate> _templates =
@@ -46,6 +66,11 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private ViewModelBase _currentPage;
 
+    [ObservableProperty] private bool _isEnabled = true;
+    [ObservableProperty] private bool _popup;
+
+    private readonly MessagePopupViewModel _messagePopupViewModel;
+
     [ObservableProperty]
     private ListItemTemplate? _selectedListItem;
 
@@ -59,6 +84,12 @@ public partial class MainViewModel : ViewModelBase
         }
  
         CurrentPage = vmb;
+        
+        var model = GetViewModel<InfoPopupViewModel>();
+        model.InfoText = "Переключили прикол!";
+        
+        _messagePopupViewModel.PopupMessage(model);
+        
     }
 
     public ObservableCollection<ListItemTemplate> Items { get; }

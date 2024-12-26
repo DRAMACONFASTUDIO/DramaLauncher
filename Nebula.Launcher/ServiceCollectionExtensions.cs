@@ -85,9 +85,11 @@ public static class ServiceCollectionExtensions
 public sealed class ServiceRegisterAttribute : Attribute
 {
     public Type? Inference { get; }
+    public bool IsSingleton { get; }
 
-    public ServiceRegisterAttribute(Type? inference = null)
+    public ServiceRegisterAttribute(Type? inference = null, bool isSingleton = true)
     {
+        IsSingleton = isSingleton;
         Inference = inference;
     }
 }

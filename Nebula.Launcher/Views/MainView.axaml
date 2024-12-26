@@ -9,75 +9,96 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:Nebula.Launcher.Models"
+    xmlns:popup="clr-namespace:Nebula.Launcher.Views.Popup"
     xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Design.DataContext>
         <viewModels:MainViewModel />
     </Design.DataContext>
-    
-    <Grid
-        ColumnDefinitions="65,*"
-        Margin="0"
-        RowDefinitions="*,40">
-    
-        <TransitioningContentControl 
-            Grid.Column="1" 
-            Grid.Row="0" 
-            Content="{Binding CurrentPage}" />
-        
-        <SplitView
-            Grid.Row="0" Grid.Column="0"
-            Grid.ColumnSpan="2"
-            CompactPaneLength="65"
-            DisplayMode="CompactInline"
-            IsPaneOpen="{Binding IsPaneOpen}"
-            PaneBackground="#00000000">
-            <SplitView.Pane>
-                <Border
-                    BorderThickness="0,0,2,0"
-                    CornerRadius="0,8,8,0"
-                    Grid.Column="0"
-                    Grid.Row="0"
-                    Margin="0,0,5,0"
-                    Padding="0">
-                    <Grid ColumnDefinitions="*" RowDefinitions="*,40"> 
-                        <ListBox
-                            ItemsSource="{Binding Items}"
-                            Padding="0" 
-                            Background="#00000000"
-                            SelectedItem="{Binding SelectedListItem}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate DataType="{x:Type models:ListItemTemplate}">
-                                    <StackPanel Orientation="Horizontal" Spacing="17">
-                                        <PathIcon Data="{Binding IconKey,
-                                     Converter={x:Static converters:TypeConverters.IconConverter}}" Height="40" Width="40"/>
-                                        <TextBlock Text="{Binding Label}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                        <Button Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Stretch" Classes="ViewSelectButton"
+
+    <Panel>
+        <Grid
+            ColumnDefinitions="65,*"
+            IsEnabled="{Binding IsEnabled}"
+            Margin="0"
+            RowDefinitions="*,40">
+
+            <TransitioningContentControl
+                Content="{Binding CurrentPage}"
+                Grid.Column="1"
+                Grid.Row="0" />
+
+            <SplitView
+                CompactPaneLength="65"
+                DisplayMode="CompactInline"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Grid.Row="0"
+                IsPaneOpen="{Binding IsPaneOpen}"
+                PaneBackground="#00000000">
+                <SplitView.Pane>
+                    <Border
+                        BorderThickness="0,0,2,0"
+                        CornerRadius="0,8,8,0"
+                        Grid.Column="0"
+                        Grid.Row="0"
+                        Margin="0,0,5,0"
+                        Padding="0">
+                        <Grid ColumnDefinitions="*" RowDefinitions="*,40">
+                            <ListBox
+                                Background="#00000000"
+                                ItemsSource="{Binding Items}"
+                                Padding="0"
+                                SelectedItem="{Binding SelectedListItem}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type models:ListItemTemplate}">
+                                        <StackPanel Orientation="Horizontal" Spacing="17">
+                                            <PathIcon
+                                                Data="{Binding IconKey, Converter={x:Static converters:TypeConverters.IconConverter}}"
+                                                Height="40"
+                                                Width="40" />
+                                            <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                            <Button
+                                Classes="ViewSelectButton"
+                                Command="{Binding TriggerPaneCommand}"
+                                Grid.Row="1"
+                                HorizontalAlignment="Left"
                                 Padding="15,0,15,0"
-                                Command="{Binding TriggerPaneCommand}">
-                            <Label VerticalAlignment="Center" HorizontalAlignment="Center">|||</Label>
-                        </Button>
-                    </Grid>
-                </Border>
-            </SplitView.Pane>
-        </SplitView>
-        
-        <Border
-            Grid.Column="0"
-            Grid.ColumnSpan="2"
-            BorderThickness="0,2,0,0"
-            CornerRadius="0,0,0,0"
-            Grid.Row="1"
-            Margin="0,0,0,0"
-            Padding="5">
-            <Panel>
-                <Label HorizontalAlignment="Left" VerticalAlignment="Center">cinka.ru</Label>
-                <Label HorizontalAlignment="Right" VerticalAlignment="Center">v0.01</Label>
-            </Panel>
-        </Border>
-    </Grid>
+                                VerticalAlignment="Stretch">
+                                <Label HorizontalAlignment="Center" VerticalAlignment="Center">|||</Label>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </SplitView.Pane>
+            </SplitView>
+
+            <Border
+                BorderThickness="0,2,0,0"
+                CornerRadius="0,0,0,0"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Grid.Row="1"
+                Margin="0,0,0,0"
+                Padding="5">
+                <Panel>
+                    <Label HorizontalAlignment="Left" VerticalAlignment="Center">cinka.ru</Label>
+                    <Label HorizontalAlignment="Right" VerticalAlignment="Center">v0.01</Label>
+                </Panel>
+            </Border>
+        </Grid>
+
+        <Panel IsVisible="{Binding Popup}">
+            <Border Background="#111" Opacity="50" />
+            <Border
+                CornerRadius="10"
+                Height="320"
+                Width="520">
+                <popup:MessagePopupView />
+            </Border>
+        </Panel>
+    </Panel>
 </UserControl>
