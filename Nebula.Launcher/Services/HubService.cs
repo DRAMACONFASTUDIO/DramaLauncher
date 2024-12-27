@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.Threading;
 using Nebula.Launcher.Models;
 
@@ -10,52 +8,38 @@ namespace Nebula.Launcher.Services;
 [ServiceRegister]
 public class HubService
 {
+    private readonly ConfigurationService _configurationService;
     private readonly RestService _restService;
 
     public Action<HubServerChangedEventArgs>? HubServerChangedEventArgs;
     
-    public readonly ObservableCollection<string> HubList = new();
-
-    private readonly Dictionary<string, List<ServerHubInfo>> _servers = new();
-    
-    
+    private bool _isUpdating = false;
     public HubService(ConfigurationService configurationService, RestService restService)
     {
+        _configurationService = configurationService;
         _restService = restService;
-        HubList.CollectionChanged += HubListCollectionChanged;
         
-        foreach (var hubUrl in configurationService.GetConfigValue<string[]>(CurrentConVar.Hub)!)
-        {
-            HubList.Add(hubUrl);
-        }
+        UpdateHub();
     }
 
-    private async void HubListCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    public async void UpdateHub()
     {
-        if (e.NewItems is not null)
-        {
-            foreach (var hubUri in e.NewItems)
-            {
-                var urlStr = (string)hubUri;
-                var servers = await _restService.GetAsyncDefault<List<ServerHubInfo>>(new Uri(urlStr), [], CancellationToken.None);
-                _servers[urlStr] = servers;
-                HubServerChangedEventArgs?.Invoke(new HubServerChangedEventArgs(servers, HubServerChangeAction.Add));
-            }
-        }
+        if(_isUpdating) return;
 
-        if (e.OldItems is not null)
+        _isUpdating = true;
+        
+        
+        HubServerChangedEventArgs?.Invoke(new HubServerChangedEventArgs([], HubServerChangeAction.Clear));
+        
+        foreach (var urlStr in _configurationService.GetConfigValue(CurrentConVar.Hub)!)
         {
-            foreach (var hubUri in e.OldItems)
-            {
-                var urlStr = (string)hubUri;
-                if (_servers.TryGetValue(urlStr, out var serverInfos))
-                {
-                    _servers.Remove(urlStr);
-                    HubServerChangedEventArgs?.Invoke(new HubServerChangedEventArgs(serverInfos, HubServerChangeAction.Remove));
-                }
-            }
+            var servers = await _restService.GetAsyncDefault<List<ServerHubInfo>>(new Uri(urlStr), [], CancellationToken.None);
+            HubServerChangedEventArgs?.Invoke(new HubServerChangedEventArgs(servers, HubServerChangeAction.Add));
         }
+        
+        _isUpdating = false;
     }
+    
 }
 
 public class HubServerChangedEventArgs : EventArgs
@@ -72,5 +56,5 @@ public class HubServerChangedEventArgs : EventArgs
 
 public enum HubServerChangeAction
 {
-    Add, Remove,
+    Add, Remove, Clear,
 }

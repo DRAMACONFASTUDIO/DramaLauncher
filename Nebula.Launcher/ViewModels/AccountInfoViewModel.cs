@@ -19,6 +19,7 @@ public partial class AccountInfoViewModel : ViewModelBase
     private readonly AuthService _authService;
     
     public ObservableCollection<AuthLoginPasswordModel> Accounts { get; } = new();
+    public ObservableCollection<string> AuthUrls { get; } = new();
     
     [ObservableProperty]
     private string _currentLogin = String.Empty;
@@ -29,9 +30,15 @@ public partial class AccountInfoViewModel : ViewModelBase
     [ObservableProperty]
     private string _currentAuthServer = String.Empty;
 
-    public ObservableCollection<string> AuthUrls { get; } = new();
+    [ObservableProperty] private bool _authUrlConfigExpand;
 
-    [ObservableProperty] private bool _pageEnabled = true;
+    [ObservableProperty] private int _authViewSpan = 1;
+    
+    [ObservableProperty] private bool _authMenuExpand;
+
+    private bool _isProfilesEmpty;
+
+    [ObservableProperty] private bool _isLogged;
 
     private AuthLoginPassword CurrentAlp
     {
@@ -64,12 +71,9 @@ public partial class AccountInfoViewModel : ViewModelBase
         ReadAuthConfig();
     }
 
-    public void AuthByALP(AuthLoginPassword authLoginPassword)
+    public void AuthByAlp(AuthLoginPassword authLoginPassword)
     {
-        CurrentLogin = authLoginPassword.Login;
-        CurrentPassword = authLoginPassword.Password;
-        CurrentAuthServer = authLoginPassword.AuthServer;
-        
+        CurrentAlp = authLoginPassword;
         DoAuth();
     }
 
@@ -80,19 +84,41 @@ public partial class AccountInfoViewModel : ViewModelBase
         if(await _authService.Auth(CurrentAlp))
         {
             _popupMessageService.ClosePopup();
-            _popupMessageService.PopupInfo("Hello, " + _authService.SelectedAuth!.Username);
+            _popupMessageService.PopupInfo("Hello, " + _authService.SelectedAuth!.AuthLoginPassword.Login);
+            IsLogged = true;
+            _configurationService.SetConfigValue(CurrentConVar.AuthCurrent, CurrentAlp);
         }
         else
         {
             _popupMessageService.ClosePopup();
-            _popupMessageService.PopupInfo("Well, shit is happened");
+            Logout();
+            _popupMessageService.PopupInfo("Well, shit is happened: " + _authService.Reason);
+        }
+    }
+
+    public void Logout()
+    {
+        IsLogged = false;
+        CurrentAlp = new AuthLoginPassword("", "", "");
+        _authService.SelectedAuth = null;
+    }
+
+    private void UpdateAuthMenu()
+    {
+        if (AuthMenuExpand || _isProfilesEmpty)
+        {
+            AuthViewSpan = 2;
+        }
+        else
+        {
+            AuthViewSpan = 1;
         }
     }
 
     private void AddAccount(AuthLoginPassword authLoginPassword)
     {
-        var onDelete = new DelegateCommand<AuthLoginPasswordModel>(a => Accounts.Remove(a));
-        var onSelect = new DelegateCommand<AuthLoginPasswordModel>(AuthByALP);
+        var onDelete = new DelegateCommand<AuthLoginPasswordModel>(OnDeleteProfile);
+        var onSelect = new DelegateCommand<AuthLoginPasswordModel>(AuthByAlp);
         
         var alpm = new AuthLoginPasswordModel(
             authLoginPassword.Login, 
@@ -110,12 +136,17 @@ public partial class AccountInfoViewModel : ViewModelBase
     private void ReadAuthConfig()
     {
         foreach (var profile in 
-                 _configurationService.GetConfigValue<AuthLoginPassword[]>(CurrentConVar.AuthProfiles)!)
+                 _configurationService.GetConfigValue(CurrentConVar.AuthProfiles)!)
         {
             AddAccount(profile);
         }
 
-        var currProfile = _configurationService.GetConfigValue<AuthLoginPassword>(CurrentConVar.AuthProfiles);
+        if (Accounts.Count == 0)
+        {
+            UpdateAuthMenu();
+        }
+
+        var currProfile = _configurationService.GetConfigValue(CurrentConVar.AuthCurrent);
 
         if (currProfile != null)
         {
@@ -124,7 +155,7 @@ public partial class AccountInfoViewModel : ViewModelBase
         }
         
         AuthUrls.Clear();
-        var authUrls = _configurationService.GetConfigValue<string[]>(CurrentConVar.AuthServers)!;
+        var authUrls = _configurationService.GetConfigValue(CurrentConVar.AuthServers)!;
         foreach (var url in authUrls)
         {
             AuthUrls.Add(url);
@@ -132,10 +163,39 @@ public partial class AccountInfoViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    public void OnSaveProfile()
+    private void OnSaveProfile()
     {
         AddAccount(CurrentAlp);
-        _configurationService.SetConfigValue(CurrentConVar.AuthProfiles, Accounts.Select(a => (AuthLoginPassword) a).ToArray());
+        _isProfilesEmpty = Accounts.Count == 0;
+        UpdateAuthMenu();
+        DirtyProfile();
+    }
+    
+    private void OnDeleteProfile(AuthLoginPasswordModel account)
+    {
+        Accounts.Remove(account);
+        _isProfilesEmpty = Accounts.Count == 0;
+        UpdateAuthMenu();
+        DirtyProfile();
+    }
+
+    [RelayCommand]
+    private void OnExpandAuthUrl()
+    {
+        AuthUrlConfigExpand = !AuthUrlConfigExpand;
+    }
+
+    [RelayCommand]
+    private void OnExpandAuthView()
+    {
+        AuthMenuExpand = !AuthMenuExpand;
+        UpdateAuthMenu();
+    }
+
+    private void DirtyProfile()
+    {
+        _configurationService.SetConfigValue(CurrentConVar.AuthProfiles, 
+            Accounts.Select(a => (AuthLoginPassword) a).ToArray());
     }
 
     public string AuthItemSelect

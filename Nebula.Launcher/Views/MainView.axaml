@@ -9,7 +9,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:Nebula.Launcher.Models"
-    xmlns:popup="clr-namespace:Nebula.Launcher.Views.Popup"
     xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Design.DataContext>
@@ -21,7 +20,7 @@
             ColumnDefinitions="65,*"
             IsEnabled="{Binding IsEnabled}"
             Margin="0"
-            RowDefinitions="*,40">
+            RowDefinitions="*,30">
 
             <TransitioningContentControl
                 Content="{Binding CurrentPage}"
@@ -84,10 +83,12 @@
                 Grid.Row="1"
                 Margin="0,0,0,0"
                 Padding="5">
-                <Panel>
-                    <Label HorizontalAlignment="Left" VerticalAlignment="Center">cinka.ru</Label>
-                    <Label HorizontalAlignment="Right" VerticalAlignment="Center">v0.01</Label>
-                </Panel>
+                <Label FontSize="10" Foreground="#777777">
+                    <Panel>
+                        <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center">cinka.ru</TextBlock>
+                        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center">v0.01</TextBlock>
+                    </Panel>
+                </Label>
             </Border>
         </Grid>
 
@@ -104,16 +105,16 @@
                         Grid.Row="0">
                         <Panel Margin="12,0,0,0" VerticalAlignment="Center">
                             <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
-                                <Label VerticalAlignment="Center" Content="{Binding CurrentTitle}"/>
+                                <Label Content="{Binding CurrentTitle}" VerticalAlignment="Center" />
                             </StackPanel>
                             <Button
+                                Command="{Binding ClosePopupCommand}"
                                 Content="X"
-                                Margin="0"
                                 CornerRadius="0,10,0,0"
                                 HorizontalAlignment="Right"
+                                Margin="0"
                                 Padding="10,8,10,8"
-                                VerticalAlignment="Stretch"
-                                Command="{Binding ClosePopupCommand}"/>
+                                VerticalAlignment="Stretch" />
                         </Panel>
                     </Border>
 

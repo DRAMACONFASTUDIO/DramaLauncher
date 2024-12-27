@@ -7,60 +7,15 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels" IsEnabled="{Binding PageEnabled}">
+    xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Design.DataContext>
         <viewModels:AccountInfoViewModel />
     </Design.DataContext>
-    <Grid ColumnDefinitions="*,1.5*" RowDefinitions="*" Margin="15">
-        <StackPanel Grid.Column="0" Grid.Row="0">
-            <Border
-                CornerRadius="10"
-                Margin="5"
-                Padding="15">
-                <StackPanel HorizontalAlignment="Center" Spacing="15">
-                    <Image
-                        Height="100"
-                        Margin="0,0,0,20"
-                        Source="/Assets/account.png" />
-                    <Grid ColumnDefinitions="100, 100" RowDefinitions="Auto, Auto, Auto, Auto" VerticalAlignment="Center">
-                        <Label Grid.Column="0" Grid.Row="0" VerticalAlignment="Center">Login:</Label>
-                        <TextBox 
-                            Grid.Column="1" 
-                            Grid.Row="0" 
-                            Text="{Binding CurrentLogin}"/>
-                        <Label Grid.Column="0" Grid.Row="1" VerticalAlignment="Center">Password:</Label>
-                        <TextBox
-                            Grid.Column="1"
-                            Grid.Row="1"
-                            PasswordChar="#"
-                            Text="{Binding CurrentPassword}" />
-                        <Label Grid.Column="0" Grid.Row="2" VerticalAlignment="Center">Auth server:</Label>
-                        <TextBox 
-                            Grid.Column="1" 
-                            Grid.Row="2" 
-                            Text="{Binding CurrentAuthServer}"/>
-                        <ScrollViewer Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" Height="80">
-                            <ListBox Margin="15" Background="#00000000" ItemsSource="{Binding AuthUrls}" SelectedItem="{Binding AuthItemSelect}">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Label><TextBlock Text="{Binding}"/></Label>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                        </ScrollViewer>
-                    </Grid>
-                    <StackPanel
-                        HorizontalAlignment="Center"
-                        Margin="5" Spacing="5"
-                        Orientation="Horizontal">
-                        <Button Command="{Binding OnSaveProfile}"><Label>Save profile</Label></Button>
-                        <Button Command="{Binding DoAuth}"><Label>Auth</Label></Button>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-        </StackPanel>
-
+    <Grid
+        ColumnDefinitions="*,1.5*"
+        Margin="15"
+        RowDefinitions="*">
         <StackPanel Grid.Column="1" Grid.Row="0">
             <Border
                 CornerRadius="10,10,0,0"
@@ -71,28 +26,36 @@
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                 <ListBox
                     Background="#00000000"
+                    Classes="AccountSelector"
                     ItemsSource="{Binding Accounts}"
-                    Padding="0" Classes="AccountSelector">
+                    Padding="0">
                     <ListBox.ItemTemplate>
                         <DataTemplate DataType="{x:Type viewModels:AuthLoginPasswordModel}">
-                            <Border Margin="5,5,5,0"
+                            <Border
                                 CornerRadius="0,10,0,10"
+                                Margin="5,5,5,0"
                                 VerticalAlignment="Center">
                                 <Panel>
                                     <StackPanel Margin="10,5,5,5" Orientation="Horizontal">
                                         <Label>Name:</Label>
-                                        <Label><TextBlock Text="{Binding Login}"/></Label>
+                                        <Label>
+                                            <TextBlock Text="{Binding Login}" />
+                                        </Label>
                                     </StackPanel>
                                     <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                                        <Button CornerRadius="0,0,0,10" Padding="5" Command="{Binding OnSelect}">
+                                        <Button
+                                            Command="{Binding OnSelect}"
+                                            CornerRadius="0,0,0,10"
+                                            Padding="5">
                                             <Label>
                                                 Select
                                             </Label>
                                         </Button>
                                         <Button
                                             BorderThickness="2,0,0,0"
+                                            Command="{Binding OnDelete}"
                                             CornerRadius="0,10,0,0"
-                                            Padding="5" Command="{Binding OnDelete}">
+                                            Padding="5">
                                             <Label>
                                                 Delete
                                             </Label>
@@ -102,8 +65,107 @@
                             </Border>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
-                    </ListBox>
+                </ListBox>
             </ScrollViewer>
+        </StackPanel>
+
+        <StackPanel
+            Grid.Column="0"
+            Grid.ColumnSpan="{Binding AuthViewSpan}"
+            Grid.Row="0">
+            <Border
+                CornerRadius="10"
+                Margin="5"
+                Padding="15">
+                <Panel>
+                    <StackPanel IsVisible="{Binding !IsLogged}" Spacing="15">
+                        <Image
+                            Height="100"
+                            Margin="0,0,0,20"
+                            Source="/Assets/account.png" />
+                        <StackPanel HorizontalAlignment="Center">
+                            <StackPanel Orientation="Horizontal">
+                                <Label VerticalAlignment="Center">
+                                    Login:
+                                </Label>
+                                <TextBox Text="{Binding CurrentLogin}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Label HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    Password:
+                                </Label>
+                                <TextBox PasswordChar="#" Text="{Binding CurrentPassword}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Label VerticalAlignment="Center">
+                                    Auth server:
+                                </Label>
+                                <TextBox Text="{Binding CurrentAuthServer}" />
+                                <Button Command="{Binding ExpandAuthUrlCommand}" VerticalAlignment="Stretch">
+                                    <Label>+</Label>
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <Border
+                            Background="#333333"
+                            CornerRadius="10"
+                            IsVisible="{Binding AuthUrlConfigExpand}">
+                            <ScrollViewer Height="80">
+                                <ListBox
+                                    Background="#00000000"
+                                    ItemsSource="{Binding AuthUrls}"
+                                    Margin="5"
+                                    SelectedItem="{Binding AuthItemSelect}">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Label>
+                                                <TextBlock Text="{Binding}" />
+                                            </Label>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </ScrollViewer>
+                        </Border>
+                        <Button
+                            Command="{Binding DoAuth}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center">
+                            <Label>Auth</Label>
+                        </Button>
+                        <Button Command="{Binding ExpandAuthViewCommand}" HorizontalAlignment="Right">
+                            <Label>
+                                >
+                            </Label>
+                        </Button>
+                    </StackPanel>
+
+                    <StackPanel IsVisible="{Binding IsLogged}">
+                        <Image
+                            Height="100"
+                            Margin="0,0,0,20"
+                            Source="/Assets/account.png" />
+                        <Label>
+                            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                <TextBlock>Hello:</TextBlock>
+                                <TextBlock Text="{Binding CurrentLogin}" />
+                            </StackPanel>
+                        </Label>
+                        <StackPanel
+                            HorizontalAlignment="Center"
+                            Margin="5"
+                            Orientation="Horizontal"
+                            Spacing="5">
+                            <Button Command="{Binding Logout}">
+                                <Label>Logout</Label>
+                            </Button>
+                            <Button Command="{Binding SaveProfileCommand}">
+                                <Label>Save profile</Label>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Panel>
+            </Border>
         </StackPanel>
     </Grid>
 </UserControl>

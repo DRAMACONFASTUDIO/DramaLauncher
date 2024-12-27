@@ -2,17 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
-using Microsoft.Extensions.DependencyInjection;
+using JetBrains.Annotations;
 using Nebula.Launcher.Models;
 using Nebula.Launcher.Services;
 using Nebula.Launcher.ViewHelper;
 using Nebula.Launcher.Views;
-using Nebula.Launcher.Views.Pages;
 
 namespace Nebula.Launcher.ViewModels;
 
@@ -29,6 +25,7 @@ public partial class MainViewModel : ViewModelBase
         SelectedListItem = Items.First(vm => vm.ModelType == typeof(AccountInfoViewModel));
     }
     
+    [UsedImplicitly]
     public MainViewModel(AccountInfoViewModel accountInfoViewModel, PopupMessageService popupMessageService,
         IServiceProvider serviceProvider): base(serviceProvider)
     {

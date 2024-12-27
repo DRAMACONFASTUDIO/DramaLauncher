@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -102,7 +103,6 @@ public class RestService
     private async Task<RestResult<T>> ReadResult<T>(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
-        //_debug.Debug("CONTENT:" + content);
 
         if (response.IsSuccessStatusCode)
         {
@@ -110,7 +110,7 @@ public class RestService
             if (typeof(T) == typeof(RawResult))
                 return (new RestResult<RawResult>(new RawResult(content), null, response.StatusCode) as RestResult<T>)!;
 
-            return new RestResult<T>(JsonSerializer.Deserialize<T>(content, _serializerOptions), null,
+            return new RestResult<T>(await response.Content.AsJson<T>(), null,
                 response.StatusCode);
         }
 
@@ -121,14 +121,14 @@ public class RestService
 
 public class RestResult<T>
 {
-    public string? Message;
+    public string Message = "Ok";
     public HttpStatusCode StatusCode;
     public T? Value;
 
     public RestResult(T? value, string? message, HttpStatusCode statusCode)
     {
         Value = value;
-        Message = message;
+        if (message != null) Message = message;
         StatusCode = statusCode;
     }
 
@@ -150,5 +150,18 @@ public class RawResult
     public static implicit operator string(RawResult result)
     {
         return result.Result;
+    }
+}
+
+
+public static class HttpExt
+{
+    public static readonly JsonSerializerOptions JsonWebOptions = new(JsonSerializerDefaults.Web);
+    
+    public static async Task<T> AsJson<T>(this HttpContent content) where T : notnull
+    {
+        var str = await content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<T>(str, JsonWebOptions) ??
+               throw new JsonException("AsJson: did not expect null response");
     }
 }

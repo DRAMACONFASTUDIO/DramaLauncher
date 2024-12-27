@@ -23,7 +23,7 @@
                 ItemsSource="{Binding ServerInfos}"
                 Padding="0">
                 <ListBox.ItemTemplate>
-                    <DataTemplate DataType="{x:Type models:ServerHubInfo}">
+                    <DataTemplate DataType="{x:Type viewModels:ServerEntryModelView}">
                         <Grid
                             ColumnDefinitions="*,90"
                             Margin="0,5,0,5"
@@ -34,7 +34,7 @@
                                 Grid.Row="0"
                                 Padding="10,0,0,0">
                                 <Label VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding StatusData.Name}" />
+                                    <TextBlock Text="{Binding ServerHubInfo.StatusData.Name}" />
                                 </Label>
                             </Border>
                             <Border
@@ -48,11 +48,11 @@
                                     Orientation="Horizontal"
                                     VerticalAlignment="Center">
                                     <Label>
-                                        <TextBlock Text="{Binding StatusData.Players}" />
+                                        <TextBlock Text="{Binding ServerHubInfo.StatusData.Players}" />
                                     </Label>
                                     <Label>/</Label>
                                     <Label>
-                                        <TextBlock Text="{Binding StatusData.SoftMaxPlayers}" />
+                                        <TextBlock Text="{Binding ServerHubInfo.StatusData.SoftMaxPlayers}" />
                                     </Label>
                                 </StackPanel>
                             </Border>
@@ -83,37 +83,37 @@
                                         <Label>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Margin="0,0,5,0">RoundStart:</TextBlock>
-                                                <TextBlock Text="{Binding StatusData.RoundStartTime}" />
+                                                <TextBlock Text="{Binding ServerHubInfo.StatusData.RoundStartTime}" />
                                             </StackPanel>
                                         </Label>
                                         <Label>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Margin="0,0,5,0">Map:</TextBlock>
-                                                <TextBlock Text="{Binding StatusData.Map}" />
+                                                <TextBlock Text="{Binding ServerHubInfo.StatusData.Map}" />
                                             </StackPanel>
                                         </Label>
                                         <Label>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Margin="0,0,5,0">Preset:</TextBlock>
-                                                <TextBlock Text="{Binding StatusData.Preset}" />
+                                                <TextBlock Text="{Binding ServerHubInfo.StatusData.Preset}" />
                                             </StackPanel>
                                         </Label>
                                         <Label>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Margin="0,0,5,0">PanicBunker:</TextBlock>
-                                                <TextBlock Text="{Binding StatusData.PanicBunker}" />
+                                                <TextBlock Text="{Binding ServerHubInfo.StatusData.PanicBunker}" />
                                             </StackPanel>
                                         </Label>
                                         <Label>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Margin="0,0,5,0">Round Id:</TextBlock>
-                                                <TextBlock Text="{Binding StatusData.RoundId}" />
+                                                <TextBlock Text="{Binding ServerHubInfo.StatusData.RoundId}" />
                                             </StackPanel>
                                         </Label>
                                         <Label>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Margin="0,0,5,0">Run Level:</TextBlock>
-                                                <TextBlock Text="{Binding StatusData.RunLevel}" />
+                                                <TextBlock Text="{Binding ServerHubInfo.StatusData.RunLevel}" />
                                             </StackPanel>
                                         </Label>
                                     </UniformGrid>
@@ -123,6 +123,7 @@
                             <Panel Grid.Column="1" Grid.Row="1">
                                 <Border Classes="ButtonBack" CornerRadius="0,0,10,0">
                                     <Button
+                                        Command="{Binding OnConnectRequired}"
                                         CornerRadius="0,0,10,0"
                                         HorizontalAlignment="Stretch"
                                         Padding="0"
@@ -143,13 +144,24 @@
             BorderThickness="2,0,0,0"
             CornerRadius="10"
             Grid.Row="1">
-            <Grid ColumnDefinitions="*,40" RowDefinitions="*">
+            <Grid ColumnDefinitions="*,40,40" RowDefinitions="*">
                 <TextBox
                     Margin="0"
+                    Text="{Binding SearchText}"
+                    TextChanged="TextBox_OnTextChanged"
                     VerticalAlignment="Center"
-                    Watermark="Server name..." Text="{Binding SearchText}" TextChanged="TextBox_OnTextChanged"/>
-                <Button Grid.Column="1" Padding="10">
+                    Watermark="Server name..." />
+                <Button
+                    Command="{Binding FilterRequired}"
+                    Grid.Column="1"
+                    Padding="10">
                     <Image Source="/Assets/filter.png" />
+                </Button>
+                <Button
+                    Command="{Binding UpdateRequired}"
+                    Grid.Column="2"
+                    Padding="10">
+                    <Image Source="/Assets/refresh.png" />
                 </Button>
             </Grid>
         </Border>

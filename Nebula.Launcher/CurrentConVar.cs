@@ -4,22 +4,22 @@ namespace Nebula.Launcher;
 
 public static class CurrentConVar
 {
-    public static readonly ConVar EngineManifestUrl = 
-        ConVar.Build<string>("engine.manifestUrl", "https://robust-builds.cdn.spacestation14.com/manifest.json");
-    public static readonly ConVar EngineModuleManifestUrl = 
-        ConVar.Build<string>("engine.moduleManifestUrl", "https://robust-builds.cdn.spacestation14.com/modules.json");
-    public static readonly ConVar ManifestDownloadProtocolVersion =
-        ConVar.Build<int>("engine.manifestDownloadProtocolVersion", 1);
-    public static readonly ConVar RobustAssemblyName = 
-        ConVar.Build("engine.robustAssemblyName", "Robust.Client");
+    public static readonly ConVar<string> EngineManifestUrl = 
+        ConVarBuilder.Build("engine.manifestUrl", "https://robust-builds.cdn.spacestation14.com/manifest.json");
+    public static readonly ConVar<string> EngineModuleManifestUrl = 
+        ConVarBuilder.Build("engine.moduleManifestUrl", "https://robust-builds.cdn.spacestation14.com/modules.json");
+    public static readonly ConVar<int> ManifestDownloadProtocolVersion =
+        ConVarBuilder.Build("engine.manifestDownloadProtocolVersion", 1);
+    public static readonly ConVar<string> RobustAssemblyName = 
+        ConVarBuilder.Build("engine.robustAssemblyName", "Robust.Client");
     
-    public static readonly ConVar Hub = ConVar.Build<string[]>("launcher.hub", [
+    public static readonly ConVar<string[]> Hub = ConVarBuilder.Build<string[]>("launcher.hub", [
         "https://hub.spacestation14.com/api/servers"
     ]);
-    public static readonly ConVar AuthServers = ConVar.Build<string[]>("launcher.authServers", [
+    public static readonly ConVar<string[]> AuthServers = ConVarBuilder.Build<string[]>("launcher.authServers", [
         "https://auth.spacestation14.com/api/auth"
     ]);
 
-    public static readonly ConVar AuthProfiles = ConVar.Build<AuthLoginPassword[]>("auth.profiles", []);
-    public static readonly ConVar AuthCurrent = ConVar.Build<AuthLoginPassword>("auth.current");
+    public static readonly ConVar<AuthLoginPassword[]> AuthProfiles = ConVarBuilder.Build<AuthLoginPassword[]>("auth.profiles", []);
+    public static readonly ConVar<AuthLoginPassword> AuthCurrent = ConVarBuilder.Build<AuthLoginPassword>("auth.current");
 }

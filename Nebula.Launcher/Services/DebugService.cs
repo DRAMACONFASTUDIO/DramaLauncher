@@ -43,6 +43,13 @@ public class DebugService : IDisposable
         Log(LoggerCategory.Log, message);
     }
 
+    public void Error(Exception e)
+    {
+        Error(e.Message + "\r\n" + e.StackTrace);
+        if(e.InnerException != null)
+            Error(e.InnerException);
+    }
+
     public void Dispose()
     {
         LogWriter.Dispose();

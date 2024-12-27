@@ -36,7 +36,6 @@ public class FileApi : IReadWriteFileApi
         using var stream = File.OpenWrite(currPath);
         input.CopyTo(stream);
         stream.Flush(true);
-        Console.WriteLine(input.Length + " " + stream.Length);
         stream.Close();
         return true;
     }

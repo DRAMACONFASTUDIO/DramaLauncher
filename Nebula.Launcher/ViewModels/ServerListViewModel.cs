@@ -13,26 +13,26 @@ namespace Nebula.Launcher.ViewModels;
 [ViewRegister(typeof(ServerListView))]
 public partial class ServerListViewModel : ViewModelBase
 {
-    public ObservableCollection<ServerHubInfo> ServerInfos { get; } = new();
+    private readonly IServiceProvider _serviceProvider;
+    private readonly HubService _hubService;
+    public ObservableCollection<ServerEntryModelView> ServerInfos { get; } = new();
 
     public Action? OnSearchChange;
     
     [ObservableProperty] private string _searchText;
-    
-    [ObservableProperty]
-    private ServerHubInfo? _selectedListItem;
-
-    private List<ServerHubInfo> UnsortedServers { get; } = new List<ServerHubInfo>();
+    private List<ServerHubInfo> UnsortedServers { get; } = new();
     
     //Design think
     public ServerListViewModel()
     {
-        ServerInfos.Add(new ServerHubInfo("ss14://localhost",new ServerStatus("Nebula","TestCraft", ["16+","RU"], "super", 12,55,1,false,DateTime.Now, 20),[]));
+        ServerInfos.Add(CreateServerView(new ServerHubInfo("ss14://localhost",new ServerStatus("Nebula","TestCraft", ["16+","RU"], "super", 12,55,1,false,DateTime.Now, 20),[])));
     }
     
     //real think
     public ServerListViewModel(IServiceProvider serviceProvider, HubService hubService) : base(serviceProvider)
     {
+        _serviceProvider = serviceProvider;
+        _hubService = hubService;
         hubService.HubServerChangedEventArgs += HubServerChangedEventArgs;
         OnSearchChange += OnChangeSearch;
     }
@@ -51,12 +51,16 @@ public partial class ServerListViewModel : ViewModelBase
                 UnsortedServers.Add(info);
             }
         }
-        else
+        if(obj.Action == HubServerChangeAction.Remove)
         {
             foreach (var info in obj.Items)
             {
                 UnsortedServers.Remove(info);
             }
+        }
+        if(obj.Action == HubServerChangeAction.Clear)
+        {
+            UnsortedServers.Clear();
         }
         
         SortServers();
@@ -68,7 +72,7 @@ public partial class ServerListViewModel : ViewModelBase
         UnsortedServers.Sort(new ServerComparer());
         foreach (var server in UnsortedServers.Where(CheckServerThink))
         {
-            ServerInfos.Add(server);
+            ServerInfos.Add(CreateServerView(server));
         }
     }
 
@@ -76,6 +80,21 @@ public partial class ServerListViewModel : ViewModelBase
     {
         if (string.IsNullOrEmpty(SearchText)) return true;
         return hubInfo.StatusData.Name.ToLower().Contains(SearchText.ToLower());
+    }
+
+    private ServerEntryModelView CreateServerView(ServerHubInfo serverHubInfo)
+    {
+        return new ServerEntryModelView(_serviceProvider, serverHubInfo);
+    }
+
+    public void FilterRequired()
+    {
+        
+    }
+
+    public void UpdateRequired()
+    {
+        _hubService.UpdateHub();
     }
 }
 

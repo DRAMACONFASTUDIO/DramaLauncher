@@ -4,18 +4,22 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Nebula.Launcher.Models.Auth;
 
 namespace Nebula.Launcher.Services;
 
 [ServiceRegister]
-public class AuthService
+public partial class AuthService : ObservableObject
 {
     private readonly HttpClient _httpClient = new();
     private readonly RestService _restService;
     private readonly DebugService _debugService;
 
-    public CurrentAuthInfo? SelectedAuth;
+    [ObservableProperty]
+    private CurrentAuthInfo? _selectedAuth;
+
+    public string Reason = "";
 
     public AuthService(RestService restService, DebugService debugService)
     {
@@ -36,11 +40,15 @@ public class AuthService
         var result =
             await _restService.PostAsync<AuthenticateResponse, AuthenticateRequest>(
                 new AuthenticateRequest(login, password), authUrl, CancellationToken.None);
-        _debugService.Debug("RESULT " + result.Value);
-        if (result.Value is null) return false;
+        
+        if (result.Value is null)
+        {
+            Reason = result.Message;
+            return false;
+        }
 
-        SelectedAuth = new CurrentAuthInfo(result.Value.UserId, result.Value.Username, 
-            new LoginToken(result.Value.Token, result.Value.ExpireTime), authServer);
+        SelectedAuth = new CurrentAuthInfo(result.Value.UserId, 
+            new LoginToken(result.Value.Token, result.Value.ExpireTime), authLoginPassword);
 
         return true;
     }
@@ -49,7 +57,7 @@ public class AuthService
     {
         if (SelectedAuth is null) return false;
 
-        var authUrl = new Uri($"{SelectedAuth.AuthServer}/ping");
+        var authUrl = new Uri($"{SelectedAuth.AuthLoginPassword.AuthServer}/ping");
 
         using var requestMessage = new HttpRequestMessage(HttpMethod.Get, authUrl);
         requestMessage.Headers.Authorization = new AuthenticationHeaderValue("SS14Auth", SelectedAuth.Token.Token);
@@ -61,5 +69,5 @@ public class AuthService
     }
 }
 
-public sealed record CurrentAuthInfo(Guid UserId, string Username, LoginToken Token, string AuthServer);
+public sealed record CurrentAuthInfo(Guid UserId, LoginToken Token, AuthLoginPassword AuthLoginPassword);
 public record AuthLoginPassword(string Login, string Password, string AuthServer);
