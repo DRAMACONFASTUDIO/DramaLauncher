@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Nebula.Launcher.Models;
 using Nebula.Launcher.Services;
@@ -12,7 +13,11 @@ namespace Nebula.Launcher.ViewModels;
 [ViewRegister(typeof(ServerListView))]
 public partial class ServerListViewModel : ViewModelBase
 {
-    public ObservableCollection<ServerHubInfo> ServerInfos { get; } = new ObservableCollection<ServerHubInfo>();
+    public ObservableCollection<ServerHubInfo> ServerInfos { get; } = new();
+
+    public Action? OnSearchChange;
+    
+    [ObservableProperty] private string _searchText;
     
     [ObservableProperty]
     private ServerHubInfo? _selectedListItem;
@@ -29,6 +34,12 @@ public partial class ServerListViewModel : ViewModelBase
     public ServerListViewModel(IServiceProvider serviceProvider, HubService hubService) : base(serviceProvider)
     {
         hubService.HubServerChangedEventArgs += HubServerChangedEventArgs;
+        OnSearchChange += OnChangeSearch;
+    }
+
+    private void OnChangeSearch()
+    {
+        SortServers();
     }
 
     private void HubServerChangedEventArgs(HubServerChangedEventArgs obj)
@@ -48,12 +59,23 @@ public partial class ServerListViewModel : ViewModelBase
             }
         }
         
+        SortServers();
+    }
+
+    private void SortServers()
+    {
         ServerInfos.Clear();
         UnsortedServers.Sort(new ServerComparer());
-        foreach (var VARIABLE in UnsortedServers)
+        foreach (var server in UnsortedServers.Where(CheckServerThink))
         {
-            ServerInfos.Add(VARIABLE);
+            ServerInfos.Add(server);
         }
+    }
+
+    private bool CheckServerThink(ServerHubInfo hubInfo)
+    {
+        if (string.IsNullOrEmpty(SearchText)) return true;
+        return hubInfo.StatusData.Name.ToLower().Contains(SearchText.ToLower());
     }
 }
 

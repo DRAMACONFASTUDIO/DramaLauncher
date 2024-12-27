@@ -17,4 +17,10 @@ public partial class ServerListView : UserControl
     {
         DataContext = viewModel;
     }
+
+    private void TextBox_OnTextChanged(object? sender, TextChangedEventArgs e)
+    {
+        var context = (ServerListViewModel?)DataContext;
+        context?.OnSearchChange?.Invoke();
+    }
 }

@@ -15,6 +15,7 @@ public partial class InfoPopupViewModel : PopupViewModelBase
     public InfoPopupViewModel(IServiceProvider serviceProvider) : base(serviceProvider)
     {
     }
+    
     public override string Title => "Info";
 
     [ObservableProperty] 

@@ -1,8 +1,8 @@
 <Window
-    Height="400"
+    Height="500"
     Icon="/Assets/avalonia-logo.ico"
-    MinHeight="400"
-    MinWidth="600"
+    MinHeight="500"
+    MinWidth="800"
     Title="Nebula.Launcher"
     Width="800"
     d:DesignHeight="450"

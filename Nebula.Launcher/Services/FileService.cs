@@ -11,16 +11,19 @@ using Robust.LoaderApi;
 
 namespace Nebula.Launcher.Services;
 
+[ServiceRegister]
 public class FileService
 {
     public static string RootPath = Path.Join(Environment.GetFolderPath(
         Environment.SpecialFolder.ApplicationData), "./Datum/");
 
     private readonly DebugService _debugService;
+    
     public readonly IReadWriteFileApi ContentFileApi;
-
     public readonly IReadWriteFileApi EngineFileApi;
     public readonly IReadWriteFileApi ManifestFileApi;
+    public readonly IReadWriteFileApi ConfigurationApi;
+    
     private HashApi? _hashApi;
 
     public FileService(DebugService debugService)
@@ -29,6 +32,7 @@ public class FileService
         ContentFileApi = CreateFileApi("content/");
         EngineFileApi = CreateFileApi("engine/");
         ManifestFileApi = CreateFileApi("manifest/");
+        ConfigurationApi = CreateFileApi("config/");
     }
 
     public List<RobustManifestItem> ManifestItems

@@ -97,7 +97,44 @@
                 CornerRadius="10"
                 Height="320"
                 Width="520">
-                <popup:MessagePopupView />
+                <Grid RowDefinitions="35,*,20">
+                    <Border
+                        BorderThickness="0,0,0,2"
+                        CornerRadius="10,10,0,0"
+                        Grid.Row="0">
+                        <Panel Margin="12,0,0,0" VerticalAlignment="Center">
+                            <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <Label VerticalAlignment="Center" Content="{Binding CurrentTitle}"/>
+                            </StackPanel>
+                            <Button
+                                Content="X"
+                                Margin="0"
+                                CornerRadius="0,10,0,0"
+                                HorizontalAlignment="Right"
+                                Padding="10,8,10,8"
+                                VerticalAlignment="Stretch"
+                                Command="{Binding ClosePopupCommand}"/>
+                        </Panel>
+                    </Border>
+
+                    <TransitioningContentControl Content="{Binding CurrentPopup}" Grid.Row="1" />
+
+                    <Border
+                        BorderThickness="0,2,0,2"
+                        CornerRadius="0,0,10,10"
+                        Grid.Row="2">
+                        <Panel Margin="12,0,12,0" VerticalAlignment="Center">
+                            <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <Label
+                                    FontSize="8"
+                                    Foreground="#666666"
+                                    VerticalAlignment="Center">
+                                    Дальше бога нет...
+                                </Label>
+                            </StackPanel>
+                        </Panel>
+                    </Border>
+                </Grid>
             </Border>
         </Panel>
     </Panel>

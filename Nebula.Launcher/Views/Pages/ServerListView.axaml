@@ -147,7 +147,7 @@
                 <TextBox
                     Margin="0"
                     VerticalAlignment="Center"
-                    Watermark="Server name..." />
+                    Watermark="Server name..." Text="{Binding SearchText}" TextChanged="TextBox_OnTextChanged"/>
                 <Button Grid.Column="1" Padding="10">
                     <Image Source="/Assets/filter.png" />
                 </Button>

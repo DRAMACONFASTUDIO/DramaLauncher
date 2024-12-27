@@ -7,7 +7,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.DependencyInjection;
 using Nebula.Launcher.Models;
+using Nebula.Launcher.Services;
 using Nebula.Launcher.ViewHelper;
 using Nebula.Launcher.Views;
 using Nebula.Launcher.Views.Pages;
@@ -21,39 +23,26 @@ public partial class MainViewModel : ViewModelBase
     {
         TryGetViewModel(typeof(AccountInfoViewModel), out var model);
         _currentPage = model!;
-        TryGetViewModel(typeof(MessagePopupViewModel), out var viewModelBase);
-        _messagePopupViewModel = (MessagePopupViewModel)viewModelBase!;
         
         Items = new ObservableCollection<ListItemTemplate>(_templates);
 
         SelectedListItem = Items.First(vm => vm.ModelType == typeof(AccountInfoViewModel));
     }
     
-    public MainViewModel(AccountInfoViewModel accountInfoViewModel, MessagePopupViewModel messagePopupViewModel, 
+    public MainViewModel(AccountInfoViewModel accountInfoViewModel, PopupMessageService popupMessageService,
         IServiceProvider serviceProvider): base(serviceProvider)
     {
         _currentPage = accountInfoViewModel;
-        _messagePopupViewModel = messagePopupViewModel;
+        _popupMessageService = popupMessageService;
         Items = new ObservableCollection<ListItemTemplate>(_templates);
-        
-        _messagePopupViewModel.OnOpenRequired += () => OnOpenRequired();
-        _messagePopupViewModel.OnCloseRequired += () => OnCloseRequired();
+
+        _popupMessageService.OnPopupRequired += OnPopupRequired;
 
         SelectedListItem = Items.First(vm => vm.ModelType == typeof(AccountInfoViewModel));
     }
 
-    private void OnCloseRequired()
-    {
-        IsEnabled = true;
-        Popup = false;
-    }
-
-    private void OnOpenRequired()
-    {
-        IsEnabled = false;
-        Popup = true;
-    }
-
+    private readonly Queue<PopupViewModelBase> _viewQueue = new();
+    
     private readonly List<ListItemTemplate> _templates =
     [
         new ListItemTemplate(typeof(AccountInfoViewModel), "Account", "Account"),
@@ -66,10 +55,15 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private ViewModelBase _currentPage;
 
+    private readonly PopupMessageService _popupMessageService;
+
     [ObservableProperty] private bool _isEnabled = true;
     [ObservableProperty] private bool _popup;
-
-    private readonly MessagePopupViewModel _messagePopupViewModel;
+    
+    [ObservableProperty]
+    private PopupViewModelBase? _currentPopup;
+    [ObservableProperty] 
+    private string _currentTitle = "Default";
 
     [ObservableProperty]
     private ListItemTemplate? _selectedListItem;
@@ -84,20 +78,63 @@ public partial class MainViewModel : ViewModelBase
         }
  
         CurrentPage = vmb;
-        
-        var model = GetViewModel<InfoPopupViewModel>();
-        model.InfoText = "Переключили прикол!";
-        
-        _messagePopupViewModel.PopupMessage(model);
-        
     }
 
     public ObservableCollection<ListItemTemplate> Items { get; }
+    
+    public void PopupMessage(PopupViewModelBase viewModelBase)
+    {
+        if (CurrentPopup == null)
+        {
+            CurrentPopup = viewModelBase;
+            CurrentTitle = viewModelBase.Title;
+            OnOpenRequired();
+        }
+        else
+        {
+            _viewQueue.Enqueue(viewModelBase);
+        }
+    }
+    
+    private void OnCloseRequired()
+    {
+        IsEnabled = true;
+        Popup = false;
+    }
+
+    private void OnOpenRequired()
+    {
+        IsEnabled = false;
+        Popup = true;
+    }
+
+    private void OnPopupRequired(PopupViewModelBase? viewModelBase)
+    {
+        if (viewModelBase is null)
+        {
+            ClosePopup();
+        }
+        else
+        {
+            PopupMessage(viewModelBase);
+        }
+    }
 
     [RelayCommand]
     private void TriggerPane()
     {
         IsPaneOpen = !IsPaneOpen;
+    }
+    
+    [RelayCommand]
+    public void ClosePopup()
+    {
+        if (!_viewQueue.TryDequeue(out var viewModelBase))
+            OnCloseRequired();
+        else
+            CurrentTitle = viewModelBase.Title;
+        
+        CurrentPopup = viewModelBase;
     }
 }
 
