@@ -22,7 +22,7 @@ public class RobustUrl
 
     public override string ToString()
     {
-        return HttpUri.ToString();
+        return Uri.ToString();
     }
 
     public static implicit operator Uri(RobustUrl url)

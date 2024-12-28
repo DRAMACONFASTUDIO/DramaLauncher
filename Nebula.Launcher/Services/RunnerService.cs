@@ -112,7 +112,7 @@ public class RunnerService: IRedialApi
 
         args.Add("--ss14-address");
         args.Add(url.ToString());
-        _debugService.Debug("Connect to " + url.ToString());
+        _debugService.Debug("Connect to " + url.ToString() + " " + account.AuthLoginPassword.AuthServer);
 
         await Run(args.ToArray(), buildInfo, this, cancelTokenSource.Token);
     }

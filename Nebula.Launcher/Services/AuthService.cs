@@ -33,9 +33,9 @@ public partial class AuthService : ObservableObject
         var login = authLoginPassword.Login;
         var password = authLoginPassword.Password;
         
-        _debugService.Debug($"Auth to {authServer}/authenticate {login}");
+        _debugService.Debug($"Auth to {authServer}api/auth/authenticate {login}");
         
-        var authUrl = new Uri($"{authServer}/authenticate");
+        var authUrl = new Uri($"{authServer}api/auth/authenticate");
 
         var result =
             await _restService.PostAsync<AuthenticateResponse, AuthenticateRequest>(
@@ -57,7 +57,7 @@ public partial class AuthService : ObservableObject
     {
         if (SelectedAuth is null) return false;
 
-        var authUrl = new Uri($"{SelectedAuth.AuthLoginPassword.AuthServer}/ping");
+        var authUrl = new Uri($"{SelectedAuth.AuthLoginPassword.AuthServer}api/auth/ping");
 
         using var requestMessage = new HttpRequestMessage(HttpMethod.Get, authUrl);
         requestMessage.Headers.Authorization = new AuthenticationHeaderValue("SS14Auth", SelectedAuth.Token.Token);

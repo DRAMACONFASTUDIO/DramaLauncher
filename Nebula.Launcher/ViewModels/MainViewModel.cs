@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using JetBrains.Annotations;
 using Nebula.Launcher.Models;
 using Nebula.Launcher.Services;
+using Nebula.Launcher.Utils;
 using Nebula.Launcher.ViewHelper;
 using Nebula.Launcher.Views;
 
@@ -103,6 +104,11 @@ public partial class MainViewModel : ViewModelBase
     {
         IsEnabled = false;
         Popup = true;
+    }
+
+    public void OpenLink()
+    {
+        Helper.OpenBrowser("https://cinka.ru/nebula-launcher/");
     }
 
     private void OnPopupRequired(PopupViewModelBase? viewModelBase)

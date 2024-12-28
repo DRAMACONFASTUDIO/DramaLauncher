@@ -17,7 +17,7 @@ public static class CurrentConVar
         "https://hub.spacestation14.com/api/servers"
     ]);
     public static readonly ConVar<string[]> AuthServers = ConVarBuilder.Build<string[]>("launcher.authServers", [
-        "https://auth.spacestation14.com/api/auth"
+        "https://auth.spacestation14.com/"
     ]);
 
     public static readonly ConVar<AuthLoginPassword[]> AuthProfiles = ConVarBuilder.Build<AuthLoginPassword[]>("auth.profiles", []);
