@@ -116,7 +116,8 @@
                                     Background="#00000000"
                                     ItemsSource="{Binding AuthUrls}"
                                     Margin="5"
-                                    SelectedItem="{Binding AuthItemSelect}">
+                                    SelectedItem="{Binding AuthItemSelect}"
+                                    SelectionMode="Toggle">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
                                             <Label>

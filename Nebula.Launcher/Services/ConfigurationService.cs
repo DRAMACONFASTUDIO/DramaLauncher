@@ -86,12 +86,10 @@ public class ConfigurationService
             var serializedData = JsonSerializer.Serialize(value);
 
             using var stream = new MemoryStream();
-            using (var writer = new StreamWriter(stream))
-            {
-                writer.Write(serializedData);
-                writer.Flush();
-                stream.Seek(0, SeekOrigin.Begin);
-            }
+            using var writer = new StreamWriter(stream);
+            writer.Write(serializedData);
+            writer.Flush();
+            stream.Seek(0, SeekOrigin.Begin);
 
             _fileService.ConfigurationApi.Save(GetFileName(conVar), stream);
         }

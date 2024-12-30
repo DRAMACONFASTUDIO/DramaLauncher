@@ -23,6 +23,8 @@ public partial class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         var services = new ServiceCollection();
+        services.AddAvaloniaServices();
+        services.AddViews();
         services.AddServices();
         
         _serviceProvider = services.BuildServiceProvider();

@@ -15,13 +15,7 @@ namespace Nebula.Launcher;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddServices(this IServiceCollection services)
-    {
-        services.AddAvaloniaServices();
-        services.AddViews();
-    }
-
-    private static void AddAvaloniaServices(this IServiceCollection services)
+    public static void AddAvaloniaServices(this IServiceCollection services)
     {
         services.AddSingleton<IDispatcher>(_ => Dispatcher.UIThread);
         services.AddSingleton(_ => Application.Current?.ApplicationLifetime ?? throw new InvalidOperationException("No application lifetime is set"));
@@ -38,7 +32,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(sp => sp.GetRequiredService<TopLevel>().StorageProvider);
     }
 
-    private static void AddViews(this IServiceCollection services)
+    public static void AddViews(this IServiceCollection services)
     {
         services.AddTransient<MainWindow>();
 
@@ -47,7 +41,11 @@ public static class ServiceCollectionExtensions
             services.AddSingleton(viewModel);
             services.AddTransient(view);
         }
+        
+    }
 
+    public static void AddServices(this IServiceCollection services)
+    {
         foreach (var (type, inference) in GetServicesWithHelpAttribute(Assembly.GetExecutingAssembly()))
         {
             if (inference is null)
