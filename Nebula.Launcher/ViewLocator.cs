@@ -14,7 +14,7 @@ public class ViewLocator : IDataTemplate
         if (param is null)
             return null;
         
-        var type = param.GetType().GetCustomAttribute<ViewRegisterAttribute>()?.Type;
+        var type = param.GetType().GetCustomAttribute<ViewModelRegisterAttribute>()?.Type;
 
         if (type != null)
         {

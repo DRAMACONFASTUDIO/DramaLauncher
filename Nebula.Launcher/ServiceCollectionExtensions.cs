@@ -36,58 +36,22 @@ public static class ServiceCollectionExtensions
     {
         services.AddTransient<MainWindow>();
 
-        foreach (var (viewModel, view) in GetTypesWithHelpAttribute(Assembly.GetExecutingAssembly()))
+        foreach (var (viewModel, view, isSingleton) in GetTypesWithHelpAttribute(Assembly.GetExecutingAssembly()))
         {
-            services.AddSingleton(viewModel);
-            services.AddTransient(view);
-        }
-        
-    }
-
-    public static void AddServices(this IServiceCollection services)
-    {
-        foreach (var (type, inference) in GetServicesWithHelpAttribute(Assembly.GetExecutingAssembly()))
-        {
-            if (inference is null)
-            {
-                services.AddSingleton(type);
-            }
-            else
-            {
-                services.AddSingleton(inference, type);
-            }
+            if(isSingleton)services.AddSingleton(viewModel);
+            else services.AddTransient(viewModel);
+            if (view != null) services.AddTransient(view);
         }
     }
     
-    private static IEnumerable<(Type,Type)> GetTypesWithHelpAttribute(Assembly assembly) {
+    private static IEnumerable<(Type,Type?,bool)> GetTypesWithHelpAttribute(Assembly assembly) {
         foreach(Type type in assembly.GetTypes())
         {
-            var attr = type.GetCustomAttribute<ViewRegisterAttribute>();
+            var attr = type.GetCustomAttribute<ViewModelRegisterAttribute>();
             if (attr is not null) {
-                yield return (type, attr.Type);
-            }
-        }
-    }
-    
-    private static IEnumerable<(Type,Type?)> GetServicesWithHelpAttribute(Assembly assembly) {
-        foreach(Type type in assembly.GetTypes())
-        {
-            var attr = type.GetCustomAttribute<ServiceRegisterAttribute>();
-            if (attr is not null) {
-                yield return (type, attr.Inference);
+                yield return (type, attr.Type, attr.IsSingleton);
             }
         }
     }
 }
 
-public sealed class ServiceRegisterAttribute : Attribute
-{
-    public Type? Inference { get; }
-    public bool IsSingleton { get; }
-
-    public ServiceRegisterAttribute(Type? inference = null, bool isSingleton = true)
-    {
-        IsSingleton = isSingleton;
-        Inference = inference;
-    }
-}

@@ -8,7 +8,6 @@
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:models="clr-namespace:Nebula.Launcher.Models"
     xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
@@ -25,7 +24,7 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type viewModels:ServerEntryModelView}">
                         <Grid
-                            ColumnDefinitions="*,90"
+                            ColumnDefinitions="*,120"
                             Margin="0,5,0,5"
                             RowDefinitions="30,*">
                             <Border
@@ -38,7 +37,7 @@
                                 </Label>
                             </Border>
                             <Border
-                                BorderThickness="2,0,0,0"
+                                BorderThickness="2,0,2,0"
                                 CornerRadius="0"
                                 Grid.Column="1"
                                 Grid.Row="0"
@@ -69,9 +68,9 @@
                                 </Border.Background>
                                 <Border
                                     BorderThickness="0,2,2,0"
-                                    CornerRadius="0,10,10,10"
+                                    CornerRadius="0,0,10,10"
                                     IsVisible="True"
-                                    Margin="0,0,5,0"
+                                    Margin="0,0,0,0"
                                     Opacity="40"
                                     Padding="0">
                                     <UniformGrid Margin="15,5,15,0">
@@ -121,18 +120,36 @@
                             </Border>
 
                             <Panel Grid.Column="1" Grid.Row="1">
-                                <Border Classes="ButtonBack" CornerRadius="0,0,10,0">
-                                    <Button
-                                        Command="{Binding OnConnectRequired}"
-                                        CornerRadius="0,0,10,0"
-                                        HorizontalAlignment="Stretch"
-                                        Padding="0"
-                                        VerticalAlignment="Stretch">
+                                <Button
+                                    Command="{Binding RunInstance}"
+                                    IsVisible="{Binding RunVisible}" 
+                                    HorizontalAlignment="Stretch" 
+                                    CornerRadius="10,0,10,10"
+                                    VerticalAlignment="Stretch">
+                                    <Label HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        Play
+                                    </Label>
+                                </Button>
+                                <Grid Grid.ColumnDefinitions="*,*" IsVisible="{Binding !RunVisible}">
+                                    <Button Command="{Binding ReadLog}"
+                                            CornerRadius="10,0,0,10" 
+                                            Margin="0,0,1,0"
+                                            VerticalAlignment="Stretch"
+                                            HorizontalAlignment="Stretch">
                                         <Label HorizontalAlignment="Center" VerticalAlignment="Center">
-                                            Play
+                                            Log
                                         </Label>
                                     </Button>
-                                </Border>
+                                    <Button Grid.Column="1" HorizontalAlignment="Stretch" 
+                                            CornerRadius="0,0,10,0" 
+                                            Margin="1,0,0,0"
+                                            VerticalAlignment="Stretch"
+                                            Command="{Binding StopInstance}">
+                                        <Label HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            Stop
+                                        </Label>
+                                    </Button>
+                                </Grid>
                             </Panel>
                         </Grid>
                     </DataTemplate>

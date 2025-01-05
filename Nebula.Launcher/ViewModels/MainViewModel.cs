@@ -5,15 +5,15 @@ using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using JetBrains.Annotations;
-using Nebula.Launcher.Models;
-using Nebula.Launcher.Services;
-using Nebula.Launcher.Utils;
 using Nebula.Launcher.ViewHelper;
 using Nebula.Launcher.Views;
+using Nebula.Shared.Models;
+using Nebula.Shared.Services;
+using Nebula.Shared.Utils;
 
 namespace Nebula.Launcher.ViewModels;
 
-[ViewRegister(typeof(MainView))]
+[ViewModelRegister(typeof(MainView))]
 public partial class MainViewModel : ViewModelBase
 {
     public MainViewModel()
@@ -111,15 +111,23 @@ public partial class MainViewModel : ViewModelBase
         Helper.OpenBrowser("https://cinka.ru/nebula-launcher/");
     }
 
-    private void OnPopupRequired(PopupViewModelBase? viewModelBase)
+    private void OnPopupRequired(object? viewModelBase)
     {
-        if (viewModelBase is null)
+        switch (viewModelBase)
         {
-            ClosePopup();
-        }
-        else
-        {
-            PopupMessage(viewModelBase);
+            case null:
+                ClosePopup();
+                break;
+            case string str:
+            {
+                var view = GetViewModel<InfoPopupViewModel>();
+                view.InfoText = str;
+                PopupMessage(view);
+                break;
+            }
+            case PopupViewModelBase @base:
+                PopupMessage(@base);
+                break;
         }
     }
 

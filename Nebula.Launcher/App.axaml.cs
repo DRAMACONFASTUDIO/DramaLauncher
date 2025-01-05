@@ -8,6 +8,7 @@ using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using Nebula.Launcher.ViewModels;
 using Nebula.Launcher.Views;
+using Nebula.Shared;
 
 namespace Nebula.Launcher;
 

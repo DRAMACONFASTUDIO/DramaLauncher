@@ -26,13 +26,7 @@
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
         <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
-        <PackageReference Include="libsodium" Version="1.0.20" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
-        <PackageReference Include="Robust.Natives" Version="0.1.1" />
-        <PackageReference Include="SharpZstd.Interop" Version="1.5.6" />
-        <EmbeddedResource Include="Utils\runtime.json">
-            <LogicalName>Utility.runtime.json</LogicalName>
-        </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
@@ -43,6 +37,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Robust.LoaderApi\Robust.LoaderApi\Robust.LoaderApi.csproj" />
+      <ProjectReference Include="..\Nebula.Shared\Nebula.Shared.csproj" />
     </ItemGroup>
 </Project>

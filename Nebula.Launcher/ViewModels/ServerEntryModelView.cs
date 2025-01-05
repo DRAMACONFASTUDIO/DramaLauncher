@@ -1,33 +1,41 @@
 using System;
+using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Microsoft.Extensions.DependencyInjection;
-using Nebula.Launcher.Models;
-using Nebula.Launcher.Services;
+using Nebula.Launcher.ViewHelper;
+using Nebula.Shared.Models;
 
 namespace Nebula.Launcher.ViewModels;
 
+[ViewModelRegister(isSingleton:false)]
 public partial class ServerEntryModelView : ViewModelBase
 {
-    
-    private readonly IServiceProvider _serviceProvider;
-    private readonly RunnerService _runnerService;
-    private readonly PopupMessageService _popupMessageService;
-    private readonly RestService _restService;
+    [ObservableProperty] private bool _runVisible = true;
 
-    public ServerHubInfo ServerHubInfo { get; }
+    public ServerHubInfo ServerHubInfo { get; set; }
 
-    public ServerEntryModelView(IServiceProvider serviceProvider, ServerHubInfo serverHubInfo) : base(serviceProvider)
+    public ServerEntryModelView() : base()
     {
-        _serviceProvider = serviceProvider;
-        _runnerService = serviceProvider.GetService<RunnerService>()!;
-        _popupMessageService = serviceProvider.GetService<PopupMessageService>()!;
-        _restService = serviceProvider.GetService<RestService>()!;
-        ServerHubInfo = serverHubInfo;
     }
 
-    public async void OnConnectRequired()
+    public ServerEntryModelView(IServiceProvider serviceProvider) : base(serviceProvider)
     {
-        _popupMessageService.PopupInfo("Running server: " + ServerHubInfo.StatusData.Name);
-        await _runnerService.RunGame(ServerHubInfo.Address);
+    }
+
+    public void RunInstance()
+    {
+        var p = Process.Start("./Nebula.Runner", "a b c");
+        p.BeginOutputReadLine();
+        p.BeginErrorReadLine();
+    }
+    
+
+    public void ReadLog()
+    {
+        
+    }
+
+    public void StopInstance()
+    {
+        
     }
 }

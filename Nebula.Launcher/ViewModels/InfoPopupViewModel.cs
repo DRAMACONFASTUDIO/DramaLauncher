@@ -5,7 +5,7 @@ using Nebula.Launcher.Views.Popup;
 
 namespace Nebula.Launcher.ViewModels;
 
-[ViewRegister(typeof(InfoPopupView), false)]
+[ViewModelRegister(typeof(InfoPopupView), false)]
 public partial class InfoPopupViewModel : PopupViewModelBase
 {
     public InfoPopupViewModel()

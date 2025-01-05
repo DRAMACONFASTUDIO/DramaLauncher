@@ -4,14 +4,15 @@ using System.Linq;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Nebula.Launcher.Services;
-using Nebula.Launcher.Utils;
 using Nebula.Launcher.ViewHelper;
 using Nebula.Launcher.Views.Pages;
+using Nebula.Shared;
+using Nebula.Shared.Services;
+using Nebula.Shared.Utils;
 
 namespace Nebula.Launcher.ViewModels;
 
-[ViewRegister(typeof(AccountInfoView))]
+[ViewModelRegister(typeof(AccountInfoView))]
 public partial class AccountInfoViewModel : ViewModelBase
 {
     private readonly PopupMessageService _popupMessageService;
@@ -79,12 +80,12 @@ public partial class AccountInfoViewModel : ViewModelBase
 
     public async void DoAuth()
     {
-        _popupMessageService.PopupInfo("Auth think, please wait...");
+        _popupMessageService.Popup("Auth think, please wait...");
         
         if(await _authService.Auth(CurrentAlp))
         {
             _popupMessageService.ClosePopup();
-            _popupMessageService.PopupInfo("Hello, " + _authService.SelectedAuth!.AuthLoginPassword.Login);
+            _popupMessageService.Popup("Hello, " + _authService.SelectedAuth!.AuthLoginPassword.Login);
             IsLogged = true;
             _configurationService.SetConfigValue(CurrentConVar.AuthCurrent, CurrentAlp);
         }
@@ -92,7 +93,7 @@ public partial class AccountInfoViewModel : ViewModelBase
         {
             _popupMessageService.ClosePopup();
             Logout();
-            _popupMessageService.PopupInfo("Well, shit is happened: " + _authService.Reason);
+            _popupMessageService.Popup("Well, shit is happened: " + _authService.Reason);
         }
     }
 
@@ -100,7 +101,7 @@ public partial class AccountInfoViewModel : ViewModelBase
     {
         IsLogged = false;
         CurrentAlp = new AuthLoginPassword("", "", "");
-        _authService.SelectedAuth = null;
+        _authService.ClearAuth();
     }
 
     private void UpdateAuthMenu()

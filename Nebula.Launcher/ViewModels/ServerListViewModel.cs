@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Nebula.Launcher.Models;
-using Nebula.Launcher.Services;
 using Nebula.Launcher.ViewHelper;
 using Nebula.Launcher.Views.Pages;
+using Nebula.Shared.Models;
+using Nebula.Shared.Services;
 
 namespace Nebula.Launcher.ViewModels;
 
-[ViewRegister(typeof(ServerListView))]
+[ViewModelRegister(typeof(ServerListView))]
 public partial class ServerListViewModel : ViewModelBase
 {
     private readonly IServiceProvider _serviceProvider;
@@ -84,7 +84,9 @@ public partial class ServerListViewModel : ViewModelBase
 
     private ServerEntryModelView CreateServerView(ServerHubInfo serverHubInfo)
     {
-        return new ServerEntryModelView(_serviceProvider, serverHubInfo);
+        var svn = GetViewModel<ServerEntryModelView>();
+        svn.ServerHubInfo = serverHubInfo;
+        return svn;
     }
 
     public void FilterRequired()
