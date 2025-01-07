@@ -81,7 +81,7 @@ public sealed class EngineService
 
         try
         {
-            return _assemblyService.Mount(_fileService.OpenZip(version, _fileService.EngineFileApi),$"Engine.Ensure-{version}");
+            return _assemblyService.Mount(_fileService.OpenZip(version, _fileService.EngineFileApi));
         }
         catch (Exception e)
         {
@@ -161,7 +161,7 @@ public sealed class EngineService
 
         try
         {
-            return _assemblyService.Mount(_fileService.OpenZip(fileName, _fileService.EngineFileApi),"Engine.EnsureModule");
+            return _assemblyService.Mount(_fileService.OpenZip(fileName, _fileService.EngineFileApi));
         }
         catch (Exception e)
         {

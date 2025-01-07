@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Nebula.Shared;
 
@@ -11,6 +12,7 @@ public static class Program
         services.AddServices();
         
         var serviceProvider = services.BuildServiceProvider();
-        serviceProvider.GetService<App>()!.Run(args);
+        var task = serviceProvider.GetService<App>()!.Run(args);
+        task.Wait();
     }
 }

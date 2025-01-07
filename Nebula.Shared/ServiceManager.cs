@@ -7,8 +7,17 @@ public static class ServiceExt
 {
     public static void AddServices(this IServiceCollection services)
     {
-        foreach (var (type, inference) in GetServicesWithHelpAttribute(Assembly.GetExecutingAssembly()))
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
         {
+            AddServices(services, assembly);
+        }
+    }
+    
+    public static void AddServices(this IServiceCollection services, Assembly assembly)
+    {
+        foreach (var (type, inference) in GetServicesWithHelpAttribute(assembly))
+        {
+            Console.WriteLine("[ServiceMng] ADD SERVICE " + type);
             if (inference is null)
             {
                 services.AddSingleton(type);

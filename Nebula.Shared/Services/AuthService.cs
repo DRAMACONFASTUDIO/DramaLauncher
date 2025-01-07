@@ -45,6 +45,12 @@ public partial class AuthService(
         SelectedAuth = null;
     }
 
+    public void SetAuth(Guid guid, string token, string login, string authServer)
+    {
+        SelectedAuth = new CurrentAuthInfo(guid, new LoginToken(token, DateTimeOffset.Now),
+            new AuthLoginPassword(login, "", authServer));
+    }
+
     public async Task<bool> EnsureToken()
     {
         if (SelectedAuth is null) return false;
