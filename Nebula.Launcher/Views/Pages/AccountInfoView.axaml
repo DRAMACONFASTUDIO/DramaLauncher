@@ -24,12 +24,11 @@
                 <Label HorizontalAlignment="Center">Profiles:</Label>
             </Border>
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                <ListBox
+                <ItemsControl
                     Background="#00000000"
-                    Classes="AccountSelector"
                     ItemsSource="{Binding Accounts}"
                     Padding="0">
-                    <ListBox.ItemTemplate>
+                    <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type viewModels:AuthLoginPasswordModel}">
                             <Border
                                 CornerRadius="0,10,0,10"
@@ -64,8 +63,8 @@
                                 </Panel>
                             </Border>
                         </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </ScrollViewer>
         </StackPanel>
 

@@ -98,8 +98,7 @@
             <Border Background="#111" Opacity="50" />
             <Border
                 CornerRadius="10"
-                Height="320"
-                Width="520">
+                Margin="40">
                 <Grid RowDefinitions="35,*,20">
                     <Border
                         BorderThickness="0,0,0,2"

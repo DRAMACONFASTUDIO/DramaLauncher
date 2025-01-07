@@ -1,7 +1,12 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Text;
+using System.Text.RegularExpressions;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Nebula.Launcher.ViewHelper;
+using Nebula.Launcher.Views.Popup;
 using Nebula.Shared.Models;
 using Nebula.Shared.Services;
 
@@ -14,14 +19,21 @@ public partial class ServerEntryModelView : ViewModelBase
     private readonly ContentService _contentService = default!;
     private readonly CancellationService _cancellationService = default!;
     private readonly DebugService _debugService = default!;
-    private readonly RunnerService _runnerService;
+    private readonly RunnerService _runnerService = default!;
+    private readonly PopupMessageService _popupMessageService;
 
     [ObservableProperty] private bool _runVisible = true;
 
     public ServerHubInfo ServerHubInfo { get; set; } = default!;
+    
+    
+    private Process? _process;
+
+    public LogPopupModelView CurrLog;
 
     public ServerEntryModelView() : base()
     {
+        CurrLog = GetViewModel<LogPopupModelView>();
     }
 
     public ServerEntryModelView(
@@ -30,7 +42,7 @@ public partial class ServerEntryModelView : ViewModelBase
         ContentService contentService, 
         CancellationService cancellationService,
         DebugService debugService, 
-        RunnerService runnerService
+        RunnerService runnerService, PopupMessageService popupMessageService
         ) : base(serviceProvider)
     {
         _authService = authService;
@@ -38,9 +50,10 @@ public partial class ServerEntryModelView : ViewModelBase
         _cancellationService = cancellationService;
         _debugService = debugService;
         _runnerService = runnerService;
-    }
+        _popupMessageService = popupMessageService;
 
-    private Process? _process;
+        CurrLog = GetViewModel<LogPopupModelView>();
+    }
 
     public async void RunInstance()
     {
@@ -62,13 +75,22 @@ public partial class ServerEntryModelView : ViewModelBase
                 { "GAME_URL",           ServerHubInfo.Address } ,
                 { "AUTH_LOGIN",         authProv?.AuthLoginPassword.Login } ,
             },
-            CreateNoWindow = true, UseShellExecute = false
+            CreateNoWindow = true, 
+            UseShellExecute = false, 
+            RedirectStandardOutput = true, 
+            RedirectStandardError = true, StandardOutputEncoding = Encoding.UTF8
         });
+        
         
         if (_process is null)
         {
             return;
         }
+        
+        _process.BeginOutputReadLine();
+        _process.BeginErrorReadLine();
+        
+        RunVisible = false;
         
         _process.OutputDataReceived += OnOutputDataReceived;
         _process.ErrorDataReceived += OnErrorDataReceived;
@@ -91,22 +113,31 @@ public partial class ServerEntryModelView : ViewModelBase
         
         _process.Dispose();
         _process = null;
+        RunVisible = true;
     }
 
     private void OnErrorDataReceived(object sender, DataReceivedEventArgs e)
     {
-        if (e.Data != null) _debugService.Error(e.Data);
+        if (e.Data != null)
+        {
+            _debugService.Error(e.Data);
+            CurrLog.Append(e.Data);
+        }
     }
 
     private void OnOutputDataReceived(object sender, DataReceivedEventArgs e)
     {
-        if (e.Data != null) _debugService.Log(e.Data);
+        if (e.Data != null)
+        {
+            _debugService.Log(e.Data);
+            CurrLog.Append(e.Data);
+        }
     }
 
 
     public void ReadLog()
     {
-        
+        _popupMessageService.Popup(CurrLog);
     }
 
     public void StopInstance()
@@ -131,5 +162,74 @@ public partial class ServerEntryModelView : ViewModelBase
         }
 
         throw new Exception("Dotnet not found!");
+    }
+}
+
+public sealed class LogInfo
+{
+    public string Category { get; set; } =  "LOG";
+    public IBrush CategoryColor { get; set; } = Brush.Parse("#424242");
+    public string Message { get; set; } = "";
+
+    public static LogInfo FromString(string input)
+    {
+        var matches = Regex.Matches(input, @"(\[(?<c>.*)\] (?<m>.*))|(?<m>.*)");
+        string category = "All";
+
+        if( matches[0].Groups.TryGetValue("c", out var c))
+        {
+            category = c.Value;
+        }
+
+        var color = Brush.Parse("#444444");
+
+        switch (category)
+        {
+            case "DEBG":
+                color = Brush.Parse("#2436d4");
+                break;
+            case "ERRO":
+                color = Brush.Parse("#d42436");
+                break;
+            case "INFO":
+                color = Brush.Parse("#0ab3c9");
+                break;
+        }
+            
+        var message = matches[0].Groups["m"].Value;
+        return new LogInfo()
+        {
+            Category = category, Message = message, CategoryColor = color
+        };
+    }
+}
+
+[ViewModelRegister(typeof(LogPopupView), false)]
+public sealed class LogPopupModelView : PopupViewModelBase
+{
+    public LogPopupModelView() : base()
+    {
+        Logs.Add(new LogInfo()
+        {
+            Category = "DEBG", Message = "MEOW MEOW TEST"
+        });
+        
+        Logs.Add(new LogInfo()
+        {
+            Category = "ERRO", Message = "MEOW MEOW TEST 11\naaaaa"
+        });
+    }
+
+    public LogPopupModelView(IServiceProvider serviceProvider) : base(serviceProvider)
+    {
+    }
+    
+    public override string Title => "LOG";
+
+    public ObservableCollection<LogInfo> Logs { get; } = new();
+
+    public void Append(string str)
+    {
+        Logs.Add(LogInfo.FromString(str));
     }
 }
