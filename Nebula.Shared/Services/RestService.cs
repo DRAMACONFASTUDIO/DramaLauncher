@@ -25,17 +25,8 @@ public class RestService
 
     public async Task<RestResult<T>> GetAsync<T>(Uri uri, CancellationToken cancellationToken)
     {
-        _debug.Debug("GET " + uri);
-        try
-        {
-            var response = await _client.GetAsync(uri, cancellationToken);
-            return await ReadResult<T>(response, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _debug.Error("ERROR WHILE CONNECTION " + uri + ": " + ex.Message);
-            return new RestResult<T>(default, ex.Message, HttpStatusCode.RequestTimeout);
-        }
+        var response = await _client.GetAsync(uri, cancellationToken);
+        return await ReadResult<T>(response, cancellationToken);
     }
 
     public async Task<T> GetAsyncDefault<T>(Uri uri, T defaultValue, CancellationToken cancellationToken)
@@ -46,53 +37,25 @@ public class RestService
 
     public async Task<RestResult<K>> PostAsync<K, T>(T information, Uri uri, CancellationToken cancellationToken)
     {
-        _debug.Debug("POST " + uri);
-        try
-        {
-            var json = JsonSerializer.Serialize(information, _serializerOptions);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await _client.PostAsync(uri, content, cancellationToken);
-            return await ReadResult<K>(response, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _debug.Debug("ERROR " + ex.Message);
-            return new RestResult<K>(default, ex.Message, HttpStatusCode.RequestTimeout);
-        }
+        var json = JsonSerializer.Serialize(information, _serializerOptions);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await _client.PostAsync(uri, content, cancellationToken);
+        return await ReadResult<K>(response, cancellationToken);
     }
 
     public async Task<RestResult<T>> PostAsync<T>(Stream stream, Uri uri, CancellationToken cancellationToken)
     {
-        _debug.Debug("POST " + uri);
-        try
-        {
-            using var multipartFormContent =
-                new MultipartFormDataContent("Upload----" + DateTime.Now.ToString(CultureInfo.InvariantCulture));
-            multipartFormContent.Add(new StreamContent(stream), "formFile", "image.png");
-            var response = await _client.PostAsync(uri, multipartFormContent, cancellationToken);
-            return await ReadResult<T>(response, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _debug.Error("ERROR " + ex.Message);
-            if (ex.StackTrace != null) _debug.Error(ex.StackTrace);
-            return new RestResult<T>(default, ex.Message, HttpStatusCode.RequestTimeout);
-        }
+        using var multipartFormContent =
+            new MultipartFormDataContent("Upload----" + DateTime.Now.ToString(CultureInfo.InvariantCulture));
+        multipartFormContent.Add(new StreamContent(stream), "formFile", "image.png");
+        var response = await _client.PostAsync(uri, multipartFormContent, cancellationToken);
+        return await ReadResult<T>(response, cancellationToken);
     }
 
     public async Task<RestResult<T>> DeleteAsync<T>(Uri uri, CancellationToken cancellationToken)
     {
-        _debug.Debug("DELETE " + uri);
-        try
-        {
-            var response = await _client.DeleteAsync(uri, cancellationToken);
-            return await ReadResult<T>(response, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _debug.Debug("ERROR " + ex.Message);
-            return new RestResult<T>(default, ex.Message, HttpStatusCode.RequestTimeout);
-        }
+        var response = await _client.DeleteAsync(uri, cancellationToken);
+        return await ReadResult<T>(response, cancellationToken);
     }
 
     private async Task<RestResult<T>> ReadResult<T>(HttpResponseMessage response, CancellationToken cancellationToken)

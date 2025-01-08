@@ -27,19 +27,20 @@ public partial class MainViewModel : ViewModelBase
     }
     
     [UsedImplicitly]
-    public MainViewModel(AccountInfoViewModel accountInfoViewModel, PopupMessageService popupMessageService,
+    public MainViewModel(AccountInfoViewModel accountInfoViewModel,DebugService debugService, PopupMessageService popupMessageService,
         IServiceProvider serviceProvider): base(serviceProvider)
     {
         _currentPage = accountInfoViewModel;
-        _popupMessageService = popupMessageService;
+        _debugService = debugService;
         Items = new ObservableCollection<ListItemTemplate>(_templates);
 
-        _popupMessageService.OnPopupRequired += OnPopupRequired;
+        popupMessageService.OnPopupRequired += OnPopupRequired;
+        popupMessageService.OnCloseRequired += OnPopupCloseRequired;
 
         SelectedListItem = Items.First(vm => vm.ModelType == typeof(AccountInfoViewModel));
     }
-
-    private readonly Queue<PopupViewModelBase> _viewQueue = new();
+    
+    private readonly List<PopupViewModelBase> _viewQueue = new();
     
     private readonly List<ListItemTemplate> _templates =
     [
@@ -53,7 +54,7 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private ViewModelBase _currentPage;
 
-    private readonly PopupMessageService _popupMessageService;
+    private readonly DebugService _debugService;
 
     [ObservableProperty] private bool _isEnabled = true;
     [ObservableProperty] private bool _popup;
@@ -90,7 +91,7 @@ public partial class MainViewModel : ViewModelBase
         }
         else
         {
-            _viewQueue.Enqueue(viewModelBase);
+            _viewQueue.Add(viewModelBase);
         }
     }
     
@@ -111,13 +112,10 @@ public partial class MainViewModel : ViewModelBase
         Helper.OpenBrowser("https://cinka.ru/nebula-launcher/");
     }
 
-    private void OnPopupRequired(object? viewModelBase)
+    private void OnPopupRequired(object viewModelBase)
     {
         switch (viewModelBase)
         {
-            case null:
-                ClosePopup();
-                break;
             case string str:
             {
                 var view = GetViewModel<InfoPopupViewModel>();
@@ -128,8 +126,28 @@ public partial class MainViewModel : ViewModelBase
             case PopupViewModelBase @base:
                 PopupMessage(@base);
                 break;
+            case Exception error:
+                var err = GetViewModel<ExceptionViewModel>();
+                _debugService.Error(error);
+                err.AppendError(error);
+                PopupMessage(err);
+                break;
         }
     }
+    
+    private void OnPopupCloseRequired(object obj)
+    {
+        if(obj is not PopupViewModelBase viewModelBase)
+        {
+            return;
+        }
+        
+        if (obj == CurrentPopup)
+            ClosePopup();
+        else
+            _viewQueue.Remove(viewModelBase);
+    }
+
 
     [RelayCommand]
     private void TriggerPane()
@@ -140,10 +158,14 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     public void ClosePopup()
     {
-        if (!_viewQueue.TryDequeue(out var viewModelBase))
+        var viewModelBase = _viewQueue.FirstOrDefault();
+        if (viewModelBase is null)
             OnCloseRequired();
         else
+        {
             CurrentTitle = viewModelBase.Title;
+            _viewQueue.RemoveAt(0);
+        }
         
         CurrentPopup = viewModelBase;
     }

@@ -80,18 +80,19 @@ public partial class AccountInfoViewModel : ViewModelBase
 
     public async void DoAuth()
     {
-        _popupMessageService.Popup("Auth think, please wait...");
+        var message = GetViewModel<InfoPopupViewModel>();
+        message.InfoText = "Auth think, please wait...";
+        _popupMessageService.Popup(message);
         
         if(await _authService.Auth(CurrentAlp))
         {
-            _popupMessageService.ClosePopup();
-            _popupMessageService.Popup("Hello, " + _authService.SelectedAuth!.AuthLoginPassword.Login);
+            message.Dispose();
             IsLogged = true;
             _configurationService.SetConfigValue(CurrentConVar.AuthCurrent, CurrentAlp);
         }
         else
         {
-            _popupMessageService.ClosePopup();
+            message.Dispose();
             Logout();
             _popupMessageService.Popup("Well, shit is happened: " + _authService.Reason);
         }
@@ -100,7 +101,7 @@ public partial class AccountInfoViewModel : ViewModelBase
     public void Logout()
     {
         IsLogged = false;
-        CurrentAlp = new AuthLoginPassword("", "", "");
+        //CurrentAlp = new AuthLoginPassword("", "", "");
         _authService.ClearAuth();
     }
 

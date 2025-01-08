@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Nebula.Launcher.ViewHelper;
@@ -22,12 +23,23 @@ public partial class ServerEntryModelView : ViewModelBase
     private readonly RunnerService _runnerService = default!;
     private readonly PopupMessageService _popupMessageService;
 
-    [ObservableProperty] private bool _runVisible = true;
+    public bool RunVisible => Process == null;
 
     public ServerHubInfo ServerHubInfo { get; set; } = default!;
-    
-    
-    private Process? _process;
+
+
+    private Process? _p;
+    private Process? Process
+    {
+        get { return _p; }
+        set
+        {
+            _p = value;
+            OnPropertyChanged(nameof(RunVisible));
+        }
+    }
+
+
 
     public LogPopupModelView CurrLog;
 
@@ -55,65 +67,93 @@ public partial class ServerEntryModelView : ViewModelBase
         CurrLog = GetViewModel<LogPopupModelView>();
     }
 
-    public async void RunInstance()
+    public void RunInstance()
     {
-        var authProv = _authService.SelectedAuth;
-        
-        var buildInfo = await _contentService.GetBuildInfo(new RobustUrl(ServerHubInfo.Address), _cancellationService.Token);
+        Task.Run(RunAsync);
+    }
 
-        await _runnerService.PrepareRun(buildInfo, _cancellationService.Token);
-        
-        _process = Process.Start(new ProcessStartInfo()
-        {
-            FileName = "dotnet.exe",
-            Arguments = "./Nebula.Runner.dll",
-            Environment = {
-                { "ROBUST_AUTH_USERID", authProv?.UserId.ToString() } ,
-                { "ROBUST_AUTH_TOKEN",  authProv?.Token.Token } ,
-                { "ROBUST_AUTH_SERVER", authProv?.AuthLoginPassword.AuthServer } ,
-                { "ROBUST_AUTH_PUBKEY", buildInfo.BuildInfo.Auth.PublicKey } ,
-                { "GAME_URL",           ServerHubInfo.Address } ,
-                { "AUTH_LOGIN",         authProv?.AuthLoginPassword.Login } ,
-            },
-            CreateNoWindow = true, 
-            UseShellExecute = false, 
-            RedirectStandardOutput = true, 
-            RedirectStandardError = true, StandardOutputEncoding = Encoding.UTF8
-        });
-        
-        
-        if (_process is null)
-        {
-            return;
-        }
-        
-        _process.BeginOutputReadLine();
-        _process.BeginErrorReadLine();
-        
-        RunVisible = false;
-        
-        _process.OutputDataReceived += OnOutputDataReceived;
-        _process.ErrorDataReceived += OnErrorDataReceived;
-        
-        _process.Exited += OnExited;
+    public async Task RunAsync()
+    {
+         try
+         {
+             var authProv = _authService.SelectedAuth;
+
+             var buildInfo =
+                 await _contentService.GetBuildInfo(new RobustUrl(ServerHubInfo.Address), _cancellationService.Token);
+            
+             using (var loadingContext = GetViewModel<LoadingContextViewModel>())
+             {
+                 loadingContext.LoadingName = "Loading instance...";
+                 ((ILoadingHandler)loadingContext).AppendJob();
+                 
+                 _popupMessageService.Popup(loadingContext);
+                 
+                 
+                 await _runnerService.PrepareRun(buildInfo, loadingContext, _cancellationService.Token);
+
+                 Process = Process.Start(new ProcessStartInfo()
+                 {
+                     FileName = "dotnet.exe",
+                     Arguments = "./Nebula.Runner.dll",
+                     Environment =
+                     {
+                         { "ROBUST_AUTH_USERID", authProv?.UserId.ToString() },
+                         { "ROBUST_AUTH_TOKEN", authProv?.Token.Token },
+                         { "ROBUST_AUTH_SERVER", authProv?.AuthLoginPassword.AuthServer },
+                         { "ROBUST_AUTH_PUBKEY", buildInfo.BuildInfo.Auth.PublicKey },
+                         { "GAME_URL", ServerHubInfo.Address },
+                         { "AUTH_LOGIN", authProv?.AuthLoginPassword.Login },
+                     },
+                     CreateNoWindow = true,
+                     UseShellExecute = false,
+                     RedirectStandardOutput = true,
+                     RedirectStandardError = true, 
+                     StandardOutputEncoding = Encoding.UTF8
+                 });
+                 
+                 ((ILoadingHandler)loadingContext).AppendResolvedJob();
+             }
+            
+             if (Process is null)
+             {
+                 return;
+             }
+             
+             Process.EnableRaisingEvents = true;
+            
+             Process.BeginOutputReadLine();
+             Process.BeginErrorReadLine();
+
+             Process.OutputDataReceived += OnOutputDataReceived;
+             Process.ErrorDataReceived += OnErrorDataReceived;
+
+             Process.Exited += OnExited;
+         }
+         catch (TaskCanceledException e)
+         {
+             _popupMessageService.Popup("Task canceled");
+         }
+         catch (Exception e)
+         {
+             _popupMessageService.Popup(e);
+         }
     }
 
     private void OnExited(object? sender, EventArgs e)
     {
-        if (_process is null)
+        if (Process is null)
         {
             return;
         }
         
-        _process.OutputDataReceived -= OnOutputDataReceived;
-        _process.ErrorDataReceived -= OnErrorDataReceived;
-        _process.Exited -= OnExited;
+        Process.OutputDataReceived -= OnOutputDataReceived;
+        Process.ErrorDataReceived -= OnErrorDataReceived;
+        Process.Exited -= OnExited;
         
-        _debugService.Log("PROCESS EXIT WITH CODE " + _process.ExitCode);
+        _debugService.Log("PROCESS EXIT WITH CODE " + Process.ExitCode);
         
-        _process.Dispose();
-        _process = null;
-        RunVisible = true;
+        Process.Dispose();
+        Process = null;
     }
 
     private void OnErrorDataReceived(object sender, DataReceivedEventArgs e)
@@ -142,7 +182,7 @@ public partial class ServerEntryModelView : ViewModelBase
 
     public void StopInstance()
     {
-        _process?.Close();
+        Process?.CloseMainWindow();
     }
     
     static string FindDotnetPath()

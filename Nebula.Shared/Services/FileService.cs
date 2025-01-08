@@ -51,15 +51,24 @@ public class FileService
         return new FileApi(Path.Join(RootPath, path));
     }
 
-    public ZipFileApi OpenZip(string path, IFileApi fileApi)
+    public ZipFileApi? OpenZip(string path, IFileApi fileApi)
     {
-        if (!fileApi.TryOpen(path, out var zipStream))
-            return null;
+        Stream? zipStream = null;
+        try
+        {
+            if (!fileApi.TryOpen(path, out zipStream))
+                return null;
 
-        var zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read);
+            var zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read);
 
-        var prefix = "";
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) prefix = "Space Station 14.app/Contents/Resources/";
-        return new ZipFileApi(zipArchive, prefix);
+            var prefix = "";
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) prefix = "Space Station 14.app/Contents/Resources/";
+            return new ZipFileApi(zipArchive, prefix);
+        }
+        catch (Exception e)
+        {
+            zipStream?.Dispose();
+            throw;
+        }
     }
 }

@@ -47,11 +47,80 @@ public sealed class App(DebugService debugService, RunnerService runnerService, 
         args.Add("--ss14-address");
         args.Add(url.ToString());
         
-        await runnerService.Run(args.ToArray(), buildInfo, this, cancelTokenSource.Token);
+        await runnerService.Run(args.ToArray(), buildInfo, this, new ConsoleLoadingHandler(), cancelTokenSource.Token);
     }
 
     public void Redial(Uri uri, string text = "")
     {
+        
+    }
+}
+
+public sealed class ConsoleLoadingHandler : ILoadingHandler
+{
+    private int _currJobs;
+    private int _resolvedJobs;
+
+    private float _percent = 0f;
+    
+    public void SetJobsCount(int count)
+    {
+        _currJobs = count;
+        
+        UpdatePercent();
+        Draw();
+    }
+
+    public int GetJobsCount()
+    {
+        return _currJobs;
+    }
+
+    public void SetResolvedJobsCount(int count)
+    {
+        _resolvedJobs = count;
+        
+        UpdatePercent();
+        Draw();
+    }
+
+    public int GetResolvedJobsCount()
+    {
+        return _resolvedJobs;
+    }
+
+    private void UpdatePercent()
+    {
+        if(_currJobs == 0)
+        {
+            _percent = 0;
+            return;
+        }
+        
+        if(_resolvedJobs > _currJobs) return;
+        
+        _percent = _resolvedJobs /(float) _currJobs;
+    }
+
+    private void Draw()
+    {
+        var barCount = 10;
+        var fullCount = (int)(barCount * _percent);
+        var emptyCount = barCount - fullCount;
+        
+        Console.Write("\r");
+
+        for (var i = 0; i < fullCount; i++)
+        {
+            Console.Write("#");
+        }
+        
+        for (var i = 0; i < emptyCount; i++)
+        {
+            Console.Write(" ");
+        }
+        
+        Console.Write($"\t {_resolvedJobs}/{_currJobs}");
         
     }
 }

@@ -81,13 +81,16 @@ public sealed class EngineService
 
         try
         {
-            return _assemblyService.Mount(_fileService.OpenZip(version, _fileService.EngineFileApi));
+            var api = _fileService.OpenZip(version, _fileService.EngineFileApi);
+            if (api != null) return _assemblyService.Mount(api);
         }
         catch (Exception e)
         {
             _fileService.EngineFileApi.Remove(version);
             throw;
         }
+
+        return null;
     }
 
     public async Task DownloadEngine(string version)

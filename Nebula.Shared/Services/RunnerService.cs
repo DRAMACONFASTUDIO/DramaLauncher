@@ -12,7 +12,7 @@ public sealed class RunnerService(
     EngineService engineService,
     AssemblyService assemblyService)
 {
-    public async Task PrepareRun(RobustBuildInfo buildInfo, CancellationToken cancellationToken)
+    public async Task PrepareRun(RobustBuildInfo buildInfo, ILoadingHandler loadingHandler, CancellationToken cancellationToken)
     {
         debugService.Log("Prepare Content!");
 
@@ -21,11 +21,11 @@ public sealed class RunnerService(
         if (engine is null)
             throw new Exception("Engine version is not usable: " + buildInfo.BuildInfo.Build.EngineVersion);
         
-        await contentService.EnsureItems(buildInfo.RobustManifestInfo, cancellationToken);
+        await contentService.EnsureItems(buildInfo.RobustManifestInfo, loadingHandler, cancellationToken);
         await engineService.EnsureEngineModules("Robust.Client.WebView", buildInfo.BuildInfo.Build.EngineVersion);
     }
 
-    public async Task Run(string[] runArgs, RobustBuildInfo buildInfo, IRedialApi redialApi,
+    public async Task Run(string[] runArgs, RobustBuildInfo buildInfo, IRedialApi redialApi, ILoadingHandler loadingHandler,
         CancellationToken cancellationToken)
     {
         debugService.Log("Start Content!");
@@ -35,7 +35,7 @@ public sealed class RunnerService(
         if (engine is null)
             throw new Exception("Engine version is not usable: " + buildInfo.BuildInfo.Build.EngineVersion);
 
-        await contentService.EnsureItems(buildInfo.RobustManifestInfo, cancellationToken);
+        await contentService.EnsureItems(buildInfo.RobustManifestInfo, loadingHandler, cancellationToken);
 
         var extraMounts = new List<ApiMount>
         {
