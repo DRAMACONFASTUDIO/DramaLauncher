@@ -15,7 +15,7 @@
         <viewModels:ServerListViewModel />
     </Design.DataContext>
 
-    <Grid ColumnDefinitions="*" RowDefinitions="*,40">
+    <Grid ColumnDefinitions="*" RowDefinitions="*,40" Margin="15">
         <ScrollViewer Margin="0,0,0,10" Padding="0,0,8,0">
             <ItemsControl
                 Background="#00000000"

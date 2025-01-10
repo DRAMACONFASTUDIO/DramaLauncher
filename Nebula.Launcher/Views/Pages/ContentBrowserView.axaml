@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Nebula.Launcher.Views.Pages.ContentBrowserView"
+             x:DataType="viewModels:ContentBrowserViewModel">
+    <Design.DataContext>
+        <viewModels:ContentBrowserViewModel />
+    </Design.DataContext>
+    
+    <StackPanel>
+        <Border
+            BorderThickness="2,0,0,0"
+            CornerRadius="10"
+            Grid.Row="1">
+            <Grid ColumnDefinitions="*,40,40" RowDefinitions="*">
+                <TextBox
+                    Margin="0"
+                    Text="{Binding SearchText}"
+                    VerticalAlignment="Center"
+                    Watermark="Server name..." />
+                <Button
+                    Command="{Binding OnBackEnter}"
+                    Grid.Column="1"
+                    Padding="10">
+                    <Image Source="/Assets/filter.png" />
+                </Button>
+                <Button
+                    Command="{Binding OnGoEnter}"
+                    Grid.Column="2"
+                    Padding="10">
+                    <Image Source="/Assets/refresh.png" />
+                </Button>
+            </Grid>
+        </Border>
+    </StackPanel>
+</UserControl>
