@@ -45,7 +45,8 @@ public partial class MainViewModel : ViewModelBase
     private readonly List<ListItemTemplate> _templates =
     [
         new ListItemTemplate(typeof(AccountInfoViewModel), "Account", "Account"),
-        new ListItemTemplate(typeof(ServerListViewModel), "HomeRegular", "Servers")
+        new ListItemTemplate(typeof(ServerListViewModel), "HomeRegular", "Servers"),
+        new ListItemTemplate(typeof(ContentBrowserViewModel), "HomeRegular", "Content")
     ];
 
     [ObservableProperty]

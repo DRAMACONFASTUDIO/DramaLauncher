@@ -1,39 +1,69 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Nebula.Launcher.Views.Pages.ContentBrowserView"
-             x:DataType="viewModels:ContentBrowserViewModel">
+<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Nebula.Launcher.Views.Pages.ContentBrowserView"
+    x:DataType="viewModels:ContentBrowserViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Design.DataContext>
         <viewModels:ContentBrowserViewModel />
     </Design.DataContext>
-    
-    <StackPanel>
-        <Border
-            BorderThickness="2,0,0,0"
-            CornerRadius="10"
-            Grid.Row="1">
+
+    <StackPanel Margin="5">
+        <Border BorderThickness="2,0,0,0" CornerRadius="10">
             <Grid ColumnDefinitions="*,40,40" RowDefinitions="*">
                 <TextBox
                     Margin="0"
                     Text="{Binding SearchText}"
                     VerticalAlignment="Center"
-                    Watermark="Server name..." />
+                    Watermark="Path..." />
                 <Button
                     Command="{Binding OnBackEnter}"
                     Grid.Column="1"
                     Padding="10">
-                    <Image Source="/Assets/filter.png" />
+                    <Image Source="/Assets/back.png" />
                 </Button>
                 <Button
                     Command="{Binding OnGoEnter}"
                     Grid.Column="2"
                     Padding="10">
-                    <Image Source="/Assets/refresh.png" />
+                    <Image Source="/Assets/go.png" />
                 </Button>
             </Grid>
         </Border>
+        <ScrollViewer Margin="0,5,10,5">
+            <ItemsControl
+                Background="#00000000"
+                ItemsSource="{Binding Entries}"
+                Padding="0">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type viewModels:ContentEntry}">
+                        <Button
+                            Command="{Binding OnPathGo}"
+                            CornerRadius="0"
+                            HorizontalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal" Spacing="15">
+                                <Border
+                                    Background="#00000000"
+                                    BorderThickness="0,0,2,0"
+                                    CornerRadius="0">
+                                    <Image
+                                        Height="15"
+                                        Margin="10,0,10,0"
+                                        Source="{Binding IconPath}" />
+                                </Border>
+                                <Label>
+                                    <TextBlock Text="{Binding Name}" />
+                                </Label>
+                            </StackPanel>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
     </StackPanel>
 </UserControl>

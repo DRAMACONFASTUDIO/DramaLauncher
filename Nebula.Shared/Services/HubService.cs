@@ -9,6 +9,7 @@ public class HubService
     private readonly RestService _restService;
 
     public Action<HubServerChangedEventArgs>? HubServerChangedEventArgs;
+    public Action? HubServerLoaded;
     
     private bool _isUpdating = false;
     public HubService(ConfigurationService configurationService, RestService restService)
@@ -35,6 +36,7 @@ public class HubService
         }
         
         _isUpdating = false;
+        HubServerLoaded?.Invoke();
     }
     
 }

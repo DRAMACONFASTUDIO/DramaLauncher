@@ -34,7 +34,13 @@ public partial class ServerListViewModel : ViewModelBase
         _serviceProvider = serviceProvider;
         _hubService = hubService;
         hubService.HubServerChangedEventArgs += HubServerChangedEventArgs;
+        hubService.HubServerLoaded += HubServerLoaded;
         OnSearchChange += OnChangeSearch;
+    }
+
+    private void HubServerLoaded()
+    {
+        SortServers();
     }
 
     private void OnChangeSearch()
@@ -62,8 +68,6 @@ public partial class ServerListViewModel : ViewModelBase
         {
             UnsortedServers.Clear();
         }
-        
-        SortServers();
     }
 
     private void SortServers()
