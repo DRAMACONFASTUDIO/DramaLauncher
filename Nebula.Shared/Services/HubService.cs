@@ -28,12 +28,9 @@ public class HubService
     {
         if(_isUpdating) return;
         
-        
-        
         _serverList.Clear();
 
         _isUpdating = true;
-        
         
         HubServerChangedEventArgs?.Invoke(new HubServerChangedEventArgs([], HubServerChangeAction.Clear));
         

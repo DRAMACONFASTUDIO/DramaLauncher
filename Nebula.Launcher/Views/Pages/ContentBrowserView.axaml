@@ -15,21 +15,27 @@
 
     <StackPanel Margin="5">
         <Border BorderThickness="2,0,0,0" CornerRadius="10">
-            <Grid ColumnDefinitions="*,40,40" RowDefinitions="*">
+            <Grid ColumnDefinitions="*,2*,40,40" RowDefinitions="*">
                 <TextBox
+                    Margin="0"
+                    Text="{Binding ServerText}"
+                    VerticalAlignment="Center"
+                    Watermark="Server Url..." />
+                <TextBox
+                    Grid.Column="1"
                     Margin="0"
                     Text="{Binding SearchText}"
                     VerticalAlignment="Center"
                     Watermark="Path..." />
                 <Button
                     Command="{Binding OnBackEnter}"
-                    Grid.Column="1"
+                    Grid.Column="2"
                     Padding="10">
                     <Image Source="/Assets/back.png" />
                 </Button>
                 <Button
                     Command="{Binding OnGoEnter}"
-                    Grid.Column="2"
+                    Grid.Column="3"
                     Padding="10">
                     <Image Source="/Assets/go.png" />
                 </Button>

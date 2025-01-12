@@ -37,6 +37,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
     
     [ObservableProperty] private string _message = "";
     [ObservableProperty] private string _searchText = "";
+    [ObservableProperty] private string _serverText = "";
 
     private ContentEntry? _selectedEntry;
 
@@ -84,8 +85,8 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
 
     public ContentBrowserViewModel() : base()
     {
-        var a = new ContentEntry(this, "A:", "");
-        var b = new ContentEntry(this, "B", "");
+        var a = new ContentEntry(this, "A:","A", "");
+        var b = new ContentEntry(this, "B","B", "");
         a.TryAddChild(b);
            Entries.Add(a);
     }
@@ -100,10 +101,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
         _debugService = debugService;
         _popupService = popupService;
         
-        foreach (var info in hubService.ServerList)
-        {
-            _root.Add(new ContentEntry(this, ToContentUrl(info.Address.ToRobustUrl()),info.Address));
-        }   
+        FillRoot(hubService.ServerList);
 
         hubService.HubServerChangedEventArgs += HubServerChangedEventArgs;
         hubService.HubServerLoaded += GoHome;
@@ -128,46 +126,43 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
         if(obj.Action == HubServerChangeAction.Clear) _root.Clear();
         if (obj.Action == HubServerChangeAction.Add)
         {
-            foreach (var info in obj.Items)
-            {
-                _root.Add(new ContentEntry(this, ToContentUrl(info.Address.ToRobustUrl()),info.Address));
-            }   
+            FillRoot(obj.Items);
         };
+    }
+
+    private void FillRoot(IEnumerable<ServerHubInfo> infos)
+    {
+        foreach (var info in infos)
+        {
+            _root.Add(new ContentEntry(this, info.StatusData.Name,info.Address,info.Address));
+        }    
     }
 
     public async void Go(ContentPath path, bool appendHistory = true)
     {
-        if (path.Pathes.Count <= 1)
+        if (path.Pathes.Count > 0 && (path.Pathes[0].StartsWith("ss14://") || path.Pathes[0].StartsWith("ss14s://")))
+        {
+            ServerText = path.Pathes[0];
+        }
+        
+        if (string.IsNullOrEmpty(ServerText))
         {
             SearchText = "";
             GoHome();
             return;
         }
-
-        if (path.Pathes[0] != "content:" || path.Pathes.Count < 3)
+        
+        if (ServerText != SelectedEntry?.ServerName)
         {
-            return;
+            SelectedEntry = await CreateEntry(ServerText);
         }
-
+        
+        _debugService.Debug(path.Path);
+        
         var oriPath = path.Clone();
-        
-        path.Pathes.RemoveAt(0);
-        path.Pathes.RemoveAt(0);
-
-        var serverUrl = path.Pathes[0];
-        path.Pathes.RemoveAt(0);
-        
-        _debugService.Debug(path.Path + " " + serverUrl +" "+ SelectedEntry?.ServerName);
-        
         try
         {
-            ContentEntry entry;
-            if (serverUrl == SelectedEntry?.ServerName)
-                entry = SelectedEntry.GetRoot();
-            else
-                entry = await CreateEntry(serverUrl);
-            
-            if (!entry.TryGetEntry(path, out var centry))
+            if (SelectedEntry == null || !SelectedEntry.GetRoot().TryGetEntry(path, out var centry))
             {
                 throw new Exception("Not found!");
             }
@@ -209,7 +204,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
         var items = await _contentService.EnsureItems(info.RobustManifestInfo, loading,
             _cancellationService.Token);
 
-        var rootEntry = new ContentEntry(this,ToContentUrl(rurl), serverUrl);
+        var rootEntry = new ContentEntry(this,"","", serverUrl);
 
         foreach (var item in items)
         {
@@ -235,12 +230,6 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
         _history.RemoveAt(0);
         return h;
     }
-    
-    private string ToContentUrl(RobustUrl serverUrl)
-    {
-        var port = serverUrl.Uri.Port != -1 ? (":"+serverUrl.Uri.Port) : "";
-        return "content://" + serverUrl.Uri.Host + port;
-    }
 }
 
 public class ContentEntry
@@ -254,6 +243,7 @@ public class ContentEntry
     public bool IsDirectory => Item == null;
 
     public string Name { get; private set; }
+    public string PathName { get; private set; }
     public string ServerName { get; private set; }
     public IImage IconPath { get; set; } = DirImage;
 
@@ -271,7 +261,7 @@ public class ContentEntry
 
     public bool TryAddChild(ContentEntry contentEntry)
     {
-        if(_childs.TryAdd(contentEntry.Name, contentEntry))
+        if(_childs.TryAdd(contentEntry.PathName, contentEntry))
         {
             contentEntry.Parent = this;
             return true;
@@ -280,10 +270,11 @@ public class ContentEntry
         return false;
     }
 
-    internal ContentEntry(ContentBrowserViewModel viewModel, string name, string serverName)
+    internal ContentEntry(ContentBrowserViewModel viewModel, string name, string pathName, string serverName)
     {
         Name = name;
         ServerName = serverName;
+        PathName = pathName;
         _viewModel = viewModel;
     }
 
@@ -292,22 +283,21 @@ public class ContentEntry
         if (Parent != null)
         {
             var path = Parent.GetPath();
-            path.Pathes.Add(Name);
+            path.Pathes.Add(PathName);
             return path;
         }
-        return new ContentPath(Name);
+        return new ContentPath([PathName]);
     }
 
     public ContentEntry GetOrCreateDirectory(ContentPath rootPath)
     {
         if (rootPath.Pathes.Count == 0) return this;
-        
-        var fName = rootPath.Pathes[0];
-        rootPath.Pathes.RemoveAt(0);
+
+        var fName = rootPath.GetNext();
         
         if(!TryGetChild(fName, out var child))
         {
-            child = new ContentEntry(_viewModel, fName, ServerName);
+            child = new ContentEntry(_viewModel, fName, fName, ServerName);
             TryAddChild(child);
         }
 
@@ -325,7 +315,8 @@ public class ContentEntry
         var dir = path.GetDirectory();
         var dirEntry = GetOrCreateDirectory(dir);
 
-        var entry = new ContentEntry(_viewModel, path.GetName(), ServerName)
+        var name = path.GetName();
+        var entry = new ContentEntry(_viewModel, name, name, ServerName)
         {
             Item = item
         };
@@ -344,9 +335,8 @@ public class ContentEntry
             entry = this;
             return true;
         }
-        
-        var fName = path.Pathes[0];
-        path.Pathes.RemoveAt(0);
+
+        var fName = path.GetNext();
         
         if(!TryGetChild(fName, out var child))
         {
@@ -362,36 +352,60 @@ public class ContentEntry
     }
 }
 
+
 public struct ContentPath
 {
-    public List<string> Pathes;
+    public List<string> Pathes { get; private set; }
 
     public ContentPath(List<string> pathes)
     {
-        Pathes = pathes;
+        Pathes = pathes ?? new List<string>();
     }
 
     public ContentPath(string path)
     {
-        Pathes = path.Split("/").ToList();
+        Pathes = string.IsNullOrEmpty(path)
+            ? new List<string>()
+            : path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).ToList();
     }
 
     public ContentPath GetDirectory()
     {
-        var p = Pathes.ToList();
-        p.RemoveAt(Pathes.Count - 1);
-        return new ContentPath(p);
+        if (Pathes.Count == 0)
+            return this; // Root remains root when getting the directory.
+
+        var directoryPathes = Pathes.Take(Pathes.Count - 1).ToList();
+        return new ContentPath(directoryPathes);
     }
 
     public string GetName()
     {
+        if (Pathes.Count == 0)
+            throw new InvalidOperationException("Cannot get the name of the root path.");
+
         return Pathes.Last();
+    }
+
+    public string GetNext()
+    {
+        if (Pathes.Count == 0)
+            throw new InvalidOperationException("No elements left to retrieve from the root.");
+
+        var nextName = Pathes[0];
+        Pathes.RemoveAt(0);
+
+        return string.IsNullOrWhiteSpace(nextName) ? GetNext() : nextName;
     }
 
     public ContentPath Clone()
     {
-        return new ContentPath(Pathes.ToList());
+        return new ContentPath(new List<string>(Pathes));
     }
 
-    public string Path => string.Join("/", Pathes);
+    public string Path => Pathes.Count == 0 ? "/" : string.Join("/", Pathes);
+
+    public override string ToString()
+    {
+        return Path;
+    }
 }
