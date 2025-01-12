@@ -13,6 +13,7 @@ public sealed partial class LoadingContextViewModel : PopupViewModelBase, ILoadi
     public LoadingContextViewModel(IServiceProvider provider) : base(provider){}
     
     public string LoadingName { get; set; } = "Loading...";
+    public override bool IsClosable => false;
 
     public override string Title => LoadingName;
     

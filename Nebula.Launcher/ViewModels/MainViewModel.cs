@@ -46,7 +46,7 @@ public partial class MainViewModel : ViewModelBase
     [
         new ListItemTemplate(typeof(AccountInfoViewModel), "Account", "Account"),
         new ListItemTemplate(typeof(ServerListViewModel), "HomeRegular", "Servers"),
-        new ListItemTemplate(typeof(ContentBrowserViewModel), "HomeRegular", "Content")
+        new ListItemTemplate(typeof(ContentBrowserViewModel), "GridRegular", "Content")
     ];
 
     [ObservableProperty]
@@ -64,6 +64,8 @@ public partial class MainViewModel : ViewModelBase
     private PopupViewModelBase? _currentPopup;
     [ObservableProperty] 
     private string _currentTitle = "Default";
+
+    [ObservableProperty] private bool _isPopupClosable = true;
 
     [ObservableProperty]
     private ListItemTemplate? _selectedListItem;
@@ -88,6 +90,7 @@ public partial class MainViewModel : ViewModelBase
         {
             CurrentPopup = viewModelBase;
             CurrentTitle = viewModelBase.Title;
+            IsPopupClosable = viewModelBase.IsClosable;
             OnOpenRequired();
         }
         else

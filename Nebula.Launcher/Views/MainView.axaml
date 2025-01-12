@@ -110,6 +110,7 @@
                             </StackPanel>
                             <Button
                                 Command="{Binding ClosePopupCommand}"
+                                IsVisible="{Binding IsPopupClosable}"
                                 Content="X"
                                 CornerRadius="0,10,0,0"
                                 HorizontalAlignment="Right"

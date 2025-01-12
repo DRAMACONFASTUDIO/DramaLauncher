@@ -10,8 +10,8 @@ namespace Nebula.Shared.Services;
 [ServiceRegister]
 public class FileService
 {
-    public static string RootPath = Path.Join(Environment.GetFolderPath(
-        Environment.SpecialFolder.ApplicationData), "./Datum/");
+    public static readonly string RootPath = Path.Join(Environment.GetFolderPath(
+        Environment.SpecialFolder.ApplicationData), "Datum");
 
     private readonly DebugService _debugService;
     
@@ -25,10 +25,10 @@ public class FileService
     public FileService(DebugService debugService)
     {
         _debugService = debugService;
-        ContentFileApi = CreateFileApi("content/");
-        EngineFileApi = CreateFileApi("engine/");
-        ManifestFileApi = CreateFileApi("manifest/");
-        ConfigurationApi = CreateFileApi("config/");
+        ContentFileApi = CreateFileApi("content");
+        EngineFileApi = CreateFileApi("engine");
+        ManifestFileApi = CreateFileApi("manifest");
+        ConfigurationApi = CreateFileApi("config");
     }
 
     public List<RobustManifestItem> ManifestItems

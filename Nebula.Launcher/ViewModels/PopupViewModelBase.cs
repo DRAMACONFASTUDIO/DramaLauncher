@@ -7,6 +7,8 @@ namespace Nebula.Launcher.ViewModels;
 public abstract class PopupViewModelBase : ViewModelBase, IDisposable
 {
     private readonly IServiceProvider _serviceProvider;
+    public abstract string Title { get; }
+    public abstract bool IsClosable { get; }
 
     public PopupViewModelBase()
     {
@@ -17,7 +19,6 @@ public abstract class PopupViewModelBase : ViewModelBase, IDisposable
         _serviceProvider = serviceProvider;
     }
     
-    public abstract string Title { get; }
     public void Dispose()
     {
         _serviceProvider.GetService<PopupMessageService>()?.ClosePopup(this);

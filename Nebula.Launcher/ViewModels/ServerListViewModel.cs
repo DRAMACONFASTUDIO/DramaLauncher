@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Nebula.Launcher.ViewHelper;
 using Nebula.Launcher.Views.Pages;
@@ -33,9 +34,20 @@ public partial class ServerListViewModel : ViewModelBase
     {
         _serviceProvider = serviceProvider;
         _hubService = hubService;
+        
+        foreach (var info in _hubService.ServerList)
+        {
+            UnsortedServers.Add(info);
+        }
+        
         hubService.HubServerChangedEventArgs += HubServerChangedEventArgs;
         hubService.HubServerLoaded += HubServerLoaded;
         OnSearchChange += OnChangeSearch;
+
+        if (!hubService.IsUpdating)
+        {
+            SortServers();
+        }
     }
 
     private void HubServerLoaded()
@@ -72,12 +84,15 @@ public partial class ServerListViewModel : ViewModelBase
 
     private void SortServers()
     {
-        ServerInfos.Clear();
-        UnsortedServers.Sort(new ServerComparer());
-        foreach (var server in UnsortedServers.Where(CheckServerThink))
+        Task.Run(() =>
         {
-            ServerInfos.Add(CreateServerView(server));
-        }
+            ServerInfos.Clear();
+            UnsortedServers.Sort(new ServerComparer());
+            foreach (var server in UnsortedServers.Where(CheckServerThink))
+            {
+                ServerInfos.Add(CreateServerView(server));
+            }
+        });
     }
 
     private bool CheckServerThink(ServerHubInfo hubInfo)
@@ -100,7 +115,7 @@ public partial class ServerListViewModel : ViewModelBase
 
     public void UpdateRequired()
     {
-        _hubService.UpdateHub();
+        Task.Run(_hubService.UpdateHub);
     }
 }
 

@@ -18,6 +18,7 @@ public class ExceptionViewModel : PopupViewModelBase
     public ExceptionViewModel(IServiceProvider serviceProvider) : base(serviceProvider){}
     
     public override string Title => "Oopsie! Some shit is happened now!";
+    public override bool IsClosable => true;
 
     public ObservableCollection<Exception> Errors { get; } = new();
 

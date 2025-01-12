@@ -2,7 +2,9 @@ using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Media;
@@ -25,6 +27,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
     private readonly IServiceProvider _provider;
     private readonly ContentService _contentService;
     private readonly CancellationService _cancellationService;
+    private readonly FileService _fileService;
     private readonly DebugService _debugService;
     private readonly PopupMessageService _popupService;
     public ObservableCollection<ContentEntry> Entries { get; } = new();
@@ -42,14 +45,36 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
         get => _selectedEntry;
         set
         {
-            _selectedEntry = value;
+            if (value is { Item: not null })
+            {
+                if (_fileService.ContentFileApi.TryOpen(value.Item.Value.Hash, out var stream))
+                {
+                    var ext = Path.GetExtension(value.Item.Value.Path);
+                    
+                    var myTempFile = Path.Combine(Path.GetTempPath(), "tempie"+ ext);
+                    
+                    using(var sw = new FileStream(myTempFile, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        stream.CopyTo(sw);
+                    }
+                    stream.Dispose();
+                    
+                    var startInfo = new ProcessStartInfo(myTempFile)
+                    {
+                       UseShellExecute = true 
+                    };
+
+                    Process.Start(startInfo);
+                }
+                return;
+            }
+            
             Entries.Clear();
+            _selectedEntry = value;
+
+            if (value == null) return;
             
-            Console.WriteLine("Entries clear!");
-            
-            if(value == null) return;
-            
-            foreach (var (_,entryCh) in value.Childs)
+            foreach (var (_, entryCh) in value.Childs)
             {
                 Entries.Add(entryCh);
             }
@@ -71,11 +96,22 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
         _provider = provider;
         _contentService = contentService;
         _cancellationService = cancellationService;
+        _fileService = fileService;
         _debugService = debugService;
         _popupService = popupService;
+        
+        foreach (var info in hubService.ServerList)
+        {
+            _root.Add(new ContentEntry(this, ToContentUrl(info.Address.ToRobustUrl()),info.Address));
+        }   
 
         hubService.HubServerChangedEventArgs += HubServerChangedEventArgs;
         hubService.HubServerLoaded += GoHome;
+        
+        if (!hubService.IsUpdating)
+        {
+            GoHome();
+        }
     }
 
     private void GoHome()
@@ -99,9 +135,9 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
         };
     }
 
-    public async void Go(ContentPath path)
+    public async void Go(ContentPath path, bool appendHistory = true)
     {
-        if (path.Pathes.Count == 0)
+        if (path.Pathes.Count <= 1)
         {
             SearchText = "";
             GoHome();
@@ -112,8 +148,8 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
         {
             return;
         }
-        
-        SearchText = path.Path;
+
+        var oriPath = path.Clone();
         
         path.Pathes.RemoveAt(0);
         path.Pathes.RemoveAt(0);
@@ -136,21 +172,26 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
                 throw new Exception("Not found!");
             }
             
-            SelectedEntry = centry;
+            if (appendHistory)
+            {
+                AppendHistory(SearchText);
+            }
+            SearchText = oriPath.Path;
             
+            SelectedEntry = centry;
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
+            SearchText = oriPath.Path;
             _popupService.Popup(e);
-            //throw;
         }
     }
 
 
     public void OnBackEnter()
     {
-        Go(new ContentPath(GetHistory()));
+        Go(new ContentPath(GetHistory()), false);
     }
     
     public void OnGoEnter()
@@ -345,6 +386,11 @@ public struct ContentPath
     public string GetName()
     {
         return Pathes.Last();
+    }
+
+    public ContentPath Clone()
+    {
+        return new ContentPath(Pathes.ToList());
     }
 
     public string Path => string.Join("/", Pathes);

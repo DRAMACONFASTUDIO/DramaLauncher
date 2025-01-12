@@ -265,6 +265,7 @@ public sealed class LogPopupModelView : PopupViewModelBase
     }
     
     public override string Title => "LOG";
+    public override bool IsClosable => true;
 
     public ObservableCollection<LogInfo> Logs { get; } = new();
 
