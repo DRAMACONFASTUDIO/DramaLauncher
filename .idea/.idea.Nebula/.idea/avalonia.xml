@@ -14,6 +14,7 @@
         <entry key="Nebula.Launcher/Views/Pages/AccountInfoPage.axaml" value="Nebula.Launcher/Nebula.Launcher.csproj" />
         <entry key="Nebula.Launcher/Views/Pages/AccountInfoView.axaml" value="Nebula.Launcher/Nebula.Launcher.csproj" />
         <entry key="Nebula.Launcher/Views/Pages/ContentBrowserView.axaml" value="Nebula.Launcher/Nebula.Launcher.csproj" />
+        <entry key="Nebula.Launcher/Views/Pages/FavoriteServerListView.axaml" value="Nebula.Launcher/Nebula.Launcher.csproj" />
         <entry key="Nebula.Launcher/Views/Pages/ServerListPage.axaml" value="Nebula.Launcher/Nebula.Launcher.csproj" />
         <entry key="Nebula.Launcher/Views/Pages/ServerListView.axaml" value="Nebula.Launcher/Nebula.Launcher.csproj" />
         <entry key="Nebula.Launcher/Views/Popup/ExceptionView.axaml" value="Nebula.Launcher/Nebula.Launcher.csproj" />

@@ -13,44 +13,58 @@
         <viewModels:ContentBrowserViewModel />
     </Design.DataContext>
 
-    <StackPanel Margin="5">
-        <Border BorderThickness="2,0,0,0" CornerRadius="10">
-            <Grid ColumnDefinitions="*,2*,40,40" RowDefinitions="*">
-                <TextBox
-                    Margin="0"
-                    Text="{Binding ServerText}"
-                    VerticalAlignment="Center"
-                    Watermark="Server Url..." />
-                <TextBox
-                    Grid.Column="1"
-                    Margin="0"
-                    Text="{Binding SearchText}"
-                    VerticalAlignment="Center"
-                    Watermark="Path..." />
-                <Button
-                    Command="{Binding OnBackEnter}"
-                    Grid.Column="2"
-                    Padding="10">
-                    <Image Source="/Assets/back.png" />
-                </Button>
-                <Button
-                    Command="{Binding OnGoEnter}"
-                    Grid.Column="3"
-                    Padding="10">
-                    <Image Source="/Assets/go.png" />
-                </Button>
-            </Grid>
-        </Border>
-        <ScrollViewer Margin="0,5,10,5">
+    <Grid
+        ColumnDefinitions="*,2*,40,40"
+        Margin="10"
+        RowDefinitions="40,*">
+        <Border
+            BorderThickness="2,0,0,0"
+            CornerRadius="10,10,0,0"
+            Grid.ColumnSpan="4" />
+        <TextBox
+            Grid.Column="0"
+            Grid.Row="0"
+            Margin="5"
+            Text="{Binding ServerText}"
+            VerticalAlignment="Center"
+            Watermark="Server Url..." />
+        <TextBox
+            Grid.Column="1"
+            Grid.Row="0"
+            Margin="5"
+            Text="{Binding SearchText}"
+            VerticalAlignment="Center"
+            Watermark="Path..." />
+        <Button
+            Command="{Binding OnBackEnter}"
+            Grid.Column="2"
+            Grid.Row="0"
+            Padding="10">
+            <Image Source="/Assets/back.png" />
+        </Button>
+        <Button
+            Command="{Binding OnGoEnter}"
+            Grid.Column="3"
+            Grid.Row="0"
+            Padding="10">
+            <Image Source="/Assets/go.png" />
+        </Button>
+
+        <ScrollViewer
+            Grid.Column="0"
+            Grid.ColumnSpan="4"
+            Grid.Row="1"
+            Margin="0,0,0,5">
             <ItemsControl
                 Background="#00000000"
                 ItemsSource="{Binding Entries}"
-                Padding="0">
+                Padding="0,0,0,0">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type viewModels:ContentEntry}">
                         <Button
                             Command="{Binding OnPathGo}"
                             CornerRadius="0"
+                            Height="30"
                             HorizontalAlignment="Stretch">
                             <StackPanel Orientation="Horizontal" Spacing="15">
                                 <Border
@@ -63,7 +77,7 @@
                                         Source="{Binding IconPath}" />
                                 </Border>
                                 <Label>
-                                    <TextBlock Text="{Binding Name}" />
+                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
                                 </Label>
                             </StackPanel>
                         </Button>
@@ -71,5 +85,5 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
-    </StackPanel>
+    </Grid>
 </UserControl>

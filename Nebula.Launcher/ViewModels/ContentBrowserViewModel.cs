@@ -143,6 +143,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
         if (path.Pathes.Count > 0 && (path.Pathes[0].StartsWith("ss14://") || path.Pathes[0].StartsWith("ss14s://")))
         {
             ServerText = path.Pathes[0];
+            path = new ContentPath("");
         }
         
         if (string.IsNullOrEmpty(ServerText))
@@ -157,14 +158,14 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
             SelectedEntry = await CreateEntry(ServerText);
         }
         
-        _debugService.Debug(path.Path);
+        _debugService.Debug("Going to:" + path.Path);
         
         var oriPath = path.Clone();
         try
         {
             if (SelectedEntry == null || !SelectedEntry.GetRoot().TryGetEntry(path, out var centry))
             {
-                throw new Exception("Not found!");
+                throw new Exception("Not found! " + oriPath.Path);
             }
             
             if (appendHistory)
