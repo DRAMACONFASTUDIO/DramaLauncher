@@ -14,12 +14,12 @@ public class FileService
         Environment.SpecialFolder.ApplicationData), "Datum");
 
     private readonly DebugService _debugService;
-    
+    public readonly IReadWriteFileApi ConfigurationApi;
+
     public readonly IReadWriteFileApi ContentFileApi;
     public readonly IReadWriteFileApi EngineFileApi;
     public readonly IReadWriteFileApi ManifestFileApi;
-    public readonly IReadWriteFileApi ConfigurationApi;
-    
+
     private HashApi? _hashApi;
 
     public FileService(DebugService debugService)

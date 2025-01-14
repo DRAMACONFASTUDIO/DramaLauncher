@@ -1,7 +1,5 @@
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
-using Nebula.Launcher.ViewModels;
+using ContentBrowserViewModel = Nebula.Launcher.ViewModels.Pages.ContentBrowserViewModel;
 
 namespace Nebula.Launcher.Views.Pages;
 
@@ -11,7 +9,7 @@ public partial class ContentBrowserView : UserControl
     {
         InitializeComponent();
     }
-    
+
     public ContentBrowserView(ContentBrowserViewModel viewModel)
         : this()
     {

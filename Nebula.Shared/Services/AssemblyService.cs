@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 using Nebula.Shared.FileApis;
 using Robust.LoaderApi;
+using SharpZstd.Interop;
 
 namespace Nebula.Shared.Services;
 
@@ -13,23 +14,23 @@ public class AssemblyService
     private readonly List<Assembly> _assemblies = new();
     private readonly DebugService _debugService;
 
+    private readonly HashSet<string> _resolvingAssemblies = new();
+
     public AssemblyService(DebugService debugService)
     {
         _debugService = debugService;
-        
-        SharpZstd.Interop.ZstdImportResolver.ResolveLibrary += (name, assembly1, path) =>
+
+        ZstdImportResolver.ResolveLibrary += (name, assembly1, path) =>
         {
             if (name.Equals("SharpZstd.Native"))
             {
                 _debugService.Debug("RESOLVING SHARPZSTD THINK: " + name + " " + path);
-                GetRuntimeInfo(out string platform, out string architecture, out string extension);
-                string fileName = GetDllName(platform, architecture, extension);
+                GetRuntimeInfo(out var platform, out var architecture, out var extension);
+                var fileName = GetDllName(platform, architecture, extension);
 
-                if (NativeLibrary.TryLoad(fileName, assembly1, path, out var nativeLibrary))
-                {
-                    return nativeLibrary;
-                }
+                if (NativeLibrary.TryLoad(fileName, assembly1, path, out var nativeLibrary)) return nativeLibrary;
             }
+
             return IntPtr.Zero;
         };
     }
@@ -98,8 +99,6 @@ public class AssemblyService
         assemblyApi.TryOpen($"{name}.pdb", out pdb);
         return true;
     }
-    
-    private readonly HashSet<string> _resolvingAssemblies = new HashSet<string>();
 
     private Assembly? OnAssemblyResolving(AssemblyLoadContext context, AssemblyName name, AssemblyApi assemblyApi)
     {
@@ -108,7 +107,7 @@ public class AssemblyService
             _debugService.Debug($"Already resolving {name.Name}, skipping.");
             return null; // Prevent recursive resolution
         }
-        
+
         try
         {
             _resolvingAssemblies.Add(name.FullName);
@@ -130,18 +129,18 @@ public class AssemblyService
 
         if (NativeLibrary.TryLoad(a, out var handle))
             return handle;
-        
+
         _debugService.Error("Loading dll error! Not found");
 
         return IntPtr.Zero;
     }
-    
+
     public static string GetDllName(
         string platform,
         string architecture,
         string extension)
     {
-        string name = $"SharpZstd.Native.{extension}";
+        var name = $"SharpZstd.Native.{extension}";
         return name;
     }
 
@@ -172,24 +171,14 @@ public class AssemblyService
         }
 
         if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
-        {
             architecture = "x64";
-        }
         else if (RuntimeInformation.ProcessArchitecture == Architecture.X86)
-        {
             architecture = "x86";
-        }
         else if (RuntimeInformation.ProcessArchitecture == Architecture.Arm)
-        {
             architecture = "arm";
-        }
         else if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
-        {
             architecture = "arm64";
-        }
         else
-        {
             throw new PlatformNotSupportedException("Unsupported process architecture.");
-        }
     }
 }

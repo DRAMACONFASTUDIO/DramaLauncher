@@ -2,28 +2,28 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels"
+             xmlns:popup="clr-namespace:Nebula.Launcher.ViewModels.Popup"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Nebula.Launcher.Views.Popup.LoadingContextView"
-             x:DataType="viewModels:LoadingContextViewModel">
+             x:DataType="popup:LoadingContextViewModel">
     <Design.DataContext>
-        <viewModels:LoadingContextViewModel />
+        <popup:LoadingContextViewModel />
     </Design.DataContext>
     <StackPanel Margin="25" Spacing="15">
-        <ProgressBar Height="40" Maximum="{Binding CurrJobs}" Value="{Binding ResolvedJobs}"/>
+        <ProgressBar Height="40" Maximum="{Binding CurrJobs}" Value="{Binding ResolvedJobs}" />
         <Panel>
             <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Left" VerticalAlignment="Center">
                 <Label>
-                    <TextBlock Text="{Binding ResolvedJobs}"/>
+                    <TextBlock Text="{Binding ResolvedJobs}" />
                 </Label>
                 <Label>
                     /
                 </Label>
                 <Label>
-                    <TextBlock Text="{Binding CurrJobs}"/>
+                    <TextBlock Text="{Binding CurrJobs}" />
                 </Label>
             </StackPanel>
-            
+
             <Button HorizontalAlignment="Right" VerticalAlignment="Center">
                 <Label>Cancel</Label>
             </Button>

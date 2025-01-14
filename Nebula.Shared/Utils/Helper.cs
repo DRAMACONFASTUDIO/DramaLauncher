@@ -7,7 +7,7 @@ namespace Nebula.Shared.Utils;
 public static class Helper
 {
     public static readonly JsonSerializerOptions JsonWebOptions = new(JsonSerializerDefaults.Web);
-    
+
     public static void OpenBrowser(string url)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -22,12 +22,8 @@ public static class Helper
         {
             Process.Start("open", url);
         }
-        else
-        {
-            
-        }
     }
-    
+
     public static async Task<T> AsJson<T>(this HttpContent content) where T : notnull
     {
         var str = await content.ReadAsStringAsync();

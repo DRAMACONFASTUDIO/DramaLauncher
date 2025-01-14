@@ -15,7 +15,6 @@ public sealed class FileApi : IReadWriteFileApi
     {
         var fullPath = Path.Join(RootPath, path);
         if (File.Exists(fullPath))
-        {
             try
             {
                 stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -26,7 +25,6 @@ public sealed class FileApi : IReadWriteFileApi
                 stream = null;
                 return false;
             }
-        }
 
         stream = null;
         return false;
@@ -66,6 +64,7 @@ public sealed class FileApi : IReadWriteFileApi
         {
             // Log exception if necessary
         }
+
         return false;
     }
 

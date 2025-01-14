@@ -5,15 +5,15 @@ namespace Nebula.Shared.Services;
 
 public class ConVar<T>
 {
-    public string Name { get; }
-    public Type Type => typeof(T);
-    public T? DefaultValue { get; }
-
     public ConVar(string name, T? defaultValue = default)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
         DefaultValue = defaultValue;
     }
+
+    public string Name { get; }
+    public Type Type => typeof(T);
+    public T? DefaultValue { get; }
 }
 
 public static class ConVarBuilder
@@ -30,8 +30,8 @@ public static class ConVarBuilder
 [ServiceRegister]
 public class ConfigurationService
 {
-    private readonly FileService _fileService;
     private readonly DebugService _debugService;
+    private readonly FileService _fileService;
 
     public ConfigurationService(FileService fileService, DebugService debugService)
     {
@@ -46,7 +46,6 @@ public class ConfigurationService
         try
         {
             if (_fileService.ConfigurationApi.TryOpen(GetFileName(conVar), out var stream))
-            {
                 using (stream)
                 {
                     var obj = JsonSerializer.Deserialize<T>(stream);
@@ -56,7 +55,6 @@ public class ConfigurationService
                         return obj;
                     }
                 }
-            }
         }
         catch (Exception e)
         {
@@ -71,10 +69,11 @@ public class ConfigurationService
     {
         ArgumentNullException.ThrowIfNull(conVar);
         if (value == null) throw new ArgumentNullException(nameof(value));
-        
+
         if (!conVar.Type.IsInstanceOfType(value))
         {
-            _debugService.Error($"Type mismatch for config {conVar.Name}. Expected {conVar.Type}, got {value.GetType()}.");
+            _debugService.Error(
+                $"Type mismatch for config {conVar.Name}. Expected {conVar.Type}, got {value.GetType()}.");
             return;
         }
 
@@ -105,7 +104,8 @@ public class ConfigurationService
 
 public static class ConfigExtensions
 {
-    public static bool TryGetConfigValue<T>(this ConfigurationService configurationService, ConVar<T> conVar, [NotNullWhen(true)] out T? value)
+    public static bool TryGetConfigValue<T>(this ConfigurationService configurationService, ConVar<T> conVar,
+        [NotNullWhen(true)] out T? value)
     {
         ArgumentNullException.ThrowIfNull(configurationService);
         ArgumentNullException.ThrowIfNull(conVar);

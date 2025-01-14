@@ -2,13 +2,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels"
              xmlns:system="clr-namespace:System;assembly=System.Runtime"
+             xmlns:popup="clr-namespace:Nebula.Launcher.ViewModels.Popup"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Nebula.Launcher.Views.Popup.ExceptionView"
-             x:DataType="viewModels:ExceptionViewModel">
+             x:DataType="popup:ExceptionViewModel">
     <Design.DataContext>
-        <viewModels:ExceptionViewModel />
+        <popup:ExceptionViewModel />
     </Design.DataContext>
     <ScrollViewer Margin="10" Padding="0,0,8,0">
         <ItemsControl
@@ -20,9 +20,13 @@
                     <Border Background="#333333" CornerRadius="5" Margin="0,0,0,5">
                         <StackPanel>
                             <Border Background="#aa2222" CornerRadius="5,5,0,0">
-                                <Label Margin="4"><TextBlock Text="{Binding Message}"/></Label>
+                                <Label Margin="4">
+                                    <TextBlock Text="{Binding Message}" />
+                                </Label>
                             </Border>
-                            <Label Margin="4"><TextBlock Text="{Binding StackTrace}"/></Label>
+                            <Label Margin="4">
+                                <TextBlock Text="{Binding StackTrace}" />
+                            </Label>
                         </StackPanel>
                     </Border>
                 </DataTemplate>

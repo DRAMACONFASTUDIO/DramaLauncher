@@ -85,7 +85,8 @@
                 Padding="5">
                 <Label FontSize="10" Foreground="#777777">
                     <Panel>
-                        <Button Command="{Binding OpenLink}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0" Padding="0" CornerRadius="0" Background="#00000000">
+                        <Button Command="{Binding OpenLink}" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                Margin="0" Padding="0" CornerRadius="0" Background="#00000000">
                             <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center">https://cinka.ru/nebula-launcher/</TextBlock>
                         </Button>
                         <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center">prototype-product-v0.01</TextBlock>

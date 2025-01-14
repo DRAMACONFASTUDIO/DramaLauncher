@@ -15,7 +15,8 @@ public partial class ContentService
         return fileService.ContentFileApi.Has(item.Hash);
     }
 
-    public async Task<List<RobustManifestItem>> EnsureItems(ManifestReader manifestReader, Uri downloadUri, ILoadingHandler loadingHandler,
+    public async Task<List<RobustManifestItem>> EnsureItems(ManifestReader manifestReader, Uri downloadUri,
+        ILoadingHandler loadingHandler,
         CancellationToken cancellationToken)
     {
         List<RobustManifestItem> allItems = [];
@@ -66,7 +67,8 @@ public partial class ContentService
         return await EnsureItems(manifestReader, info.DownloadUri, loadingHandler, cancellationToken);
     }
 
-    public async Task Unpack(RobustManifestInfo info, IWriteFileApi otherApi, ILoadingHandler loadingHandler, CancellationToken cancellationToken)
+    public async Task Unpack(RobustManifestInfo info, IWriteFileApi otherApi, ILoadingHandler loadingHandler,
+        CancellationToken cancellationToken)
     {
         debugService.Log("Unpack manifest files");
         var items = await EnsureItems(info, loadingHandler, cancellationToken);
@@ -83,11 +85,13 @@ public partial class ContentService
             {
                 debugService.Error("OH FUCK!! " + item.Path);
             }
+
             loadingHandler.AppendResolvedJob();
         }
     }
 
-    public async Task Download(Uri contentCdn, List<RobustManifestItem> toDownload, ILoadingHandler loadingHandler, CancellationToken cancellationToken)
+    public async Task Download(Uri contentCdn, List<RobustManifestItem> toDownload, ILoadingHandler loadingHandler,
+        CancellationToken cancellationToken)
     {
         if (toDownload.Count == 0 || cancellationToken.IsCancellationRequested)
         {
@@ -110,7 +114,8 @@ public partial class ContentService
         var request = new HttpRequestMessage(HttpMethod.Post, contentCdn);
         request.Headers.Add(
             "X-Robust-Download-Protocol",
-            varService.GetConfigValue(CurrentConVar.ManifestDownloadProtocolVersion).ToString(CultureInfo.InvariantCulture));
+            varService.GetConfigValue(CurrentConVar.ManifestDownloadProtocolVersion)
+                .ToString(CultureInfo.InvariantCulture));
 
         request.Content = new ByteArrayContent(requestBody);
         request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
@@ -123,7 +128,7 @@ public partial class ContentService
             debugService.Log("Downloading is cancelled!");
             return;
         }
-        
+
         downloadJobWatch.Dispose();
 
         response.EnsureSuccessStatusCode();
@@ -163,9 +168,9 @@ public partial class ContentService
             var readBuffer = new byte[1024];
 
             var i = 0;
-            
+
             loadingHandler.AppendJob(toDownload.Count);
-            
+
             foreach (var item in toDownload)
             {
                 if (cancellationToken.IsCancellationRequested)

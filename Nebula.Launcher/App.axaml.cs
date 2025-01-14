@@ -1,22 +1,19 @@
 using System;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
-using System.Linq;
-using System.Reflection;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
-using Nebula.Launcher.ViewModels;
 using Nebula.Launcher.Views;
 using Nebula.Shared;
 
 namespace Nebula.Launcher;
 
-public partial class App : Application
+public class App : Application
 {
     private IServiceProvider _serviceProvider = null!;
-    
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -26,11 +23,11 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
         services.AddAvaloniaServices();
-        services.AddViews();
         services.AddServices();
-        
+        services.AddViews();
+
         _serviceProvider = services.BuildServiceProvider();
-        
+
         switch (ApplicationLifetime)
         {
             case IClassicDesktopStyleApplicationLifetime desktop:
@@ -52,9 +49,6 @@ public partial class App : Application
             BindingPlugins.DataValidators.OfType<DataAnnotationsValidationPlugin>().ToArray();
 
         // remove each entry found
-        foreach (var plugin in dataValidationPluginsToRemove)
-        {
-            BindingPlugins.DataValidators.Remove(plugin);
-        }
+        foreach (var plugin in dataValidationPluginsToRemove) BindingPlugins.DataValidators.Remove(plugin);
     }
 }

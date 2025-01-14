@@ -4,7 +4,7 @@ public interface ILoadingHandler
 {
     public void SetJobsCount(int count);
     public int GetJobsCount();
-    
+
     public void SetResolvedJobsCount(int count);
     public int GetResolvedJobsCount();
 
@@ -30,7 +30,7 @@ public interface ILoadingHandler
     }
 }
 
-public sealed class QueryJob: IDisposable
+public sealed class QueryJob : IDisposable
 {
     private readonly ILoadingHandler _handler;
 
@@ -39,7 +39,7 @@ public sealed class QueryJob: IDisposable
         _handler = handler;
         handler.AppendJob();
     }
-    
+
     public void Dispose()
     {
         _handler.AppendResolvedJob();

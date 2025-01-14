@@ -5,25 +5,30 @@ namespace Nebula.Shared.Services;
 [ServiceRegister]
 public class DebugService : IDisposable
 {
-    public ILogger Logger;
-
     private static string LogPath = Path.Combine(FileService.RootPath, "log");
     public DateTime LogDate = DateTime.Now;
+    public ILogger Logger;
     private FileStream LogStream;
     private StreamWriter LogWriter;
 
     public DebugService(ILogger logger)
     {
         Logger = logger;
-        
+
         //if (!Directory.Exists(LogPath))
-         //   Directory.CreateDirectory(LogPath);
-        
+        //   Directory.CreateDirectory(LogPath);
+
         //var filename = String.Format("{0:yyyy-MM-dd}.txt", DateTime.Now);
 
         //LogStream = File.Open(Path.Combine(LogPath, filename),
         //    FileMode.Append, FileAccess.Write);
         //LogWriter = new StreamWriter(LogStream);
+    }
+
+    public void Dispose()
+    {
+        LogWriter.Dispose();
+        LogStream.Dispose();
     }
 
     public void Debug(string message)
@@ -44,14 +49,8 @@ public class DebugService : IDisposable
     public void Error(Exception e)
     {
         Error(e.Message + "\r\n" + e.StackTrace);
-        if(e.InnerException != null)
+        if (e.InnerException != null)
             Error(e.InnerException);
-    }
-
-    public void Dispose()
-    {
-        LogWriter.Dispose();
-        LogStream.Dispose();
     }
 
     private void Log(LoggerCategory category, string message)

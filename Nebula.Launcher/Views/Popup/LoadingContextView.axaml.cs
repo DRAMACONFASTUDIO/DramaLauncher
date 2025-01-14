@@ -1,5 +1,5 @@
 using Avalonia.Controls;
-using Nebula.Launcher.ViewModels;
+using LoadingContextViewModel = Nebula.Launcher.ViewModels.Popup.LoadingContextViewModel;
 
 namespace Nebula.Launcher.Views.Popup;
 
@@ -9,8 +9,8 @@ public partial class LoadingContextView : UserControl
     {
         InitializeComponent();
     }
-    
-    public LoadingContextView(LoadingContextViewModel viewModel): this()
+
+    public LoadingContextView(LoadingContextViewModel viewModel) : this()
     {
         DataContext = viewModel;
     }

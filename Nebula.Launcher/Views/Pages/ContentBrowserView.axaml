@@ -3,14 +3,14 @@
     d:DesignWidth="800"
     mc:Ignorable="d"
     x:Class="Nebula.Launcher.Views.Pages.ContentBrowserView"
-    x:DataType="viewModels:ContentBrowserViewModel"
+    x:DataType="pages:ContentBrowserViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:pages="clr-namespace:Nebula.Launcher.ViewModels.Pages">
     <Design.DataContext>
-        <viewModels:ContentBrowserViewModel />
+        <pages:ContentBrowserViewModel />
     </Design.DataContext>
 
     <Grid
@@ -60,7 +60,7 @@
                 ItemsSource="{Binding Entries}"
                 Padding="0,0,0,0">
                 <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="{x:Type viewModels:ContentEntry}">
+                    <DataTemplate DataType="{x:Type pages:ContentEntry}">
                         <Button
                             Command="{Binding OnPathGo}"
                             CornerRadius="0"

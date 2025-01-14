@@ -11,35 +11,37 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Microsoft.Extensions.DependencyInjection;
-using Nebula.Launcher.ViewHelper;
+using Nebula.Launcher.Services;
+using Nebula.Launcher.ViewModels.Popup;
 using Nebula.Launcher.Views.Pages;
-using Nebula.Shared;
 using Nebula.Shared.Models;
 using Nebula.Shared.Services;
 using Nebula.Shared.Utils;
 
-namespace Nebula.Launcher.ViewModels;
+namespace Nebula.Launcher.ViewModels.Pages;
 
 [ViewModelRegister(typeof(ContentBrowserView))]
+[ConstructGenerator]
 public sealed partial class ContentBrowserViewModel : ViewModelBase
 {
-    private readonly IServiceProvider _provider;
-    private readonly ContentService _contentService;
-    private readonly CancellationService _cancellationService;
-    private readonly FileService _fileService;
-    private readonly DebugService _debugService;
-    private readonly PopupMessageService _popupService;
-    public ObservableCollection<ContentEntry> Entries { get; } = new();
     private readonly List<ContentEntry> _root = new();
 
-    private List<string> _history = new();
-    
+    private readonly List<string> _history = new();
+
     [ObservableProperty] private string _message = "";
     [ObservableProperty] private string _searchText = "";
-    [ObservableProperty] private string _serverText = "";
 
     private ContentEntry? _selectedEntry;
+    [ObservableProperty] private string _serverText = "";
+    [GenerateProperty] private ContentService ContentService { get; } = default!;
+    [GenerateProperty] private CancellationService CancellationService { get; } = default!;
+    [GenerateProperty] private FileService FileService { get; } = default!;
+    [GenerateProperty] private DebugService DebugService { get; } = default!;
+    [GenerateProperty] private PopupMessageService PopupService { get; } = default!;
+    [GenerateProperty] private HubService HubService { get; } = default!;
+    [GenerateProperty] private ViewHelperService ViewHelperService { get; } = default!;
+
+    public ObservableCollection<ContentEntry> Entries { get; } = new();
 
     public ContentEntry? SelectedEntry
     {
@@ -48,94 +50,73 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
         {
             if (value is { Item: not null })
             {
-                if (_fileService.ContentFileApi.TryOpen(value.Item.Value.Hash, out var stream))
+                if (FileService.ContentFileApi.TryOpen(value.Item.Value.Hash, out var stream))
                 {
                     var ext = Path.GetExtension(value.Item.Value.Path);
-                    
-                    var myTempFile = Path.Combine(Path.GetTempPath(), "tempie"+ ext);
-                    
-                    using(var sw = new FileStream(myTempFile, FileMode.Create, FileAccess.Write, FileShare.None))
+
+                    var myTempFile = Path.Combine(Path.GetTempPath(), "tempie" + ext);
+
+                    using (var sw = new FileStream(myTempFile, FileMode.Create, FileAccess.Write, FileShare.None))
                     {
                         stream.CopyTo(sw);
                     }
+
                     stream.Dispose();
-                    
+
                     var startInfo = new ProcessStartInfo(myTempFile)
                     {
-                       UseShellExecute = true 
+                        UseShellExecute = true
                     };
 
                     Process.Start(startInfo);
                 }
+
                 return;
             }
-            
+
             Entries.Clear();
             _selectedEntry = value;
 
             if (value == null) return;
-            
-            foreach (var (_, entryCh) in value.Childs)
-            {
-                Entries.Add(entryCh);
-            }
+
+            foreach (var (_, entryCh) in value.Childs) Entries.Add(entryCh);
         }
     }
 
 
-    public ContentBrowserViewModel() : base()
+    protected override void InitialiseInDesignMode()
     {
-        var a = new ContentEntry(this, "A:","A", "");
-        var b = new ContentEntry(this, "B","B", "");
+        var a = new ContentEntry(this, "A:", "A", "");
+        var b = new ContentEntry(this, "B", "B", "");
         a.TryAddChild(b);
-           Entries.Add(a);
+        Entries.Add(a);
     }
 
-    public ContentBrowserViewModel(IServiceProvider provider, ContentService contentService, CancellationService cancellationService, 
-        FileService fileService, HubService hubService, DebugService debugService, PopupMessageService popupService) : base(provider)
+    protected override void Initialise()
     {
-        _provider = provider;
-        _contentService = contentService;
-        _cancellationService = cancellationService;
-        _fileService = fileService;
-        _debugService = debugService;
-        _popupService = popupService;
-        
-        FillRoot(hubService.ServerList);
+        FillRoot(HubService.ServerList);
 
-        hubService.HubServerChangedEventArgs += HubServerChangedEventArgs;
-        hubService.HubServerLoaded += GoHome;
-        
-        if (!hubService.IsUpdating)
-        {
-            GoHome();
-        }
+        HubService.HubServerChangedEventArgs += HubServerChangedEventArgs;
+        HubService.HubServerLoaded += GoHome;
+
+        if (!HubService.IsUpdating) GoHome();
     }
 
     private void GoHome()
     {
         SelectedEntry = null;
-        foreach (var entry in _root)
-        {
-            Entries.Add(entry);
-        }
+        foreach (var entry in _root) Entries.Add(entry);
     }
 
     private void HubServerChangedEventArgs(HubServerChangedEventArgs obj)
     {
-        if(obj.Action == HubServerChangeAction.Clear) _root.Clear();
-        if (obj.Action == HubServerChangeAction.Add)
-        {
-            FillRoot(obj.Items);
-        };
+        if (obj.Action == HubServerChangeAction.Clear) _root.Clear();
+        if (obj.Action == HubServerChangeAction.Add) FillRoot(obj.Items);
     }
 
     private void FillRoot(IEnumerable<ServerHubInfo> infos)
     {
-        foreach (var info in infos)
-        {
-            _root.Add(new ContentEntry(this, info.StatusData.Name,info.Address,info.Address));
-        }    
+        foreach (var info in infos) _root.Add(new ContentEntry(this, info.StatusData.Name, info.Address, info.Address));
     }
 
     public async void Go(ContentPath path, bool appendHistory = true)
@@ -145,42 +126,34 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
             ServerText = path.Pathes[0];
             path = new ContentPath("");
         }
-        
+
         if (string.IsNullOrEmpty(ServerText))
         {
             SearchText = "";
             GoHome();
             return;
         }
-        
-        if (ServerText != SelectedEntry?.ServerName)
-        {
-            SelectedEntry = await CreateEntry(ServerText);
-        }
-        
-        _debugService.Debug("Going to:" + path.Path);
-        
+
+        if (ServerText != SelectedEntry?.ServerName) SelectedEntry = await CreateEntry(ServerText);
+
+        DebugService.Debug("Going to:" + path.Path);
+
         var oriPath = path.Clone();
         try
         {
             if (SelectedEntry == null || !SelectedEntry.GetRoot().TryGetEntry(path, out var centry))
-            {
                 throw new Exception("Not found! " + oriPath.Path);
-            }
-            
-            if (appendHistory)
-            {
-                AppendHistory(SearchText);
-            }
+
+            if (appendHistory) AppendHistory(SearchText);
             SearchText = oriPath.Path;
-            
+
             SelectedEntry = centry;
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
             SearchText = oriPath.Path;
-            _popupService.Popup(e);
+            PopupService.Popup(e);
         }
     }
 
@@ -189,7 +162,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
     {
         Go(new ContentPath(GetHistory()), false);
     }
-    
+
     public void OnGoEnter()
     {
         Go(new ContentPath(SearchText));
@@ -198,21 +171,21 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
     private async Task<ContentEntry> CreateEntry(string serverUrl)
     {
         var rurl = serverUrl.ToRobustUrl();
-        var info = await _contentService.GetBuildInfo(rurl, _cancellationService.Token);
-        var loading = _provider.GetService<LoadingContextViewModel>()!;
+        var info = await ContentService.GetBuildInfo(rurl, CancellationService.Token);
+        var loading = ViewHelperService.GetViewModel<LoadingContextViewModel>();
         loading.LoadingName = "Loading entry";
-        _popupService.Popup(loading);
-        var items = await _contentService.EnsureItems(info.RobustManifestInfo, loading,
-            _cancellationService.Token);
+        PopupService.Popup(loading);
+        var items = await ContentService.EnsureItems(info.RobustManifestInfo, loading,
+            CancellationService.Token);
 
-        var rootEntry = new ContentEntry(this,"","", serverUrl);
+        var rootEntry = new ContentEntry(this, "", "", serverUrl);
 
         foreach (var item in items)
         {
             var path = new ContentPath(item.Path);
             rootEntry.CreateItem(path, item);
         }
-        
+
         loading.Dispose();
 
         return rootEntry;
@@ -220,7 +193,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
 
     private void AppendHistory(string str)
     {
-        if(_history.Count >= 10) _history.RemoveAt(9);
+        if (_history.Count >= 10) _history.RemoveAt(9);
         _history.Insert(0, str);
     }
 
@@ -235,41 +208,13 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
 
 public class ContentEntry
 {
-    private readonly ContentBrowserViewModel _viewModel;
-
     public static IImage DirImage = new Bitmap(AssetLoader.Open(new Uri("avares://Nebula.Launcher/Assets/dir.png")));
     public static IImage IconImage = new Bitmap(AssetLoader.Open(new Uri("avares://Nebula.Launcher/Assets/file.png")));
 
-    public RobustManifestItem? Item;
-    public bool IsDirectory => Item == null;
-
-    public string Name { get; private set; }
-    public string PathName { get; private set; }
-    public string ServerName { get; private set; }
-    public IImage IconPath { get; set; } = DirImage;
-
-    public ContentEntry? Parent { get; private set; }
-    public bool IsRoot => Parent == null;
-
     private readonly Dictionary<string, ContentEntry> _childs = new();
+    private readonly ContentBrowserViewModel _viewModel;
 
-    public IReadOnlyDictionary<string, ContentEntry> Childs => _childs.ToFrozenDictionary();
-
-    public bool TryGetChild(string name,[NotNullWhen(true)] out ContentEntry? child)
-    {
-        return _childs.TryGetValue(name, out child);
-    }
-
-    public bool TryAddChild(ContentEntry contentEntry)
-    {
-        if(_childs.TryAdd(contentEntry.PathName, contentEntry))
-        {
-            contentEntry.Parent = this;
-            return true;
-        }
-
-        return false;
-    }
+    public RobustManifestItem? Item;
 
     internal ContentEntry(ContentBrowserViewModel viewModel, string name, string pathName, string serverName)
     {
@@ -277,6 +222,34 @@ public class ContentEntry
         ServerName = serverName;
         PathName = pathName;
         _viewModel = viewModel;
+    }
+
+    public bool IsDirectory => Item == null;
+
+    public string Name { get; private set; }
+    public string PathName { get; }
+    public string ServerName { get; }
+    public IImage IconPath { get; set; } = DirImage;
+
+    public ContentEntry? Parent { get; private set; }
+    public bool IsRoot => Parent == null;
+
+    public IReadOnlyDictionary<string, ContentEntry> Childs => _childs.ToFrozenDictionary();
+
+    public bool TryGetChild(string name, [NotNullWhen(true)] out ContentEntry? child)
+    {
+        return _childs.TryGetValue(name, out child);
+    }
+
+    public bool TryAddChild(ContentEntry contentEntry)
+    {
+        if (_childs.TryAdd(contentEntry.PathName, contentEntry))
+        {
+            contentEntry.Parent = this;
+            return true;
+        }
+
+        return false;
     }
 
     public ContentPath GetPath()
@@ -287,6 +260,7 @@ public class ContentEntry
             path.Pathes.Add(PathName);
             return path;
         }
+
         return new ContentPath([PathName]);
     }
 
@@ -295,8 +269,8 @@ public class ContentEntry
         if (rootPath.Pathes.Count == 0) return this;
 
         var fName = rootPath.GetNext();
-        
-        if(!TryGetChild(fName, out var child))
+
+        if (!TryGetChild(fName, out var child))
         {
             child = new ContentEntry(_viewModel, fName, fName, ServerName);
             TryAddChild(child);
@@ -321,7 +295,7 @@ public class ContentEntry
         {
             Item = item
         };
-        
+
         dirEntry.TryAddChild(entry);
         entry.IconPath = IconImage;
         return entry;
@@ -330,7 +304,7 @@ public class ContentEntry
     public bool TryGetEntry(ContentPath path, out ContentEntry? entry)
     {
         entry = null;
-        
+
         if (path.Pathes.Count == 0)
         {
             entry = this;
@@ -338,11 +312,8 @@ public class ContentEntry
         }
 
         var fName = path.GetNext();
-        
-        if(!TryGetChild(fName, out var child))
-        {
-            return false;
-        }
+
+        if (!TryGetChild(fName, out var child)) return false;
 
         return child.TryGetEntry(path, out entry);
     }
@@ -353,14 +324,13 @@ public class ContentEntry
     }
 }
 
-
 public struct ContentPath
 {
-    public List<string> Pathes { get; private set; }
+    public List<string> Pathes { get; }
 
     public ContentPath(List<string> pathes)
     {
-        Pathes = pathes ?? new List<string>();
+        Pathes = pathes;
     }
 
     public ContentPath(string path)

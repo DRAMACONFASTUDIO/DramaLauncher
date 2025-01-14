@@ -121,7 +121,7 @@ public static class UriHelper
     {
         return new Uri(GetServerApiAddress(serverAddress), "client.zip");
     }
-    
+
     [Pure]
     public static Uri AddParameter(this Uri url, string paramName, string paramValue)
     {

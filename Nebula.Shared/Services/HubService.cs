@@ -8,43 +8,43 @@ public class HubService
     private readonly ConfigurationService _configurationService;
     private readonly RestService _restService;
 
+    private readonly List<ServerHubInfo> _serverList = new();
+
     public Action<HubServerChangedEventArgs>? HubServerChangedEventArgs;
     public Action? HubServerLoaded;
 
-    private readonly List<ServerHubInfo> _serverList = new();
-    public IReadOnlyList<ServerHubInfo> ServerList => _serverList;
-    
-    private bool _isUpdating = false;
-    public bool IsUpdating => _isUpdating;
     public HubService(ConfigurationService configurationService, RestService restService)
     {
         _configurationService = configurationService;
         _restService = restService;
-        
+
         UpdateHub();
     }
 
+    public IReadOnlyList<ServerHubInfo> ServerList => _serverList;
+    public bool IsUpdating { get; private set; }
+
     public async void UpdateHub()
     {
-        if(_isUpdating) return;
-        
+        if (IsUpdating) return;
+
         _serverList.Clear();
 
-        _isUpdating = true;
-        
+        IsUpdating = true;
+
         HubServerChangedEventArgs?.Invoke(new HubServerChangedEventArgs([], HubServerChangeAction.Clear));
-        
+
         foreach (var urlStr in _configurationService.GetConfigValue(CurrentConVar.Hub)!)
         {
-            var servers = await _restService.GetAsyncDefault<List<ServerHubInfo>>(new Uri(urlStr), [], CancellationToken.None);
+            var servers =
+                await _restService.GetAsyncDefault<List<ServerHubInfo>>(new Uri(urlStr), [], CancellationToken.None);
             _serverList.AddRange(servers);
             HubServerChangedEventArgs?.Invoke(new HubServerChangedEventArgs(servers, HubServerChangeAction.Add));
         }
-        
-        _isUpdating = false;
+
+        IsUpdating = false;
         HubServerLoaded?.Invoke();
     }
-    
 }
 
 public class HubServerChangedEventArgs : EventArgs
@@ -61,5 +61,7 @@ public class HubServerChangedEventArgs : EventArgs
 
 public enum HubServerChangeAction
 {
-    Add, Remove, Clear,
+    Add,
+    Remove,
+    Clear
 }

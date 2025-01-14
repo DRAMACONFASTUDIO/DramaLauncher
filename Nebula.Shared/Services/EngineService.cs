@@ -14,11 +14,11 @@ public sealed class EngineService
     private readonly RestService _restService;
     private readonly IServiceProvider _serviceProvider;
     private readonly ConfigurationService _varService;
-    
+
+    private readonly Task _currInfoTask;
+
     public Dictionary<string, Module> ModuleInfos = default!;
     public Dictionary<string, EngineVersionInfo> VersionInfos = default!;
-
-    private Task _currInfoTask;
 
     public EngineService(RestService restService, DebugService debugService, ConfigurationService varService,
         FileService fileService, IServiceProvider serviceProvider, AssemblyService assemblyService)
@@ -52,7 +52,7 @@ public sealed class EngineService
     public EngineBuildInfo? GetVersionInfo(string version)
     {
         CheckAndWaitValidation();
-        
+
         if (!VersionInfos.TryGetValue(version, out var foundVersion))
             return null;
 
@@ -120,7 +120,7 @@ public sealed class EngineService
     public EngineBuildInfo? GetModuleBuildInfo(string moduleName, string version)
     {
         CheckAndWaitValidation();
-        
+
         if (!ModuleInfos.TryGetValue(moduleName, out var module) ||
             !module.Versions.TryGetValue(version, out var value))
             return null;
@@ -140,7 +140,7 @@ public sealed class EngineService
     public string ResolveModuleVersion(string moduleName, string engineVersion)
     {
         CheckAndWaitValidation();
-        
+
         var engineVersionObj = Version.Parse(engineVersion);
         var module = ModuleInfos[moduleName];
         var selectedVersion = module.Versions.Select(kv => new { Version = Version.Parse(kv.Key), kv.Key, kv.Value })
@@ -192,9 +192,9 @@ public sealed class EngineService
 
     private void CheckAndWaitValidation()
     {
-        if (_currInfoTask.IsCompleted) 
+        if (_currInfoTask.IsCompleted)
             return;
-        
+
         _debugService.Debug("thinks is not done yet, please wait");
         _currInfoTask.Wait();
     }

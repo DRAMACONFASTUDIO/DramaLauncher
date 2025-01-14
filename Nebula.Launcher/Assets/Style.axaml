@@ -57,7 +57,7 @@
         <Setter Property="Padding" Value="8" />
         <Setter Property="Background" Value="#00000000" />
     </Style>
-    
+
     <Style Selector="ListBox.AccountSelector > ListBoxItem">
         <Setter Property="CornerRadius" Value="0" />
         <Setter Property="Margin" Value="0,0,0,0" />
@@ -65,7 +65,7 @@
         <Setter Property="Background" Value="#00000000" />
         <Setter Property="Focusable" Value="False" />
     </Style>
-    
+
     <Style Selector="ListBox.AccountSelector > ListBoxItem:selected">
         <Setter Property="Background" Value="#00000000" />
     </Style>

@@ -10,7 +10,7 @@ public class AssemblyApi : IFileApi
     {
         _root = root;
     }
-    
+
     public bool TryOpen(string path, out Stream? stream)
     {
         return _root.TryOpen(path, out stream);

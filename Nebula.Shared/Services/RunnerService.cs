@@ -12,7 +12,8 @@ public sealed class RunnerService(
     EngineService engineService,
     AssemblyService assemblyService)
 {
-    public async Task PrepareRun(RobustBuildInfo buildInfo, ILoadingHandler loadingHandler, CancellationToken cancellationToken)
+    public async Task PrepareRun(RobustBuildInfo buildInfo, ILoadingHandler loadingHandler,
+        CancellationToken cancellationToken)
     {
         debugService.Log("Prepare Content!");
 
@@ -20,12 +21,13 @@ public sealed class RunnerService(
 
         if (engine is null)
             throw new Exception("Engine version is not usable: " + buildInfo.BuildInfo.Build.EngineVersion);
-        
+
         await contentService.EnsureItems(buildInfo.RobustManifestInfo, loadingHandler, cancellationToken);
         await engineService.EnsureEngineModules("Robust.Client.WebView", buildInfo.BuildInfo.Build.EngineVersion);
     }
 
-    public async Task Run(string[] runArgs, RobustBuildInfo buildInfo, IRedialApi redialApi, ILoadingHandler loadingHandler,
+    public async Task Run(string[] runArgs, RobustBuildInfo buildInfo, IRedialApi redialApi,
+        ILoadingHandler loadingHandler,
         CancellationToken cancellationToken)
     {
         debugService.Log("Start Content!");
@@ -49,7 +51,8 @@ public sealed class RunnerService(
 
         var args = new MainArgs(runArgs, engine, redialApi, extraMounts);
 
-        if (!assemblyService.TryOpenAssembly(varService.GetConfigValue(CurrentConVar.RobustAssemblyName)!, engine, out var clientAssembly))
+        if (!assemblyService.TryOpenAssembly(varService.GetConfigValue(CurrentConVar.RobustAssemblyName)!, engine,
+                out var clientAssembly))
             throw new Exception("Unable to locate Robust.Client.dll in engine build!");
 
         if (!assemblyService.TryGetLoader(clientAssembly, out var loader))

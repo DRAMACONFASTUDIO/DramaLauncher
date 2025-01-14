@@ -1,37 +1,40 @@
 using System;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Avalonia.Media;
-using CommunityToolkit.Mvvm.ComponentModel;
-using Nebula.Launcher.ViewHelper;
-using Nebula.Launcher.Views.Popup;
+using Nebula.Launcher.Services;
+using Nebula.Launcher.ViewModels.Popup;
 using Nebula.Shared.Models;
 using Nebula.Shared.Services;
 
 namespace Nebula.Launcher.ViewModels;
 
-[ViewModelRegister(isSingleton:false)]
+[ViewModelRegister(isSingleton: false)]
+[ConstructGenerator]
 public partial class ServerEntryModelView : ViewModelBase
 {
-    private readonly AuthService _authService = default!;
-    private readonly ContentService _contentService = default!;
-    private readonly CancellationService _cancellationService = default!;
-    private readonly DebugService _debugService = default!;
-    private readonly RunnerService _runnerService = default!;
-    private readonly PopupMessageService _popupMessageService;
+    private Process? _p;
+
+
+    public LogPopupModelView CurrLog;
+    [GenerateProperty] private AuthService AuthService { get; } = default!;
+    [GenerateProperty] private ContentService ContentService { get; } = default!;
+    [GenerateProperty] private CancellationService CancellationService { get; } = default!;
+    [GenerateProperty] private DebugService DebugService { get; } = default!;
+    [GenerateProperty] private RunnerService RunnerService { get; } = default!;
+    [GenerateProperty] private PopupMessageService PopupMessageService { get; } = default!;
+    [GenerateProperty] private ViewHelperService ViewHelperService { get; } = default!;
 
     public bool RunVisible => Process == null;
 
     public ServerHubInfo ServerHubInfo { get; set; } = default!;
 
-
-    private Process? _p;
     private Process? Process
     {
-        get { return _p; }
+        get => _p;
         set
         {
             _p = value;
@@ -39,32 +42,14 @@ public partial class ServerEntryModelView : ViewModelBase
         }
     }
 
-
-
-    public LogPopupModelView CurrLog;
-
-    public ServerEntryModelView() : base()
+    protected override void InitialiseInDesignMode()
     {
-        CurrLog = GetViewModel<LogPopupModelView>();
+        CurrLog = ViewHelperService.GetViewModel<LogPopupModelView>();
     }
 
-    public ServerEntryModelView(
-        IServiceProvider serviceProvider,
-        AuthService authService, 
-        ContentService contentService, 
-        CancellationService cancellationService,
-        DebugService debugService, 
-        RunnerService runnerService, PopupMessageService popupMessageService
-        ) : base(serviceProvider)
+    protected override void Initialise()
     {
-        _authService = authService;
-        _contentService = contentService;
-        _cancellationService = cancellationService;
-        _debugService = debugService;
-        _runnerService = runnerService;
-        _popupMessageService = popupMessageService;
-
-        CurrLog = GetViewModel<LogPopupModelView>();
+        CurrLog = ViewHelperService.GetViewModel<LogPopupModelView>();
     }
 
     public void RunInstance()
@@ -74,84 +59,77 @@ public partial class ServerEntryModelView : ViewModelBase
 
     public async Task RunAsync()
     {
-         try
-         {
-             var authProv = _authService.SelectedAuth;
+        try
+        {
+            var authProv = AuthService.SelectedAuth;
 
-             var buildInfo =
-                 await _contentService.GetBuildInfo(new RobustUrl(ServerHubInfo.Address), _cancellationService.Token);
-            
-             using (var loadingContext = GetViewModel<LoadingContextViewModel>())
-             {
-                 loadingContext.LoadingName = "Loading instance...";
-                 ((ILoadingHandler)loadingContext).AppendJob();
-                 
-                 _popupMessageService.Popup(loadingContext);
-                 
-                 
-                 await _runnerService.PrepareRun(buildInfo, loadingContext, _cancellationService.Token);
+            var buildInfo =
+                await ContentService.GetBuildInfo(new RobustUrl(ServerHubInfo.Address), CancellationService.Token);
 
-                 Process = Process.Start(new ProcessStartInfo()
-                 {
-                     FileName = "dotnet.exe",
-                     Arguments = "./Nebula.Runner.dll",
-                     Environment =
-                     {
-                         { "ROBUST_AUTH_USERID", authProv?.UserId.ToString() },
-                         { "ROBUST_AUTH_TOKEN", authProv?.Token.Token },
-                         { "ROBUST_AUTH_SERVER", authProv?.AuthLoginPassword.AuthServer },
-                         { "ROBUST_AUTH_PUBKEY", buildInfo.BuildInfo.Auth.PublicKey },
-                         { "GAME_URL", ServerHubInfo.Address },
-                         { "AUTH_LOGIN", authProv?.AuthLoginPassword.Login },
-                     },
-                     CreateNoWindow = true,
-                     UseShellExecute = false,
-                     RedirectStandardOutput = true,
-                     RedirectStandardError = true, 
-                     StandardOutputEncoding = Encoding.UTF8
-                 });
-                 
-                 ((ILoadingHandler)loadingContext).AppendResolvedJob();
-             }
-            
-             if (Process is null)
-             {
-                 return;
-             }
-             
-             Process.EnableRaisingEvents = true;
-            
-             Process.BeginOutputReadLine();
-             Process.BeginErrorReadLine();
+            using (var loadingContext = ViewHelperService.GetViewModel<LoadingContextViewModel>())
+            {
+                loadingContext.LoadingName = "Loading instance...";
+                ((ILoadingHandler)loadingContext).AppendJob();
 
-             Process.OutputDataReceived += OnOutputDataReceived;
-             Process.ErrorDataReceived += OnErrorDataReceived;
+                PopupMessageService.Popup(loadingContext);
 
-             Process.Exited += OnExited;
-         }
-         catch (TaskCanceledException e)
-         {
-             _popupMessageService.Popup("Task canceled");
-         }
-         catch (Exception e)
-         {
-             _popupMessageService.Popup(e);
-         }
+                await RunnerService.PrepareRun(buildInfo, loadingContext, CancellationService.Token);
+
+                Process = Process.Start(new ProcessStartInfo
+                {
+                    FileName = "dotnet.exe",
+                    Arguments = "./Nebula.Runner.dll",
+                    Environment =
+                    {
+                        { "ROBUST_AUTH_USERID", authProv?.UserId.ToString() },
+                        { "ROBUST_AUTH_TOKEN", authProv?.Token.Token },
+                        { "ROBUST_AUTH_SERVER", authProv?.AuthLoginPassword.AuthServer },
+                        { "ROBUST_AUTH_PUBKEY", buildInfo.BuildInfo.Auth.PublicKey },
+                        { "GAME_URL", ServerHubInfo.Address },
+                        { "AUTH_LOGIN", authProv?.AuthLoginPassword.Login }
+                    },
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    StandardOutputEncoding = Encoding.UTF8
+                });
+
+                ((ILoadingHandler)loadingContext).AppendResolvedJob();
+            }
+
+            if (Process is null) return;
+
+            Process.EnableRaisingEvents = true;
+
+            Process.BeginOutputReadLine();
+            Process.BeginErrorReadLine();
+
+            Process.OutputDataReceived += OnOutputDataReceived;
+            Process.ErrorDataReceived += OnErrorDataReceived;
+
+            Process.Exited += OnExited;
+        }
+        catch (TaskCanceledException _)
+        {
+            PopupMessageService.Popup("Task canceled");
+        }
+        catch (Exception e)
+        {
+            PopupMessageService.Popup(e);
+        }
     }
 
     private void OnExited(object? sender, EventArgs e)
     {
-        if (Process is null)
-        {
-            return;
-        }
-        
+        if (Process is null) return;
+
         Process.OutputDataReceived -= OnOutputDataReceived;
         Process.ErrorDataReceived -= OnErrorDataReceived;
         Process.Exited -= OnExited;
-        
-        _debugService.Log("PROCESS EXIT WITH CODE " + Process.ExitCode);
-        
+
+        DebugService.Log("PROCESS EXIT WITH CODE " + Process.ExitCode);
+
         Process.Dispose();
         Process = null;
     }
@@ -160,7 +138,7 @@ public partial class ServerEntryModelView : ViewModelBase
     {
         if (e.Data != null)
         {
-            _debugService.Error(e.Data);
+            DebugService.Error(e.Data);
             CurrLog.Append(e.Data);
         }
     }
@@ -169,7 +147,7 @@ public partial class ServerEntryModelView : ViewModelBase
     {
         if (e.Data != null)
         {
-            _debugService.Log(e.Data);
+            DebugService.Log(e.Data);
             CurrLog.Append(e.Data);
         }
     }
@@ -177,29 +155,24 @@ public partial class ServerEntryModelView : ViewModelBase
 
     public void ReadLog()
     {
-        _popupMessageService.Popup(CurrLog);
+        PopupMessageService.Popup(CurrLog);
     }
 
     public void StopInstance()
     {
         Process?.CloseMainWindow();
     }
-    
-    static string FindDotnetPath()
+
+    private static string FindDotnetPath()
     {
         var pathEnv = Environment.GetEnvironmentVariable("PATH");
-        var paths = pathEnv?.Split(System.IO.Path.PathSeparator);
+        var paths = pathEnv?.Split(Path.PathSeparator);
         if (paths != null)
-        {
             foreach (var path in paths)
             {
-                var dotnetPath = System.IO.Path.Combine(path, "dotnet");
-                if (System.IO.File.Exists(dotnetPath))
-                {
-                    return dotnetPath;
-                }
+                var dotnetPath = Path.Combine(path, "dotnet");
+                if (File.Exists(dotnetPath)) return dotnetPath;
             }
-        }
 
         throw new Exception("Dotnet not found!");
     }
@@ -207,19 +180,16 @@ public partial class ServerEntryModelView : ViewModelBase
 
 public sealed class LogInfo
 {
-    public string Category { get; set; } =  "LOG";
+    public string Category { get; set; } = "LOG";
     public IBrush CategoryColor { get; set; } = Brush.Parse("#424242");
     public string Message { get; set; } = "";
 
     public static LogInfo FromString(string input)
     {
         var matches = Regex.Matches(input, @"(\[(?<c>.*)\] (?<m>.*))|(?<m>.*)");
-        string category = "All";
+        var category = "All";
 
-        if( matches[0].Groups.TryGetValue("c", out var c))
-        {
-            category = c.Value;
-        }
+        if (matches[0].Groups.TryGetValue("c", out var c)) category = c.Value;
 
         var color = Brush.Parse("#444444");
 
@@ -235,42 +205,11 @@ public sealed class LogInfo
                 color = Brush.Parse("#0ab3c9");
                 break;
         }
-            
+
         var message = matches[0].Groups["m"].Value;
-        return new LogInfo()
+        return new LogInfo
         {
             Category = category, Message = message, CategoryColor = color
         };
-    }
-}
-
-[ViewModelRegister(typeof(LogPopupView), false)]
-public sealed class LogPopupModelView : PopupViewModelBase
-{
-    public LogPopupModelView() : base()
-    {
-        Logs.Add(new LogInfo()
-        {
-            Category = "DEBG", Message = "MEOW MEOW TEST"
-        });
-        
-        Logs.Add(new LogInfo()
-        {
-            Category = "ERRO", Message = "MEOW MEOW TEST 11\naaaaa"
-        });
-    }
-
-    public LogPopupModelView(IServiceProvider serviceProvider) : base(serviceProvider)
-    {
-    }
-    
-    public override string Title => "LOG";
-    public override bool IsClosable => true;
-
-    public ObservableCollection<LogInfo> Logs { get; } = new();
-
-    public void Append(string str)
-    {
-        Logs.Add(LogInfo.FromString(str));
     }
 }

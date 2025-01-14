@@ -1,7 +1,5 @@
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
-using Nebula.Launcher.ViewModels;
+using Nebula.Launcher.ViewModels.Popup;
 
 namespace Nebula.Launcher.Views.Popup;
 

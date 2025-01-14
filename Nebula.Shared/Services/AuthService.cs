@@ -4,37 +4,37 @@ using Nebula.Shared.Models.Auth;
 namespace Nebula.Shared.Services;
 
 [ServiceRegister]
-public partial class AuthService(
-    RestService restService, 
-    DebugService debugService, 
+public class AuthService(
+    RestService restService,
+    DebugService debugService,
     CancellationService cancellationService)
 {
     private readonly HttpClient _httpClient = new();
-    public CurrentAuthInfo? SelectedAuth { get; internal set; }
 
     public string Reason = "";
+    public CurrentAuthInfo? SelectedAuth { get; internal set; }
 
     public async Task<bool> Auth(AuthLoginPassword authLoginPassword)
     {
         var authServer = authLoginPassword.AuthServer;
         var login = authLoginPassword.Login;
         var password = authLoginPassword.Password;
-        
+
         debugService.Debug($"Auth to {authServer}api/auth/authenticate {login}");
-        
+
         var authUrl = new Uri($"{authServer}api/auth/authenticate");
 
         var result =
             await restService.PostAsync<AuthenticateResponse, AuthenticateRequest>(
                 new AuthenticateRequest(login, password), authUrl, cancellationService.Token);
-        
+
         if (result.Value is null)
         {
             Reason = result.Message;
             return false;
         }
 
-        SelectedAuth = new CurrentAuthInfo(result.Value.UserId, 
+        SelectedAuth = new CurrentAuthInfo(result.Value.UserId,
             new LoginToken(result.Value.Token, result.Value.ExpireTime), authLoginPassword);
 
         return true;
@@ -68,4 +68,5 @@ public partial class AuthService(
 }
 
 public sealed record CurrentAuthInfo(Guid UserId, LoginToken Token, AuthLoginPassword AuthLoginPassword);
+
 public record AuthLoginPassword(string Login, string Password, string AuthServer);

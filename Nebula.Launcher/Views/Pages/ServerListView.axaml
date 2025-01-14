@@ -3,16 +3,17 @@
     d:DesignWidth="800"
     mc:Ignorable="d"
     x:Class="Nebula.Launcher.Views.Pages.ServerListView"
-    x:DataType="viewModels:ServerListViewModel"
+    x:DataType="pages:ServerListViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:pages="clr-namespace:Nebula.Launcher.ViewModels.Pages">
 
     <Design.DataContext>
-        <viewModels:ServerListViewModel />
+        <pages:ServerListViewModel />
     </Design.DataContext>
 
     <Grid
@@ -67,7 +68,8 @@
                                 Grid.Row="1"
                                 MinHeight="50">
                                 <Border.Background>
-                                    <ImageBrush Stretch="UniformToFill" asyncImageLoader:ImageBrushLoader.Source="https://t4.ftcdn.net/jpg/00/81/55/69/360_F_81556974_8sF8cKszJaRfBGd5sDt1RXE2QbzDtQqs.jpg" />
+                                    <ImageBrush Stretch="UniformToFill"
+                                                asyncImageLoader:ImageBrushLoader.Source="https://t4.ftcdn.net/jpg/00/81/55/69/360_F_81556974_8sF8cKszJaRfBGd5sDt1RXE2QbzDtQqs.jpg" />
                                 </Border.Background>
                                 <Border
                                     BorderThickness="0,2,2,0"

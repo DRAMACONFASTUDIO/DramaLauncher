@@ -3,14 +3,14 @@
     d:DesignWidth="800"
     mc:Ignorable="d"
     x:Class="Nebula.Launcher.Views.Pages.AccountInfoView"
-    x:DataType="viewModels:AccountInfoViewModel"
+    x:DataType="pages:AccountInfoViewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:pages="clr-namespace:Nebula.Launcher.ViewModels.Pages">
     <Design.DataContext>
-        <viewModels:AccountInfoViewModel />
+        <pages:AccountInfoViewModel />
     </Design.DataContext>
     <Grid
         ColumnDefinitions="*,1.5*"
@@ -29,7 +29,7 @@
                     ItemsSource="{Binding Accounts}"
                     Padding="0">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type viewModels:AuthLoginPasswordModel}">
+                        <DataTemplate DataType="{x:Type pages:AuthLoginPasswordModel}">
                             <Border
                                 CornerRadius="0,10,0,10"
                                 Margin="5,5,5,0"

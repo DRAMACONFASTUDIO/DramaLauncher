@@ -1,27 +1,25 @@
-using System;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Nebula.Launcher.ViewHelper;
 using Nebula.Launcher.Views.Popup;
 using Nebula.Shared.Models;
+using Nebula.Shared.Services;
 
-namespace Nebula.Launcher.ViewModels;
+namespace Nebula.Launcher.ViewModels.Popup;
 
 [ViewModelRegister(typeof(LoadingContextView), false)]
+[ConstructGenerator]
 public sealed partial class LoadingContextViewModel : PopupViewModelBase, ILoadingHandler
 {
-    public LoadingContextViewModel() :base(){}
-    public LoadingContextViewModel(IServiceProvider provider) : base(provider){}
+    [GenerateProperty] public override PopupMessageService PopupMessageService { get; }
     
+    [ObservableProperty] private int _currJobs;
+
+    [ObservableProperty] private int _resolvedJobs;
+
     public string LoadingName { get; set; } = "Loading...";
     public override bool IsClosable => false;
 
     public override string Title => LoadingName;
-    
-    [ObservableProperty]
-    private int _currJobs;
-    [ObservableProperty]
-    private int _resolvedJobs;
-    
+
     public void SetJobsCount(int count)
     {
         CurrJobs = count;
@@ -35,11 +33,18 @@ public sealed partial class LoadingContextViewModel : PopupViewModelBase, ILoadi
     public void SetResolvedJobsCount(int count)
     {
         ResolvedJobs = count;
-
     }
 
     public int GetResolvedJobsCount()
     {
         return ResolvedJobs;
+    }
+
+    protected override void Initialise()
+    {
+    }
+
+    protected override void InitialiseInDesignMode()
+    {
     }
 }

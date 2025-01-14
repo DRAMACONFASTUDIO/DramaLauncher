@@ -1,5 +1,5 @@
 using Avalonia.Controls;
-using Nebula.Launcher.ViewModels;
+using ServerListViewModel = Nebula.Launcher.ViewModels.Pages.ServerListViewModel;
 
 namespace Nebula.Launcher.Views.Pages;
 

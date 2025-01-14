@@ -7,12 +7,17 @@ using Robust.LoaderApi;
 namespace Nebula.Runner;
 
 [ServiceRegister]
-public sealed class App(DebugService debugService, RunnerService runnerService, ContentService contentService) : IRedialApi
+public sealed class App(DebugService debugService, RunnerService runnerService, ContentService contentService)
+    : IRedialApi
 {
+    public void Redial(Uri uri, string text = "")
+    {
+    }
+
     public async Task Run(string[] args1)
     {
         debugService.Log("HELLO!!! ");
-        
+
         var login = Environment.GetEnvironmentVariable("AUTH_LOGIN") ?? "Alexandra";
         var urlraw = Environment.GetEnvironmentVariable("GAME_URL") ?? "ss14://localhost";
 
@@ -20,7 +25,7 @@ public sealed class App(DebugService debugService, RunnerService runnerService, 
 
         using var cancelTokenSource = new CancellationTokenSource();
         var buildInfo = await contentService.GetBuildInfo(url, cancelTokenSource.Token);
-        
+
 
         var args = new List<string>
         {
@@ -46,27 +51,22 @@ public sealed class App(DebugService debugService, RunnerService runnerService, 
 
         args.Add("--ss14-address");
         args.Add(url.ToString());
-        
-        await runnerService.Run(args.ToArray(), buildInfo, this, new ConsoleLoadingHandler(), cancelTokenSource.Token);
-    }
 
-    public void Redial(Uri uri, string text = "")
-    {
-        
+        await runnerService.Run(args.ToArray(), buildInfo, this, new ConsoleLoadingHandler(), cancelTokenSource.Token);
     }
 }
 
 public sealed class ConsoleLoadingHandler : ILoadingHandler
 {
     private int _currJobs;
+
+    private float _percent;
     private int _resolvedJobs;
 
-    private float _percent = 0f;
-    
     public void SetJobsCount(int count)
     {
         _currJobs = count;
-        
+
         UpdatePercent();
         Draw();
     }
@@ -79,7 +79,7 @@ public sealed class ConsoleLoadingHandler : ILoadingHandler
     public void SetResolvedJobsCount(int count)
     {
         _resolvedJobs = count;
-        
+
         UpdatePercent();
         Draw();
     }
@@ -91,15 +91,15 @@ public sealed class ConsoleLoadingHandler : ILoadingHandler
 
     private void UpdatePercent()
     {
-        if(_currJobs == 0)
+        if (_currJobs == 0)
         {
             _percent = 0;
             return;
         }
-        
-        if(_resolvedJobs > _currJobs) return;
-        
-        _percent = _resolvedJobs /(float) _currJobs;
+
+        if (_resolvedJobs > _currJobs) return;
+
+        _percent = _resolvedJobs / (float)_currJobs;
     }
 
     private void Draw()
@@ -107,20 +107,13 @@ public sealed class ConsoleLoadingHandler : ILoadingHandler
         var barCount = 10;
         var fullCount = (int)(barCount * _percent);
         var emptyCount = barCount - fullCount;
-        
+
         Console.Write("\r");
 
-        for (var i = 0; i < fullCount; i++)
-        {
-            Console.Write("#");
-        }
-        
-        for (var i = 0; i < emptyCount; i++)
-        {
-            Console.Write(" ");
-        }
-        
+        for (var i = 0; i < fullCount; i++) Console.Write("#");
+
+        for (var i = 0; i < emptyCount; i++) Console.Write(" ");
+
         Console.Write($"\t {_resolvedJobs}/{_currJobs}");
-        
     }
 }
