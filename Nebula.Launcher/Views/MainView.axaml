@@ -65,8 +65,8 @@
                                 Classes="ViewSelectButton"
                                 Command="{Binding TriggerPaneCommand}"
                                 Grid.Row="1"
-                                HorizontalAlignment="Left"
-                                Padding="15,0,15,0"
+                                HorizontalAlignment="Stretch"
+                                Padding="5,0,5,0"
                                 VerticalAlignment="Stretch">
                                 <Label HorizontalAlignment="Center" VerticalAlignment="Center">|||</Label>
                             </Button>

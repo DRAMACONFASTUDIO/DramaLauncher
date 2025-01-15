@@ -110,7 +110,7 @@ public partial class ServerEntryModelView : ViewModelBase
 
             Process.Exited += OnExited;
         }
-        catch (TaskCanceledException _)
+        catch (TaskCanceledException)
         {
             PopupMessageService.Popup("Task canceled");
         }

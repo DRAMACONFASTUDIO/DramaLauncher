@@ -15,7 +15,7 @@
 
     <Grid
         ColumnDefinitions="*,2*,40,40"
-        Margin="10"
+        Margin="5,5,5,0"
         RowDefinitions="40,*">
         <Border
             BorderThickness="2,0,0,0"
