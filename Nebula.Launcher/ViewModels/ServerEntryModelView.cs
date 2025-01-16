@@ -7,12 +7,13 @@ using System.Threading.Tasks;
 using Avalonia.Media;
 using Nebula.Launcher.Services;
 using Nebula.Launcher.ViewModels.Popup;
+using Nebula.Launcher.Views;
 using Nebula.Shared.Models;
 using Nebula.Shared.Services;
 
 namespace Nebula.Launcher.ViewModels;
 
-[ViewModelRegister(isSingleton: false)]
+[ViewModelRegister(typeof(ServerEntryView), isSingleton: false)]
 [ConstructGenerator]
 public partial class ServerEntryModelView : ViewModelBase
 {
@@ -44,7 +45,7 @@ public partial class ServerEntryModelView : ViewModelBase
 
     protected override void InitialiseInDesignMode()
     {
-        CurrLog = ViewHelperService.GetViewModel<LogPopupModelView>();
+        
     }
 
     protected override void Initialise()

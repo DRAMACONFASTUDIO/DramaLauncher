@@ -28,6 +28,10 @@ public partial class ServerListViewModel : ViewModelBase
     {
         ServerInfos.Add(CreateServerView(new ServerHubInfo("ss14://localhost",
             new ServerStatus("Nebula", "TestCraft", ["16+", "RU"], "super", 12, 55, 1, false, DateTime.Now, 20), [])));
+        ServerInfos.Add(CreateServerView(new ServerHubInfo("ss14://localhost",
+            new ServerStatus("Nebula", "TestCraft", ["16+", "RU"], "super", 12, 55, 1, false, DateTime.Now, 20), [])));
+        ServerInfos.Add(CreateServerView(new ServerHubInfo("ss14://localhost",
+            new ServerStatus("Nebula", "TestCraft", ["16+", "RU"], "super", 12, 55, 1, false, DateTime.Now, 20), [])));
     }
 
     //real think

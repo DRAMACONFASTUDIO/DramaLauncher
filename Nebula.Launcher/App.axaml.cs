@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
@@ -12,8 +13,6 @@ namespace Nebula.Launcher;
 
 public class App : Application
 {
-    private IServiceProvider _serviceProvider = null!;
-
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -21,23 +20,40 @@ public class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        var services = new ServiceCollection();
-        services.AddAvaloniaServices();
-        services.AddServices();
-        services.AddViews();
-
-        _serviceProvider = services.BuildServiceProvider();
-
-        switch (ApplicationLifetime)
+        if (Design.IsDesignMode)
         {
-            case IClassicDesktopStyleApplicationLifetime desktop:
-                DisableAvaloniaDataAnnotationValidation();
-                desktop.MainWindow = _serviceProvider.GetService<MainWindow>();
-                break;
-            case ISingleViewApplicationLifetime singleViewPlatform:
-                singleViewPlatform.MainView = _serviceProvider.GetRequiredService<MainView>();
-                break;
+            switch (ApplicationLifetime)
+            {
+                case IClassicDesktopStyleApplicationLifetime desktop:
+                    DisableAvaloniaDataAnnotationValidation();
+                    desktop.MainWindow = new MainWindow();
+                    break;
+                case ISingleViewApplicationLifetime singleViewPlatform:
+                    singleViewPlatform.MainView = new MainView();
+                    break;
+            }
         }
+        else
+        {
+            var services = new ServiceCollection();
+            services.AddAvaloniaServices();
+            services.AddServices();
+            services.AddViews();
+
+            var serviceProvider = services.BuildServiceProvider();
+            
+            switch (ApplicationLifetime)
+            {
+                case IClassicDesktopStyleApplicationLifetime desktop:
+                    DisableAvaloniaDataAnnotationValidation();
+                    desktop.MainWindow = serviceProvider.GetService<MainWindow>();
+                    break;
+                case ISingleViewApplicationLifetime singleViewPlatform:
+                    singleViewPlatform.MainView = serviceProvider.GetRequiredService<MainView>();
+                    break;
+            }
+        }
+        
 
         base.OnFrameworkInitializationCompleted();
     }

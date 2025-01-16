@@ -3,8 +3,6 @@ using AccountInfoViewModel = Nebula.Launcher.ViewModels.Pages.AccountInfoViewMod
 
 namespace Nebula.Launcher.Views.Pages;
 
-public interface ITab;
-
 public partial class AccountInfoView : UserControl
 {
     public AccountInfoView()
