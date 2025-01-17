@@ -26,6 +26,7 @@ public partial class ServerListViewModel : ViewModelBase
     //Design think
     protected override void InitialiseInDesignMode()
     {
+        Console.WriteLine("SOSAL");
         ServerInfos.Add(CreateServerView(new ServerHubInfo("ss14://localhost",
             new ServerStatus("Nebula", "TestCraft", ["16+", "RU"], "super", 12, 55, 1, false, DateTime.Now, 20), [])));
         ServerInfos.Add(CreateServerView(new ServerHubInfo("ss14://localhost",
@@ -37,6 +38,7 @@ public partial class ServerListViewModel : ViewModelBase
     //real think
     protected override void Initialise()
     {
+        Console.WriteLine("SOSAL!!");
         foreach (var info in HubService.ServerList) UnsortedServers.Add(info);
 
         HubService.HubServerChangedEventArgs += HubServerChangedEventArgs;

@@ -1,15 +1,22 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Media;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Nebula.Launcher.Services;
 using Nebula.Launcher.ViewModels.Popup;
 using Nebula.Launcher.Views;
 using Nebula.Shared.Models;
 using Nebula.Shared.Services;
+using Nebula.Shared.Utils;
 
 namespace Nebula.Launcher.ViewModels;
 
@@ -28,10 +35,49 @@ public partial class ServerEntryModelView : ViewModelBase
     [GenerateProperty] private RunnerService RunnerService { get; } = default!;
     [GenerateProperty] private PopupMessageService PopupMessageService { get; } = default!;
     [GenerateProperty] private ViewHelperService ViewHelperService { get; } = default!;
+    [GenerateProperty] private RestService RestService { get; } = default!;
 
+    [ObservableProperty] private string _description = "...";
+    [ObservableProperty] private bool _expandInfo = false;
     public bool RunVisible => Process == null;
 
-    public ServerHubInfo ServerHubInfo { get; set; } = default!;
+    private ServerInfo? _serverInfo = null;
+
+    public async Task<ServerInfo?> GetServerInfo()
+    {
+        if (_serverInfo == null)
+        {
+            var result =
+                await RestService.GetAsync<ServerInfo>(ServerHubInfo.Address.ToRobustUrl().InfoUri, CancellationService.Token);
+            if (result.Value == null) return null;
+            _serverInfo = result.Value;
+        }
+
+        return _serverInfo;
+    }
+
+    private ServerHubInfo _serverHubInfo = default!;
+    public ServerHubInfo ServerHubInfo
+    {
+        get => _serverHubInfo;
+        set
+        {
+            Tags.Clear();
+            foreach (var tag in value.StatusData.Tags)
+            {
+                Tags.Add(tag);
+            }
+            foreach (var tag in value.InferredTags)
+            {
+                Tags.Add(tag);
+            }
+            
+            _serverHubInfo = value;
+            OnPropertyChanged(nameof(ServerHubInfo));
+        }
+    }
+
+    public ObservableCollection<string> Tags { get; } = [];
 
     private Process? Process
     {
@@ -45,7 +91,9 @@ public partial class ServerEntryModelView : ViewModelBase
 
     protected override void InitialiseInDesignMode()
     {
-        
+        Description = "Server of meow girls! Nya~ \nNyaMeow\nOOOINK!!";
+        ServerHubInfo = new ServerHubInfo("ss14://localhost",
+            new ServerStatus("Ameba", "Locala", ["rp:hrp", "18+"], "Antag", 15, 5, 1, false, DateTime.Now, 100), ["meow:rp"]);
     }
 
     protected override void Initialise()
@@ -162,6 +210,18 @@ public partial class ServerEntryModelView : ViewModelBase
     public void StopInstance()
     {
         Process?.CloseMainWindow();
+    }
+
+    public async void ExpandInfoRequired()
+    {
+        ExpandInfo = !ExpandInfo;
+        if (Avalonia.Controls.Design.IsDesignMode)
+        {
+            return;
+        }
+        
+        var info = await GetServerInfo();
+        Description = info != null ? info.Desc : "Server offline";
     }
 
     private static string FindDotnetPath()
