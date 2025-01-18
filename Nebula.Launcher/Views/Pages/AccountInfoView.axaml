@@ -78,10 +78,10 @@
                 Padding="15">
                 <Panel>
                     <StackPanel IsVisible="{Binding !IsLogged}" Spacing="15">
-                        <Image
+                        <Svg
                             Height="100"
                             Margin="0,0,0,20"
-                            Source="/Assets/account.png" />
+                            Path="/Assets/svg/user.svg"/>
                         <StackPanel HorizontalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
                                 <Label VerticalAlignment="Center">
@@ -141,19 +141,19 @@
                     </StackPanel>
 
                     <StackPanel IsVisible="{Binding IsLogged}">
-                        <Image
+                        <Svg
                             Height="100"
                             Margin="0,0,0,20"
-                            Source="/Assets/account.png" />
+                            Path="/Assets/svg/user.svg"/>
                         <Label>
                             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                                <TextBlock>Hello:</TextBlock>
+                                <TextBlock>Hello,</TextBlock>
                                 <TextBlock Text="{Binding CurrentLogin}" />
                             </StackPanel>
                         </Label>
                         <StackPanel
                             HorizontalAlignment="Center"
-                            Margin="5"
+                            Margin="5,20,5,5"
                             Orientation="Horizontal"
                             Spacing="5">
                             <Button Command="{Binding Logout}">

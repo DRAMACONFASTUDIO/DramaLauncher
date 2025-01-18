@@ -15,10 +15,9 @@
 
     <Grid
         ColumnDefinitions="*,2*,40,40"
-        Margin="5,5,5,0"
+        Margin="8"
         RowDefinitions="40,*">
         <Border
-            BorderThickness="2,0,0,0"
             CornerRadius="10,10,0,0"
             Grid.ColumnSpan="4" />
         <TextBox
@@ -40,14 +39,14 @@
             Grid.Column="2"
             Grid.Row="0"
             Padding="10">
-            <Image Source="/Assets/back.png" />
+            <Svg Path="/Assets/svg/undo.svg"></Svg>
         </Button>
         <Button
             Command="{Binding OnGoEnter}"
             Grid.Column="3"
             Grid.Row="0"
             Padding="10">
-            <Image Source="/Assets/go.png" />
+            <Svg Path="/Assets/svg/next.svg"></Svg>
         </Button>
 
         <ScrollViewer
@@ -71,10 +70,10 @@
                                     Background="#00000000"
                                     BorderThickness="0,0,2,0"
                                     CornerRadius="0">
-                                    <Image
+                                    <Svg
                                         Height="15"
                                         Margin="10,0,10,0"
-                                        Source="{Binding IconPath}" />
+                                        Path="{Binding IconPath}" />
                                 </Border>
                                 <Label>
                                     <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />

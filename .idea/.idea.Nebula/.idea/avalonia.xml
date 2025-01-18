@@ -5,6 +5,7 @@
       <map>
         <entry key="Nebula.Launcher/App.axaml" value="Nebula.Launcher/Nebula.Launcher.csproj" />
         <entry key="Nebula.Launcher/Assets/Icons.axaml" value="Nebula.Launcher/Nebula.Launcher.csproj" />
+        <entry key="Nebula.Launcher/Assets/Resources.axaml" value="Nebula.Launcher/Nebula.Launcher.csproj" />
         <entry key="Nebula.Launcher/Assets/Style.axaml" value="Nebula.Launcher/Nebula.Launcher.csproj" />
         <entry key="Nebula.Launcher/ViewModels/Styles1.axaml" value="Nebula.Launcher/Nebula.Launcher.csproj" />
         <entry key="Nebula.Launcher/Views/Controls/PlayerContainerControl.axaml" value="Nebula.Launcher/Nebula.Launcher.csproj" />

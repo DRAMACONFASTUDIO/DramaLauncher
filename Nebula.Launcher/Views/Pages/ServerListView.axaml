@@ -16,7 +16,7 @@
 
     <Grid
         ColumnDefinitions="*"
-        Margin="5,0,5,5"
+        Margin="8,0,8,5"
         RowDefinitions="*,40">
         <ScrollViewer Margin="0,0,0,10" Padding="0,0,10,0" Grid.RowSpan="2">
             <ItemsControl
@@ -41,13 +41,13 @@
                     Command="{Binding FilterRequired}"
                     Grid.Column="1"
                     Padding="10">
-                    <Image Source="/Assets/filter.png" />
+                    <Svg Path="/Assets/svg/filter.svg"></Svg>
                 </Button>
                 <Button
                     Command="{Binding UpdateRequired}"
                     Grid.Column="2"
                     Padding="10">
-                    <Image Source="/Assets/refresh.png" />
+                    <Svg Path="/Assets/svg/refresh.svg"></Svg>
                 </Button>
             </Grid>
         </Border>

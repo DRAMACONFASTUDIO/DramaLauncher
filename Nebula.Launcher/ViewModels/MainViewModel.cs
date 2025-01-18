@@ -20,9 +20,9 @@ public partial class MainViewModel : ViewModelBase
 {
     private readonly List<ListItemTemplate> _templates =
     [
-        new ListItemTemplate(typeof(AccountInfoViewModel), "Account", "Account"),
-        new ListItemTemplate(typeof(ServerListViewModel), "HomeRegular", "Servers"),
-        new ListItemTemplate(typeof(ContentBrowserViewModel), "GridRegular", "Content")
+        new ListItemTemplate(typeof(AccountInfoViewModel), "user", "Account"),
+        new ListItemTemplate(typeof(ServerListViewModel), "file", "Servers"),
+        new ListItemTemplate(typeof(ContentBrowserViewModel), "folder", "Content")
     ];
 
     private readonly List<PopupViewModelBase> _viewQueue = new();

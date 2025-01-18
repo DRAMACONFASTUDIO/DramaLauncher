@@ -10,13 +10,14 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:Nebula.Launcher.Converters">
     <Design.DataContext>
         <viewModels:ServerEntryModelView />
     </Design.DataContext>
 
     <Border CornerRadius="10" Margin="0,5,0,5">
-        <Grid ColumnDefinitions="30,*,80,120" RowDefinitions="35,*,*">
+        <Grid ColumnDefinitions="30,*,80,90" RowDefinitions="35,*,*">
             <Border
                 BorderThickness="0,0,0,2"
                 CornerRadius="10"
@@ -31,9 +32,7 @@
                 Grid.Row="0"
                 Grid.RowSpan="3"
                 VerticalAlignment="Stretch">
-                <Label VerticalAlignment="Center">
-                    ^
-                </Label>
+                <Label VerticalAlignment="Bottom" Margin="5,0,5,2">i</Label>
             </Button>
             <ScrollViewer
                 Grid.Column="1"
@@ -68,31 +67,26 @@
                     HorizontalAlignment="Stretch"
                     IsVisible="{Binding RunVisible}"
                     VerticalAlignment="Stretch">
-                    <Label HorizontalAlignment="Center" VerticalAlignment="Center">
-                        Play
-                    </Label>
+                    <Svg Path="/Assets/svg/play.svg"/>
                 </Button>
-                <Grid Grid.ColumnDefinitions="*,*" IsVisible="{Binding !RunVisible}">
+                <Grid ColumnDefinitions="*,*" 
+                      IsVisible="{Binding !RunVisible}">
                     <Button
                         Command="{Binding ReadLog}"
                         CornerRadius="10,0,0,10"
                         HorizontalAlignment="Stretch"
-                        Margin="0,0,1,0"
+                        Margin="0,0,2,0"
                         VerticalAlignment="Stretch">
-                        <Label HorizontalAlignment="Center" VerticalAlignment="Center">
-                            Log
-                        </Label>
+                        <Svg Path="/Assets/svg/newspaper.svg"/>
                     </Button>
                     <Button
                         Command="{Binding StopInstance}"
-                        CornerRadius="10,0,10,0"
+                        CornerRadius="0,10,10,0"
                         Grid.Column="1"
                         HorizontalAlignment="Stretch"
-                        Margin="1,0,0,0"
+                        Margin="2,0,0,0"
                         VerticalAlignment="Stretch">
-                        <Label HorizontalAlignment="Center" VerticalAlignment="Center">
-                            Stop
-                        </Label>
+                        <Svg Path="/Assets/svg/stop.svg"/>
                     </Button>
                 </Grid>
             </Panel>

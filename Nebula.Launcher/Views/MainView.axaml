@@ -52,10 +52,9 @@
                                 <ListBox.ItemTemplate>
                                     <DataTemplate DataType="{x:Type models:ListItemTemplate}">
                                         <StackPanel Orientation="Horizontal" Spacing="17">
-                                            <PathIcon
-                                                Data="{Binding IconKey, Converter={x:Static converters:TypeConverters.IconConverter}}"
-                                                Height="40"
-                                                Width="40" />
+                                            <Svg Path="{Binding IconKey, Converter={x:Static converters:TypeConverters.IconConverter}}"
+                                                 Height="40"
+                                                 Width="40"/>
                                             <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
                                         </StackPanel>
                                     </DataTemplate>

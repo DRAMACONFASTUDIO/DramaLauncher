@@ -208,9 +208,6 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
 
 public class ContentEntry
 {
-    public static IImage DirImage = new Bitmap(AssetLoader.Open(new Uri("avares://Nebula.Launcher/Assets/dir.png")));
-    public static IImage IconImage = new Bitmap(AssetLoader.Open(new Uri("avares://Nebula.Launcher/Assets/file.png")));
-
     private readonly Dictionary<string, ContentEntry> _childs = new();
     private readonly ContentBrowserViewModel _viewModel;
 
@@ -229,7 +226,7 @@ public class ContentEntry
     public string Name { get; private set; }
     public string PathName { get; }
     public string ServerName { get; }
-    public IImage IconPath { get; set; } = DirImage;
+    public string IconPath { get; set; } = "/Assets/svg/folder.svg";
 
     public ContentEntry? Parent { get; private set; }
     public bool IsRoot => Parent == null;
@@ -297,7 +294,7 @@ public class ContentEntry
         };
 
         dirEntry.TryAddChild(entry);
-        entry.IconPath = IconImage;
+        entry.IconPath = "/Assets/svg/file.svg";
         return entry;
     }
 
