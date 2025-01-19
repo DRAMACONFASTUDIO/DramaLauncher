@@ -93,7 +93,7 @@ public partial class ServerEntryModelView : ViewModelBase
     {
         Description = "Server of meow girls! Nya~ \nNyaMeow\nOOOINK!!";
         ServerHubInfo = new ServerHubInfo("ss14://localhost",
-            new ServerStatus("Ameba", "Locala", ["rp:hrp", "18+"], "Antag", 15, 5, 1, false, DateTime.Now, 100), ["meow:rp"]);
+            new ServerStatus("Ameba", "Locala meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow ", ["rp:hrp", "18+"], "Antag", 15, 5, 1, false, DateTime.Now, 100), ["meow:rp"]);
     }
 
     protected override void Initialise()
