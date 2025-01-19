@@ -87,7 +87,7 @@ public class ManifestReader : StreamReader
 
     private void ReadManifestVersion()
     {
-        ManifestVersion = ReadLine();
+        ManifestVersion = ReadLine() ?? throw new InvalidOperationException("File is empty!");
     }
 
     public RobustManifestItem? ReadItem()

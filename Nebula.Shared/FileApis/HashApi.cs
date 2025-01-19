@@ -1,4 +1,5 @@
-﻿using Nebula.Shared.Models;
+﻿using System.Diagnostics.CodeAnalysis;
+using Nebula.Shared.Models;
 using Robust.LoaderApi;
 
 namespace Nebula.Shared.FileApis;
@@ -15,7 +16,7 @@ public class HashApi : IFileApi
         foreach (var item in manifest) Manifest.TryAdd(item.Path, item);
     }
 
-    public bool TryOpen(string path, out Stream? stream)
+    public bool TryOpen(string path,[NotNullWhen(true)] out Stream? stream)
     {
         if (path[0] == '/') path = path.Substring(1);
 

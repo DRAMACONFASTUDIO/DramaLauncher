@@ -58,7 +58,7 @@ public class RestService
         return await ReadResult<T>(response, cancellationToken);
     }
 
-    private async Task<RestResult<T>> ReadResult<T>(HttpResponseMessage response, CancellationToken cancellationToken)
+    private async Task<RestResult<T>> ReadResult<T>(HttpResponseMessage response, CancellationToken cancellationToken) where T : notnull
     {
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
 

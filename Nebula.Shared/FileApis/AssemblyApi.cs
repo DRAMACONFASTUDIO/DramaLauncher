@@ -1,4 +1,5 @@
-﻿using Robust.LoaderApi;
+﻿using System.Diagnostics.CodeAnalysis;
+using Robust.LoaderApi;
 
 namespace Nebula.Shared.FileApis;
 
@@ -11,7 +12,7 @@ public class AssemblyApi : IFileApi
         _root = root;
     }
 
-    public bool TryOpen(string path, out Stream? stream)
+    public bool TryOpen(string path,[NotNullWhen(true)] out Stream? stream)
     {
         return _root.TryOpen(path, out stream);
     }

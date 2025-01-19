@@ -1,4 +1,5 @@
-﻿using Nebula.Shared.FileApis.Interfaces;
+﻿using System.Diagnostics.CodeAnalysis;
+using Nebula.Shared.FileApis.Interfaces;
 
 namespace Nebula.Shared.FileApis;
 
@@ -11,7 +12,7 @@ public sealed class FileApi : IReadWriteFileApi
         RootPath = rootPath;
     }
 
-    public bool TryOpen(string path, out Stream? stream)
+    public bool TryOpen(string path,[NotNullWhen(true)] out Stream? stream)
     {
         var fullPath = Path.Join(RootPath, path);
         if (File.Exists(fullPath))

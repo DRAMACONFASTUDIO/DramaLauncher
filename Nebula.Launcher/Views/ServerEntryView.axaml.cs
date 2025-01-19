@@ -1,7 +1,5 @@
 using System;
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Nebula.Launcher.ViewModels;
 
@@ -9,11 +7,17 @@ namespace Nebula.Launcher.Views;
 
 public partial class ServerEntryView : UserControl
 {
-    private DispatcherTimer _scrollTimer; 
-    private bool _scrollingDown = true; 
+    private readonly TimeSpan _interval = TimeSpan.FromMilliseconds(25);
+    private readonly DispatcherTimer _scrollTimer;
+    private TimeSpan _currTime = TimeSpan.Zero;
     
     public ServerEntryView()
     {
+        _scrollTimer = new DispatcherTimer
+        {
+            Interval = _interval
+        }; 
+    
         InitializeComponent();
         StartAutoScrolling();
     }
@@ -25,45 +29,17 @@ public partial class ServerEntryView : UserControl
     
     private void StartAutoScrolling()
     {
-        _scrollTimer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromMilliseconds(50) // Adjust the interval for scroll speed
-        };
         _scrollTimer.Tick += AutoScroll;
         _scrollTimer.Start();
     }
 
     private void AutoScroll(object? sender, EventArgs e)
     {
-        // Get the current offset and extent
-        var currentOffset = AutoScrollViewer.Offset.X;
         var maxOffset = AutoScrollViewer.Extent.Width - AutoScrollViewer.Viewport.Width;
-
-        if (_scrollingDown)
-        {
-            // Scroll down
-            if (currentOffset < maxOffset)
-            {
-                AutoScrollViewer.Offset = new Avalonia.Vector(currentOffset + 2, AutoScrollViewer.Offset.Y); // Adjust speed
-            }
-            else
-            {
-                // Reverse direction when reaching the bottom
-                _scrollingDown = false;
-            }
-        }
-        else
-        {
-            // Scroll up
-            if (currentOffset > 0)
-            {
-                AutoScrollViewer.Offset = new Avalonia.Vector(currentOffset - 2, AutoScrollViewer.Offset.Y); // Adjust speed
-            }
-            else
-            {
-                // Reverse direction when reaching the top
-                _scrollingDown = true;
-            }
-        }
+        var value = (Math.Sin(_currTime.TotalSeconds / 2) + 1) * (maxOffset / 2) ;
+        
+        AutoScrollViewer.Offset = new Avalonia.Vector(value, AutoScrollViewer.Offset.Y);
+        _currTime += _interval;
+        if (_currTime > TimeSpan.FromSeconds(10000)) _currTime = TimeSpan.Zero;
     }
 }

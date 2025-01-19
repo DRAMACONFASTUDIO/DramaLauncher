@@ -84,7 +84,7 @@ public sealed class EngineService
             var api = _fileService.OpenZip(version, _fileService.EngineFileApi);
             if (api != null) return _assemblyService.Mount(api);
         }
-        catch (Exception e)
+        catch (Exception)
         {
             _fileService.EngineFileApi.Remove(version);
             throw;
@@ -164,9 +164,9 @@ public sealed class EngineService
 
         try
         {
-            return _assemblyService.Mount(_fileService.OpenZip(fileName, _fileService.EngineFileApi));
+            return _assemblyService.Mount(_fileService.OpenZip(fileName, _fileService.EngineFileApi) ?? throw new InvalidOperationException($"{fileName} is not exist!"));
         }
-        catch (Exception e)
+        catch (Exception)
         {
             _fileService.EngineFileApi.Remove(fileName);
             throw;

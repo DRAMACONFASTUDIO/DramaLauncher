@@ -65,7 +65,7 @@ public class FileService
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) prefix = "Space Station 14.app/Contents/Resources/";
             return new ZipFileApi(zipArchive, prefix);
         }
-        catch (Exception e)
+        catch (Exception)
         {
             zipStream?.Dispose();
             throw;
