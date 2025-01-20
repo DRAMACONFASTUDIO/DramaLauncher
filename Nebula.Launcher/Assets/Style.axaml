@@ -4,34 +4,37 @@
     </Style>
     <Style Selector="Border">
         <Setter Property="BorderBrush" Value="#343334" />
-        <Setter Property="Background" Value="#222222" />
+        <Setter Property="Background" Value="{StaticResource NoneBackground}" />
         <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="BoxShadow" Value="0 0 10 0 #222222" />
     </Style>
     <Style Selector="Label">
         <Setter Property="Foreground" Value="#f7f7ff" />
     </Style>
-
+    <Style Selector="ItemsControl">
+        <Setter Property="Background" Value="{StaticResource NoneBackground}" />
+    </Style>
     <Style Selector="Button">
         <Setter Property="BorderBrush" Value="#343334" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Padding" Value="5" />
         <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Background" Value="{StaticResource NoneBackground}" />
     </Style>
 
     <Style Selector="Button:pressed">
-        <Setter Property="RenderTransform" Value="{x:Null}" />
+        <Setter Property="Background" Value="{StaticResource NoneBackground}" />
     </Style>
 
-    <Style Selector="Border.ButtonBack">
-        <Setter Property="Background" Value="#e63462" />
-        <Setter Property="CornerRadius" Value="0,0,10,0" />
+    <Style Selector="Button:pointerover">
+        <Setter Property="BorderThickness" Value="0,0,0,2" />
     </Style>
 
     <Style Selector="Button.ViewSelectButton">
         <Setter Property="CornerRadius" Value="0,8,8,0" />
         <Setter Property="Margin" Value="0,0,0,5" />
         <Setter Property="Padding" Value="8" />
-        <Setter Property="Background" Value="#00000000" />
+        <Setter Property="Background" Value="{StaticResource NoneBackground}" />
     </Style>
 
     <Style Selector="Button.ViewSelectButton:pressed">
@@ -49,18 +52,18 @@
         <Setter Property="CornerRadius" Value="0,8,8,0" />
         <Setter Property="Margin" Value="0,0,0,5" />
         <Setter Property="Padding" Value="8" />
-        <Setter Property="Background" Value="#00000000" />
+        <Setter Property="Background" Value="{StaticResource NoneBackground}" />
     </Style>
 
-    <Style Selector="ListBox.AccountSelector > ListBoxItem">
+    <Style Selector="ListBox.AccountSelector &gt; ListBoxItem">
         <Setter Property="CornerRadius" Value="0" />
         <Setter Property="Margin" Value="0,0,0,0" />
         <Setter Property="Padding" Value="0" />
-        <Setter Property="Background" Value="#00000000" />
+        <Setter Property="Background" Value="{StaticResource NoneBackground}" />
         <Setter Property="Focusable" Value="False" />
     </Style>
 
-    <Style Selector="ListBox.AccountSelector > ListBoxItem:selected">
-        <Setter Property="Background" Value="#00000000" />
+    <Style Selector="TextBox">
+        <Setter Property="Background" Value="{StaticResource NoneBackground}" />
     </Style>
 </Styles>

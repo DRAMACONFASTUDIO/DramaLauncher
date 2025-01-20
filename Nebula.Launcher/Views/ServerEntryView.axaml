@@ -17,11 +17,14 @@
     </Design.DataContext>
 
     <Border
+        Background="#00000000"
         BorderThickness="0,0,0,0"
+        BoxShadow="0 0 10 0 #222222"
         CornerRadius="10"
         Margin="0,5,0,5">
         <Grid ColumnDefinitions="30,*,80,50" RowDefinitions="35,*,*">
             <Border
+                Background="#00000000"
                 BorderThickness="0,0,0,2"
                 CornerRadius="10"
                 Grid.Column="1"
@@ -30,6 +33,8 @@
                 IsVisible="{Binding ExpandInfo}" />
 
             <Button
+                Background="#00000000"
+                BorderThickness="2,0,0,0"
                 Command="{Binding ExpandInfoRequired}"
                 CornerRadius="10,0,0,10"
                 Grid.Column="0"
@@ -89,6 +94,7 @@
             </Panel>
 
             <Border
+                Background="#00000000"
                 BorderThickness="0,0,0,0"
                 Grid.Column="1"
                 Grid.ColumnSpan="3"
@@ -100,6 +106,7 @@
                 </Label>
             </Border>
             <Border
+                Background="#00000000"
                 BorderThickness="0,2,0,0"
                 CornerRadius="10"
                 Grid.Column="1"

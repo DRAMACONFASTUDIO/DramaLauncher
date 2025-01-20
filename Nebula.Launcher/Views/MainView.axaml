@@ -1,4 +1,5 @@
 <UserControl
+    Background="{StaticResource DefaultBackground}"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -37,8 +38,9 @@
                 PaneBackground="#00000000">
                 <SplitView.Pane>
                     <Border
+                        Background="{StaticResource DefaultBackground}"
                         BorderThickness="0,0,2,0"
-                        CornerRadius="0,8,8,0"
+                        CornerRadius="0,0,0,0"
                         Grid.Column="0"
                         Grid.Row="0"
                         Margin="0,0,5,0"
@@ -52,9 +54,10 @@
                                 <ListBox.ItemTemplate>
                                     <DataTemplate DataType="{x:Type models:ListItemTemplate}">
                                         <StackPanel Orientation="Horizontal" Spacing="17">
-                                            <Svg Path="{Binding IconKey, Converter={x:Static converters:TypeConverters.IconConverter}}"
-                                                 Height="40"
-                                                 Width="40"/>
+                                            <Svg
+                                                Height="40"
+                                                Path="{Binding IconKey, Converter={x:Static converters:TypeConverters.IconConverter}}"
+                                                Width="40" />
                                             <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
                                         </StackPanel>
                                     </DataTemplate>
@@ -84,8 +87,14 @@
                 Padding="5">
                 <Label FontSize="10" Foreground="#777777">
                     <Panel>
-                        <Button Command="{Binding OpenLink}" HorizontalAlignment="Left" VerticalAlignment="Center"
-                                Margin="0" Padding="0" CornerRadius="0" Background="#00000000">
+                        <Button
+                            Background="#00000000"
+                            Command="{Binding OpenLink}"
+                            CornerRadius="0"
+                            HorizontalAlignment="Left"
+                            Margin="0"
+                            Padding="0"
+                            VerticalAlignment="Center">
                             <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center">https://cinka.ru/nebula-launcher/</TextBlock>
                         </Button>
                         <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center">prototype-product-v0.01</TextBlock>
@@ -96,9 +105,7 @@
 
         <Panel IsVisible="{Binding Popup}">
             <Border Background="#111" Opacity="50" />
-            <Border
-                CornerRadius="10"
-                Margin="40">
+            <Border CornerRadius="10" Margin="40">
                 <Grid RowDefinitions="35,*,20">
                     <Border
                         BorderThickness="0,0,0,2"
@@ -110,10 +117,10 @@
                             </StackPanel>
                             <Button
                                 Command="{Binding ClosePopupCommand}"
-                                IsVisible="{Binding IsPopupClosable}"
                                 Content="X"
                                 CornerRadius="0,10,0,0"
                                 HorizontalAlignment="Right"
+                                IsVisible="{Binding IsPopupClosable}"
                                 Margin="0"
                                 Padding="10,8,10,8"
                                 VerticalAlignment="Stretch" />
