@@ -105,7 +105,7 @@
 
         <Panel IsVisible="{Binding Popup}">
             <Border Background="#111" Opacity="50" />
-            <Border CornerRadius="10" Margin="40">
+            <Border CornerRadius="10" Margin="40" Background="{StaticResource DefaultBackground}">
                 <Grid RowDefinitions="35,*,20">
                     <Border
                         BorderThickness="0,0,0,2"

@@ -16,7 +16,7 @@
 
     <Grid
         ColumnDefinitions="*"
-        Margin="8,0,8,5"
+        Margin="0"
         RowDefinitions="*,40">
         <ScrollViewer Margin="0,0,0,10" Padding="0,0,10,0" Grid.RowSpan="2">
             <ItemsControl
@@ -25,31 +25,30 @@
                 Padding="0">
             </ItemsControl>
         </ScrollViewer>
-
-        <Border
-            BorderThickness="2,2,2,0"
-            CornerRadius="10"
-            Grid.Row="1">
-            <Grid ColumnDefinitions="*,40,40" RowDefinitions="*" Margin="5,0,0,0">
-                <TextBox
-                    Margin="0"
-                    Text="{Binding SearchText}"
-                    TextChanged="TextBox_OnTextChanged"
-                    VerticalAlignment="Center"
-                    Watermark="Server name..." />
-                <Button
-                    Command="{Binding FilterRequired}"
-                    Grid.Column="1"
-                    Padding="10">
-                    <Svg Path="/Assets/svg/filter.svg"></Svg>
-                </Button>
-                <Button
-                    Command="{Binding UpdateRequired}"
-                    Grid.Column="2"
-                    Padding="10">
-                    <Svg Path="/Assets/svg/refresh.svg"></Svg>
-                </Button>
-            </Grid>
+        
+        <Border Grid.Row="1" Background="{StaticResource DefaultBackground}" BoxShadow="none">
+            
         </Border>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,40,40" RowDefinitions="*" Margin="5,0,0,0">
+            <TextBox
+                Margin="0"
+                Text="{Binding SearchText}"
+                TextChanged="TextBox_OnTextChanged"
+                VerticalAlignment="Center"
+                Watermark="Server name..." />
+            <Button
+                Command="{Binding FilterRequired}"
+                Grid.Column="1"
+                Padding="10">
+                <Svg Path="/Assets/svg/filter.svg"></Svg>
+            </Button>
+            <Button
+                Command="{Binding UpdateRequired}"
+                Grid.Column="2"
+                Padding="10">
+                <Svg Path="/Assets/svg/refresh.svg"></Svg>
+            </Button>
+        </Grid>
     </Grid>
 </UserControl>

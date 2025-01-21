@@ -18,44 +18,38 @@
 
     <Border
         Background="#00000000"
-        BorderThickness="0,0,0,0"
-        BoxShadow="0 0 10 0 #222222"
+        BorderThickness="2,1,0,1"
         CornerRadius="10"
-        Margin="0,5,0,5">
-        <Grid ColumnDefinitions="30,*,80,50" RowDefinitions="35,*,*">
+        Margin="5">
+        <Grid ColumnDefinitions="*,80,50" RowDefinitions="35,*,*">
             <Border
                 Background="#00000000"
                 BorderThickness="0,0,0,2"
                 CornerRadius="10"
-                Grid.Column="1"
+                Grid.Column="0"
                 Grid.ColumnSpan="2"
                 Grid.Row="0"
                 IsVisible="{Binding ExpandInfo}" />
 
             <Button
                 Background="#00000000"
-                BorderThickness="2,0,0,0"
                 Command="{Binding ExpandInfoRequired}"
-                CornerRadius="10,0,0,10"
                 Grid.Column="0"
                 Grid.Row="0"
-                Grid.RowSpan="3"
-                VerticalAlignment="Stretch">
-                <Label Margin="5,0,5,0" VerticalAlignment="Bottom">i</Label>
+                VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                <ScrollViewer
+                    HorizontalScrollBarVisibility="Hidden"
+                    Margin="10,0,0,0"
+                    VerticalScrollBarVisibility="Disabled"
+                    x:Name="AutoScrollViewer">
+                    <Label VerticalAlignment="Center">
+                        <TextBlock Text="{Binding ServerHubInfo.StatusData.Name}" />
+                    </Label>
+                </ScrollViewer>
             </Button>
-            <ScrollViewer
-                Grid.Column="1"
-                Grid.Row="0"
-                HorizontalScrollBarVisibility="Hidden"
-                Margin="10,0,0,0"
-                VerticalScrollBarVisibility="Disabled"
-                x:Name="AutoScrollViewer">
-                <Label VerticalAlignment="Center">
-                    <TextBlock Text="{Binding ServerHubInfo.StatusData.Name}" />
-                </Label>
-            </ScrollViewer>
+            
             <StackPanel
-                Grid.Column="2"
+                Grid.Column="1"
                 Grid.Row="0"
                 HorizontalAlignment="Center"
                 Orientation="Horizontal"
@@ -71,7 +65,7 @@
 
 
             <Panel
-                Grid.Column="3"
+                Grid.Column="2"
                 Grid.Row="0"
                 Margin="5,0,0,0">
                 <Button
@@ -92,29 +86,25 @@
                     </Button>
                 </Grid>
             </Panel>
-
-            <Border
-                Background="#00000000"
-                BorderThickness="0,0,0,0"
-                Grid.Column="1"
-                Grid.ColumnSpan="3"
-                Grid.Row="1"
-                IsVisible="{Binding ExpandInfo}"
-                Margin="5">
-                <Label FontSize="12">
-                    <TextBlock Text="{Binding Description}" TextWrapping="Wrap" />
-                </Label>
-            </Border>
+            
+            <Label FontSize="12"  Grid.Column="0" HorizontalAlignment="Left"
+                   Grid.ColumnSpan="2"
+                   Grid.Row="1"
+                   IsVisible="{Binding ExpandInfo}"
+                   Margin="15">
+                <TextBlock Text="{Binding Description}" TextWrapping="Wrap" />
+            </Label>
+            
             <Border
                 Background="#00000000"
                 BorderThickness="0,2,0,0"
                 CornerRadius="10"
-                Grid.Column="1"
-                Grid.ColumnSpan="3"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
                 Grid.Row="2"
                 IsVisible="{Binding ExpandInfo}"
                 Margin="5,15,15,5">
-                <StackPanel Margin="5" Spacing="4">
+                <StackPanel Margin="5" Spacing="5">
                     <StackPanel Orientation="Horizontal">
                         <Label FontSize="10" VerticalAlignment="Center">Tags:</Label>
                         <ItemsControl ItemsSource="{Binding Tags}">
@@ -134,22 +124,22 @@
                             </ItemsControl.ItemTemplate>
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <StackPanel
+                                    <StackPanel Margin="5"
                                         HorizontalAlignment="Left"
                                         Orientation="Horizontal"
-                                        VerticalAlignment="Center" />
+                                        VerticalAlignment="Center" Spacing="8"/>
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                         </ItemsControl>
                     </StackPanel>
 
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal" >
                         <Label FontSize="10" VerticalAlignment="Center">Map:</Label>
-                        <Border
+                        <Border 
                             Background="#121212"
                             CornerRadius="8"
                             HorizontalAlignment="Center"
-                            Margin="1,1,1,1"
+                            Margin="5"
                             VerticalAlignment="Center">
                             <Label FontSize="10" Margin="5,0,5,0">
                                 <TextBlock Text="{Binding ServerHubInfo.StatusData.Map}" />
@@ -163,7 +153,7 @@
                             Background="#121212"
                             CornerRadius="8"
                             HorizontalAlignment="Center"
-                            Margin="1,1,1,1"
+                            Margin="5"
                             VerticalAlignment="Center">
                             <Label FontSize="10" Margin="5,0,5,0">
                                 <TextBlock Text="{Binding ServerHubInfo.StatusData.Preset}" />
@@ -173,7 +163,7 @@
                 </StackPanel>
             </Border>
             <StackPanel
-                Grid.Column="3"
+                Grid.Column="2"
                 Grid.Row="1"
                 IsVisible="{Binding ExpandInfo}"
                 Margin="5,5,0,0"
