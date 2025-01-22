@@ -39,7 +39,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
     [GenerateProperty] private DebugService DebugService { get; } = default!;
     [GenerateProperty] private PopupMessageService PopupService { get; } = default!;
     [GenerateProperty] private HubService HubService { get; } = default!;
-    [GenerateProperty] private ViewHelperService ViewHelperService { get; } = default!;
+    [GenerateProperty, DesignConstruct] private ViewHelperService ViewHelperService { get; } = default!;
 
     public ObservableCollection<ContentEntry> Entries { get; } = new();
 

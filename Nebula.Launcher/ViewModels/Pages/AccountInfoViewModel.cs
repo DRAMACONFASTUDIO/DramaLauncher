@@ -34,7 +34,7 @@ public partial class AccountInfoViewModel : ViewModelBase
     [GenerateProperty] private PopupMessageService PopupMessageService { get; } = default!;
     [GenerateProperty] private ConfigurationService ConfigurationService { get; } = default!;
     [GenerateProperty] private AuthService AuthService { get; } = default!;
-    [GenerateProperty] private ViewHelperService ViewHelperService { get; } = default!;
+    [GenerateProperty, DesignConstruct] private ViewHelperService ViewHelperService { get; } = default!;
 
     public ObservableCollection<AuthLoginPasswordModel> Accounts { get; } = new();
     public ObservableCollection<string> AuthUrls { get; } = new();

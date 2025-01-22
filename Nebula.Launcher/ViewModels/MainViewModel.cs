@@ -44,7 +44,7 @@ public partial class MainViewModel : ViewModelBase
 
     [GenerateProperty] private DebugService DebugService { get; } = default!;
     [GenerateProperty] private PopupMessageService PopupMessageService { get; } = default!;
-    [GenerateProperty] private ViewHelperService ViewHelperService { get; } = default!;
+    [GenerateProperty, DesignConstruct] private ViewHelperService ViewHelperService { get; } = default!;
 
     public ObservableCollection<ListItemTemplate> Items { get; private set; }
 

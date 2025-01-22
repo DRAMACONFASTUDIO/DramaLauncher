@@ -17,12 +17,14 @@
     </Design.DataContext>
 
     <Border
-        Background="#00000000"
-        BorderThickness="2,1,0,1"
+        Background="Transparent"
+        BorderThickness="3,1,0,1"
+        BorderBrush="{StaticResource DefaultForeground}"
         CornerRadius="10"
         Margin="5">
         <Grid ColumnDefinitions="*,80,50" RowDefinitions="35,*,*">
             <Border
+                BorderBrush="{StaticResource DefaultForeground}"
                 Background="#00000000"
                 BorderThickness="0,0,0,2"
                 CornerRadius="10"
@@ -96,7 +98,8 @@
             </Label>
             
             <Border
-                Background="#00000000"
+                BorderBrush="{StaticResource DefaultForeground}"
+                Background="Transparent"
                 BorderThickness="0,2,0,0"
                 CornerRadius="10"
                 Grid.Column="0"
@@ -111,8 +114,9 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="{x:Type system:String}">
                                     <Border
-                                        Background="#121212"
+                                        Background="{StaticResource DefaultForeground}"
                                         CornerRadius="8"
+                                        BorderThickness="0"
                                         HorizontalAlignment="Center"
                                         Margin="1,1,1,1"
                                         VerticalAlignment="Center">
@@ -136,8 +140,9 @@
                     <StackPanel Orientation="Horizontal" >
                         <Label FontSize="10" VerticalAlignment="Center">Map:</Label>
                         <Border 
-                            Background="#121212"
+                            Background="{StaticResource DefaultForeground}"
                             CornerRadius="8"
+                            BorderThickness="0"
                             HorizontalAlignment="Center"
                             Margin="5"
                             VerticalAlignment="Center">
@@ -150,8 +155,9 @@
                     <StackPanel Orientation="Horizontal">
                         <Label FontSize="10" VerticalAlignment="Center">Preset:</Label>
                         <Border
-                            Background="#121212"
+                            Background="{StaticResource DefaultForeground}"
                             CornerRadius="8"
+                            BorderThickness="0"
                             HorizontalAlignment="Center"
                             Margin="5"
                             VerticalAlignment="Center">

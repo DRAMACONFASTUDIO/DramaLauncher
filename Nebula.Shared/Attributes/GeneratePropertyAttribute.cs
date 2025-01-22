@@ -4,4 +4,9 @@ namespace Nebula.Shared.Attributes
     public class GeneratePropertyAttribute : Attribute
     {
     }
+    
+    [AttributeUsage(AttributeTargets.Property)]
+    public class DesignConstructAttribute : Attribute
+    {
+    }
 }

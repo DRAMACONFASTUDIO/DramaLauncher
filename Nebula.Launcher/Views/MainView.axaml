@@ -38,9 +38,9 @@
                 PaneBackground="#00000000">
                 <SplitView.Pane>
                     <Border
-                        Background="{StaticResource DefaultBackground}"
+                        Background="{StaticResource DefaultForeground}"
                         BorderThickness="0,0,2,0"
-                        CornerRadius="0,0,0,0"
+                        CornerRadius="0,8,8,0"
                         Grid.Column="0"
                         Grid.Row="0"
                         Margin="0,0,5,0"
@@ -80,6 +80,7 @@
             <Border
                 BorderThickness="0,2,0,0"
                 CornerRadius="0,0,0,0"
+                Background="{StaticResource DefaultForeground}"
                 Grid.Column="0"
                 Grid.ColumnSpan="2"
                 Grid.Row="1"
@@ -95,7 +96,7 @@
                             Margin="0"
                             Padding="0"
                             VerticalAlignment="Center">
-                            <TextBlock HorizontalAlignment="Left" VerticalAlignment="Center">https://cinka.ru/nebula-launcher/</TextBlock>
+                            <TextBlock Foreground="#777777" HorizontalAlignment="Left" VerticalAlignment="Center">https://cinka.ru/nebula-launcher/</TextBlock>
                         </Button>
                         <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center">prototype-product-v0.01</TextBlock>
                     </Panel>

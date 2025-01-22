@@ -20,13 +20,12 @@
         RowDefinitions="*,40">
         <ScrollViewer Margin="0,0,0,10" Padding="0,0,10,0" Grid.RowSpan="2">
             <ItemsControl
-                Background="#00000000"
                 ItemsSource="{Binding ServerInfos}"
                 Padding="0">
             </ItemsControl>
         </ScrollViewer>
         
-        <Border Grid.Row="1" Background="{StaticResource DefaultBackground}" BoxShadow="none">
+        <Border Grid.Row="1" Background="{StaticResource DefaultBackground}" BorderThickness="0">
             
         </Border>
 

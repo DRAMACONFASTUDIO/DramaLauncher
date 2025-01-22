@@ -19,7 +19,7 @@ public partial class ServerListViewModel : ViewModelBase
 
     public Action? OnSearchChange;
     [GenerateProperty] private HubService HubService { get; } = default!;
-    [GenerateProperty] private ViewHelperService ViewHelperService { get; } = default!;
+    [GenerateProperty, DesignConstruct] private ViewHelperService ViewHelperService { get; } = default!;
     public ObservableCollection<ServerEntryModelView> ServerInfos { get; } = new();
     private List<ServerHubInfo> UnsortedServers { get; } = new();
 
