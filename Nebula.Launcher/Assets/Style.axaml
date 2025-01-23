@@ -1,6 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style Selector="Window">
-        <Setter Property="Background" Value="{StaticResource DefaultBackground}"/>
+        <Setter Property="Background" Value="{StaticResource DefaultBackground}" />
     </Style>
     <Style Selector="Border">
         <Setter Property="CornerRadius" Value="10" />
@@ -48,23 +48,35 @@
         <Setter Property="BorderBrush" Value="#f7f7ff" />
         <Setter Property="Background" Value="Transparent" />
     </Style>
-    <Style Selector="TextBox"></Style>
+    <Style Selector="TextBox" />
 
-    <Style Selector="ListBoxItem">
+    <Style Selector="ListBoxItem /template/ ContentPresenter">
         <Setter Property="CornerRadius" Value="0,8,8,0" />
         <Setter Property="Margin" Value="0,0,0,5" />
         <Setter Property="Padding" Value="8" />
         <Setter Property="Background" Value="Transparent" />
     </Style>
 
-    <Style Selector="ListBoxItem:selected">
-        <Setter Property="Background" Value="{StaticResource DefaultSelected}"/>
+    <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+        <Setter Property="CornerRadius" Value="0,8,8,0" />
+        <Setter Property="Background" Value="{StaticResource DefaultSelected}" />
+        <Setter Property="BoxShadow" Value="0 0 15 1 #1212" />
     </Style>
-    <Style Selector="ListBoxItem:pressed">
-        <Setter Property="Background" Value="{StaticResource DefaultSelected}"/>
+    <Style Selector="ListBoxItem:pointerover">
+        <Setter Property="CornerRadius" Value="0,8,8,0" />
+        <Setter Property="Margin" Value="0,0,5,0" />
+    </Style>
+    <Style Selector="ListBoxItem:pressed /template/ ContentPresenter">
+        <Setter Property="CornerRadius" Value="0,8,8,0" />
+        <Setter Property="Background" Value="{StaticResource DefaultSelected}" />
     </Style>
 
     <Style Selector="TextBox">
         <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="White" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
     </Style>
 </Styles>

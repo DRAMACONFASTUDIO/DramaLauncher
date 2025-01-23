@@ -35,19 +35,19 @@
                 Grid.ColumnSpan="2"
                 Grid.Row="0"
                 IsPaneOpen="{Binding IsPaneOpen}"
-                PaneBackground="#00000000">
+                PaneBackground="Transparent">
                 <SplitView.Pane>
                     <Border
-                        Background="{StaticResource DefaultForeground}"
-                        BorderThickness="0,0,2,0"
+                        Background="{StaticResource DefaultBackground}"
+                        BoxShadow="0 0 5 0 #121212"
                         CornerRadius="0,8,8,0"
                         Grid.Column="0"
                         Grid.Row="0"
                         Margin="0,0,5,0"
-                        Padding="0">
+                        Padding="0,0,-4,0">
                         <Grid ColumnDefinitions="*" RowDefinitions="*,40">
                             <ListBox
-                                Background="#00000000"
+                                Background="Transparent"
                                 ItemsSource="{Binding Items}"
                                 Padding="0"
                                 SelectedItem="{Binding SelectedListItem}">
@@ -78,9 +78,9 @@
             </SplitView>
 
             <Border
-                BorderThickness="0,2,0,0"
+                Background="{StaticResource DefaultBackground}"
+                BoxShadow="0 0 5 0 #121212"
                 CornerRadius="0,0,0,0"
-                Background="{StaticResource DefaultForeground}"
                 Grid.Column="0"
                 Grid.ColumnSpan="2"
                 Grid.Row="1"
@@ -96,7 +96,12 @@
                             Margin="0"
                             Padding="0"
                             VerticalAlignment="Center">
-                            <TextBlock Foreground="#777777" HorizontalAlignment="Left" VerticalAlignment="Center">https://cinka.ru/nebula-launcher/</TextBlock>
+                            <TextBlock
+                                Foreground="#777777"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center">
+                                https://cinka.ru/nebula-launcher/
+                            </TextBlock>
                         </Button>
                         <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center">prototype-product-v0.01</TextBlock>
                     </Panel>
@@ -106,9 +111,13 @@
 
         <Panel IsVisible="{Binding Popup}">
             <Border Background="#111" Opacity="50" />
-            <Border CornerRadius="10" Margin="40" Background="{StaticResource DefaultBackground}">
+            <Border
+                Background="{StaticResource DefaultBackground}"
+                CornerRadius="10"
+                Margin="40">
                 <Grid RowDefinitions="35,*,20">
                     <Border
+                        BorderBrush="{StaticResource DefaultForeground}"
                         BorderThickness="0,0,0,2"
                         CornerRadius="10,10,0,0"
                         Grid.Row="0">
@@ -131,7 +140,8 @@
                     <TransitioningContentControl Content="{Binding CurrentPopup}" Grid.Row="1" />
 
                     <Border
-                        BorderThickness="0,2,0,2"
+                        BorderBrush="{StaticResource DefaultForeground}"
+                        BorderThickness="0,2,0,0"
                         CornerRadius="0,0,10,10"
                         Grid.Row="2">
                         <Panel Margin="12,0,12,0" VerticalAlignment="Center">
