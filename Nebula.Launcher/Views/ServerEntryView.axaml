@@ -1,5 +1,5 @@
 <UserControl
-    d:DesignHeight="300"
+    d:DesignHeight="500"
     d:DesignWidth="800"
     mc:Ignorable="d"
     x:Class="Nebula.Launcher.Views.ServerEntryView"
@@ -9,8 +9,10 @@
     xmlns:converters="clr-namespace:Nebula.Launcher.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:Nebula.Shared.Models;assembly=Nebula.Shared"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels"
+    xmlns:views="clr-namespace:Nebula.Launcher.Views"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Design.DataContext>
         <viewModels:ServerEntryModelView />
@@ -169,6 +171,39 @@
                             </Label>
                         </Border>
                     </StackPanel>
+
+                    <ItemsControl ItemsSource="{Binding Links}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type models:ServerLink}">
+                                <Border
+                                    Background="Transparent"
+                                    BoxShadow="0 0 13 -1 #121212"
+                                    CornerRadius="10">
+                                    <Button
+                                        Command="{Binding $parent[views:ServerEntryView].((viewModels:ServerEntryModelView)DataContext).OnLinkGo}"
+                                        CommandParameter="{Binding Url}"
+                                        Margin="3">
+                                        <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <Svg Height="20" Path="{Binding Icon, Converter={x:Static converters:TypeConverters.IconConverter}}" />
+                                            <Label FontSize="10">
+                                                <TextBlock Text="{Binding Name}" />
+                                            </Label>
+                                        </StackPanel>
+                                    </Button>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel
+                                    HorizontalAlignment="Left"
+                                    Margin="5"
+                                    Orientation="Horizontal"
+                                    Spacing="8"
+                                    VerticalAlignment="Center" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
                 </StackPanel>
             </Border>
             <StackPanel

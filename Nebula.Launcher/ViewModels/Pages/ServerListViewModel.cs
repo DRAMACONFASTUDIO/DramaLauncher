@@ -40,19 +40,15 @@ public partial class ServerListViewModel : ViewModelBase
         foreach (var info in HubService.ServerList) UnsortedServers.Add(info);
 
         HubService.HubServerChangedEventArgs += HubServerChangedEventArgs;
-        HubService.HubServerLoaded += HubServerLoaded;
+        HubService.HubServerLoaded += SortServers;
         OnSearchChange += OnChangeSearch;
 
         if (!HubService.IsUpdating) SortServers();
     }
-
-    private void HubServerLoaded()
-    {
-        SortServers();
-    }
-
+    
     private void OnChangeSearch()
     {
+        if(string.IsNullOrEmpty(SearchText)) return;
         SortServers();
     }
 

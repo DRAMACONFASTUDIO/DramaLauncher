@@ -7,21 +7,25 @@ namespace Nebula.Shared.Utils;
 public static class Helper
 {
     public static readonly JsonSerializerOptions JsonWebOptions = new(JsonSerializerDefaults.Web);
+    public static void SafeOpenBrowser(string uri)
+    {
+        if (!Uri.TryCreate(uri, UriKind.Absolute, out var parsedUri))
+        {
+            Console.WriteLine("Unable to parse URI in server-provided link: {Link}", uri);
+            return;
+        }
 
+        if (parsedUri.Scheme is not ("http" or "https"))
+        {
+            Console.WriteLine("Refusing to open server-provided link {Link}, only http/https are allowed", parsedUri);
+            return;
+        }
+
+        OpenBrowser(parsedUri.ToString());
+    }
     public static void OpenBrowser(string url)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            Process.Start(new ProcessStartInfo("cmd", $"/c start {url}"));
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
-            Process.Start("xdg-open", url);
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            Process.Start("open", url);
-        }
+        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
 
     public static async Task<T> AsJson<T>(this HttpContent content) where T : notnull

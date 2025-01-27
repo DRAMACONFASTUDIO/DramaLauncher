@@ -13,7 +13,8 @@ public partial class InfoPopupViewModel : PopupViewModelBase
     [ObservableProperty] private string _infoText = "Test";
 
     public override string Title => "Info";
-    public override bool IsClosable => true;
+    public bool IsInfoClosable { get; set; } = true;
+    public override bool IsClosable => IsInfoClosable;
 
     protected override void Initialise()
     {

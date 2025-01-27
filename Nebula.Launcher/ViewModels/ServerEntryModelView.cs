@@ -8,9 +8,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using Avalonia;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Nebula.Launcher.Services;
 using Nebula.Launcher.ViewModels.Popup;
 using Nebula.Launcher.Views;
@@ -37,7 +39,8 @@ public partial class ServerEntryModelView : ViewModelBase
     [GenerateProperty] private ViewHelperService ViewHelperService { get; } = default!;
     [GenerateProperty] private RestService RestService { get; } = default!;
 
-    [ObservableProperty] private string _description = "...";
+    [ObservableProperty] private string _description = "Fetching info...";
+    public ObservableCollection<ServerLink> Links { get; } = new();
     [ObservableProperty] private bool _expandInfo = false;
     public bool RunVisible => Process == null;
 
@@ -79,6 +82,8 @@ public partial class ServerEntryModelView : ViewModelBase
 
     public ObservableCollection<string> Tags { get; } = [];
 
+    public ICommand OnLinkGo { get; }= new LinkGoCommand();
+
     private Process? Process
     {
         get => _p;
@@ -92,8 +97,14 @@ public partial class ServerEntryModelView : ViewModelBase
     protected override void InitialiseInDesignMode()
     {
         Description = "Server of meow girls! Nya~ \nNyaMeow\nOOOINK!!";
+        Links.Add(new ServerLink("Discord","discord","https://cinka.ru"));
         ServerHubInfo = new ServerHubInfo("ss14://localhost",
-            new ServerStatus("Ameba", "Locala meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow ", ["rp:hrp", "18+"], "Antag", 15, 5, 1, false, DateTime.Now, 100), ["meow:rp"]);
+            new ServerStatus("Ameba", 
+                "Locala meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow ",
+                ["rp:hrp", "18+"], 
+                "Antag", 15, 5, 1, false
+                , DateTime.Now, 100),
+            ["meow:rp"]);
     }
 
     protected override void Initialise()
@@ -221,7 +232,20 @@ public partial class ServerEntryModelView : ViewModelBase
         }
         
         var info = await GetServerInfo();
-        Description = info != null ? info.Desc : "Server offline";
+        if (info == null)
+        {
+            Description = "Error think!";
+            return;
+        }
+        
+        Description = info.Desc;
+
+        Links.Clear();
+        foreach (var link in info.Links)
+        {
+            Links.Add(link);
+        }
+        
     }
 
     private static string FindDotnetPath()
@@ -273,4 +297,24 @@ public sealed class LogInfo
             Category = category, Message = message, CategoryColor = color
         };
     }
+}
+
+public class LinkGoCommand : ICommand
+{
+    public LinkGoCommand()
+    {
+        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+    }
+    public bool CanExecute(object? parameter)
+    {
+        return true;
+    }
+
+    public void Execute(object? parameter)
+    {
+        if(parameter is not string str) return;
+        Helper.SafeOpenBrowser(str);
+    }
+
+    public event EventHandler? CanExecuteChanged;
 }

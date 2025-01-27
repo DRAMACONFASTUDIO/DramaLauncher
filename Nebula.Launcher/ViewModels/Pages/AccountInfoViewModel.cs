@@ -1,5 +1,7 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -75,24 +77,29 @@ public partial class AccountInfoViewModel : ViewModelBase
         DoAuth();
     }
 
-    public async void DoAuth()
+    public void DoAuth()
     {
         var message = ViewHelperService.GetViewModel<InfoPopupViewModel>();
         message.InfoText = "Auth think, please wait...";
+        message.IsInfoClosable = false;
+        Console.WriteLine("AUTH SHIT");
         PopupMessageService.Popup(message);
 
-        if (await AuthService.Auth(CurrentAlp))
+        Task.Run(async () =>
         {
-            message.Dispose();
-            IsLogged = true;
-            ConfigurationService.SetConfigValue(CurrentConVar.AuthCurrent, CurrentAlp);
-        }
-        else
-        {
-            message.Dispose();
-            Logout();
-            PopupMessageService.Popup("Well, shit is happened: " + AuthService.Reason);
-        }
+            if (await AuthService.Auth(CurrentAlp))
+            {
+                message.Dispose();
+                IsLogged = true;
+                ConfigurationService.SetConfigValue(CurrentConVar.AuthCurrent, CurrentAlp);
+            }
+            else
+            {
+                message.Dispose();
+                Logout();
+                PopupMessageService.Popup("Well, shit is happened: " + AuthService.Reason);
+            }
+        });
     }
 
     public void Logout()

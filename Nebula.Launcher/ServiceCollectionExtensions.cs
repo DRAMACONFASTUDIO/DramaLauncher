@@ -41,9 +41,17 @@ public static class ServiceCollectionExtensions
 
         foreach (var (viewModel, view, isSingleton) in GetTypesWithHelpAttribute(Assembly.GetExecutingAssembly()))
         {
-            if (isSingleton) services.AddSingleton(viewModel);
-            else services.AddTransient(viewModel);
-            if (view != null) services.AddTransient(view);
+            if (isSingleton)
+            {
+                services.AddSingleton(viewModel);
+                if (view != null) services.AddSingleton(view);
+            }
+            else
+            {
+                services.AddTransient(viewModel);
+                if (view != null) services.AddTransient(view);
+            }
+            
         }
     }
 
