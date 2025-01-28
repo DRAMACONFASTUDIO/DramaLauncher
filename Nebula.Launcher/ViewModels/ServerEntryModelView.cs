@@ -1,18 +1,13 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Avalonia;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using Nebula.Launcher.Services;
 using Nebula.Launcher.ViewModels.Popup;
 using Nebula.Launcher.Views;
@@ -27,8 +22,9 @@ namespace Nebula.Launcher.ViewModels;
 public partial class ServerEntryModelView : ViewModelBase
 {
     private Process? _p;
-
-
+    public RobustUrl Address { get; private set; }
+    public Action? OnFavoriteToggle;
+    
     public LogPopupModelView CurrLog;
     [GenerateProperty] private AuthService AuthService { get; } = default!;
     [GenerateProperty] private ContentService ContentService { get; } = default!;
@@ -40,8 +36,13 @@ public partial class ServerEntryModelView : ViewModelBase
     [GenerateProperty] private RestService RestService { get; } = default!;
 
     [ObservableProperty] private string _description = "Fetching info...";
-    public ObservableCollection<ServerLink> Links { get; } = new();
     [ObservableProperty] private bool _expandInfo = false;
+    [ObservableProperty] private bool _tagDataVisible = false;
+
+    public ServerStatus Status { get; set; } = 
+        new("", "", [], "", -1, -1, -1, false, DateTime.Now, -1);
+    
+    public ObservableCollection<ServerLink> Links { get; } = new();
     public bool RunVisible => Process == null;
 
     private ServerInfo? _serverInfo = null;
@@ -51,33 +52,12 @@ public partial class ServerEntryModelView : ViewModelBase
         if (_serverInfo == null)
         {
             var result =
-                await RestService.GetAsync<ServerInfo>(ServerHubInfo.Address.ToRobustUrl().InfoUri, CancellationService.Token);
+                await RestService.GetAsync<ServerInfo>(Address.InfoUri, CancellationService.Token);
             if (result.Value == null) return null;
             _serverInfo = result.Value;
         }
 
         return _serverInfo;
-    }
-
-    private ServerHubInfo _serverHubInfo = default!;
-    public ServerHubInfo ServerHubInfo
-    {
-        get => _serverHubInfo;
-        set
-        {
-            Tags.Clear();
-            foreach (var tag in value.StatusData.Tags)
-            {
-                Tags.Add(tag);
-            }
-            foreach (var tag in value.InferredTags)
-            {
-                Tags.Add(tag);
-            }
-            
-            _serverHubInfo = value;
-            OnPropertyChanged(nameof(ServerHubInfo));
-        }
     }
 
     public ObservableCollection<string> Tags { get; } = [];
@@ -98,18 +78,52 @@ public partial class ServerEntryModelView : ViewModelBase
     {
         Description = "Server of meow girls! Nya~ \nNyaMeow\nOOOINK!!";
         Links.Add(new ServerLink("Discord","discord","https://cinka.ru"));
-        ServerHubInfo = new ServerHubInfo("ss14://localhost",
-            new ServerStatus("Ameba", 
-                "Locala meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow ",
-                ["rp:hrp", "18+"], 
-                "Antag", 15, 5, 1, false
-                , DateTime.Now, 100),
-            ["meow:rp"]);
+        Status = new ServerStatus("Ameba",
+            "Locala meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow ",
+            ["rp:hrp", "18+"],
+            "Antag", 15, 5, 1, false
+            , DateTime.Now, 100);
+        Address = "ss14://localhost".ToRobustUrl();
     }
 
     protected override void Initialise()
     {
         CurrLog = ViewHelperService.GetViewModel<LogPopupModelView>();
+    }
+
+    public ServerEntryModelView WithData(ServerHubInfo value)
+    {
+        Status = value.StatusData;
+        Address = value.Address.ToRobustUrl();
+        Tags.Clear();
+        foreach (var tag in Status.Tags)
+        {
+            Tags.Add(tag);
+        }
+        foreach (var tag in value.InferredTags)
+        {
+            Tags.Add(tag);
+        }
+        
+        return this;
+    }
+
+    public ServerEntryModelView WithData(RobustUrl url, ServerStatus serverStatus)
+    {
+        Status = serverStatus;
+        Address = url;
+        Tags.Clear();
+        foreach (var tag in Status.Tags)
+        {
+            Tags.Add(tag);
+        }
+
+        return this;
+    }
+    
+    public void ToggleFavorites()
+    {
+        OnFavoriteToggle?.Invoke();
     }
 
     public void RunInstance()
@@ -124,7 +138,7 @@ public partial class ServerEntryModelView : ViewModelBase
             var authProv = AuthService.SelectedAuth;
 
             var buildInfo =
-                await ContentService.GetBuildInfo(new RobustUrl(ServerHubInfo.Address), CancellationService.Token);
+                await ContentService.GetBuildInfo(Address, CancellationService.Token);
 
             using (var loadingContext = ViewHelperService.GetViewModel<LoadingContextViewModel>())
             {
@@ -145,7 +159,7 @@ public partial class ServerEntryModelView : ViewModelBase
                         { "ROBUST_AUTH_TOKEN", authProv?.Token.Token },
                         { "ROBUST_AUTH_SERVER", authProv?.AuthLoginPassword.AuthServer },
                         { "ROBUST_AUTH_PUBKEY", buildInfo.BuildInfo.Auth.PublicKey },
-                        { "GAME_URL", ServerHubInfo.Address },
+                        { "GAME_URL", Address.ToString() },
                         { "AUTH_LOGIN", authProv?.AuthLoginPassword.Login }
                     },
                     CreateNoWindow = true,

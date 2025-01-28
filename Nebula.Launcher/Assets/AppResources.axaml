@@ -2,4 +2,5 @@
     <SolidColorBrush x:Key="DefaultBackground">#222222</SolidColorBrush>
     <SolidColorBrush x:Key="DefaultForeground">#121212</SolidColorBrush>
     <SolidColorBrush x:Key="DefaultSelected">#D95F59</SolidColorBrush>
+    <BoxShadows x:Key="DefaultShadow">0 0 10 -1 #121212</BoxShadows>
 </ResourceDictionary>

@@ -19,8 +19,8 @@
     </Design.DataContext>
 
     <Border
-        Background="Transparent"
-        BoxShadow="-2 0 18 -1 #121212"
+        Background="{StaticResource DefaultBackground}"
+        BoxShadow="-2 0 5 -1 #121212"
         CornerRadius="10"
         Margin="5">
         <Grid ColumnDefinitions="*,80,50" RowDefinitions="35,*,*">
@@ -46,7 +46,7 @@
                     VerticalScrollBarVisibility="Disabled"
                     x:Name="AutoScrollViewer">
                     <Label VerticalAlignment="Center">
-                        <TextBlock Text="{Binding ServerHubInfo.StatusData.Name}" />
+                        <TextBlock Text="{Binding Status.Name}" />
                     </Label>
                 </ScrollViewer>
             </Button>
@@ -58,14 +58,13 @@
                 Orientation="Horizontal"
                 VerticalAlignment="Center">
                 <Label>
-                    <TextBlock Text="{Binding ServerHubInfo.StatusData.Players}" />
+                    <TextBlock Text="{Binding Status.Players}" />
                 </Label>
                 <Label>/</Label>
                 <Label>
-                    <TextBlock Text="{Binding ServerHubInfo.StatusData.SoftMaxPlayers}" />
+                    <TextBlock Text="{Binding Status.SoftMaxPlayers}" />
                 </Label>
             </StackPanel>
-
 
             <Panel
                 Grid.Column="2"
@@ -152,7 +151,7 @@
                             Margin="5"
                             VerticalAlignment="Center">
                             <Label FontSize="10" Margin="5,0,5,0">
-                                <TextBlock Text="{Binding ServerHubInfo.StatusData.Map}" />
+                                <TextBlock Text="{Binding Status.Map}" />
                             </Label>
                         </Border>
                     </StackPanel>
@@ -167,7 +166,7 @@
                             Margin="5"
                             VerticalAlignment="Center">
                             <Label FontSize="10" Margin="5,0,5,0">
-                                <TextBlock Text="{Binding ServerHubInfo.StatusData.Preset}" />
+                                <TextBlock Text="{Binding Status.Preset}" />
                             </Label>
                         </Border>
                     </StackPanel>

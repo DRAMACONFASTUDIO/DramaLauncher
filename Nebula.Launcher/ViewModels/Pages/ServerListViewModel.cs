@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -8,6 +9,7 @@ using Nebula.Launcher.Services;
 using Nebula.Launcher.Views.Pages;
 using Nebula.Shared.Models;
 using Nebula.Shared.Services;
+using Nebula.Shared.Utils;
 
 namespace Nebula.Launcher.ViewModels.Pages;
 
@@ -26,6 +28,9 @@ public partial class ServerListViewModel : ViewModelBase
     //Design think
     protected override void InitialiseInDesignMode()
     {
+        FavoriteVisible = true;
+        SortedFavoriteServers.Add(GetServerEntryModelView(("ss14://localhost".ToRobustUrl(),
+            new ServerStatus("Nebula", "TestCraft", ["16+", "RU"], "super", 12, 55, 1, false, DateTime.Now, 20))));
         ServerInfos.Add(CreateServerView(new ServerHubInfo("ss14://localhost",
             new ServerStatus("Nebula", "TestCraft", ["16+", "RU"], "super", 12, 55, 1, false, DateTime.Now, 20), [])));
         ServerInfos.Add(CreateServerView(new ServerHubInfo("ss14://localhost",
@@ -44,12 +49,14 @@ public partial class ServerListViewModel : ViewModelBase
         OnSearchChange += OnChangeSearch;
 
         if (!HubService.IsUpdating) SortServers();
+        FetchFavorite();
     }
     
     private void OnChangeSearch()
     {
         if(string.IsNullOrEmpty(SearchText)) return;
         SortServers();
+        SortFavorite();
     }
 
     private void HubServerChangedEventArgs(HubServerChangedEventArgs obj)
@@ -69,20 +76,20 @@ public partial class ServerListViewModel : ViewModelBase
         {
             ServerInfos.Clear();
             UnsortedServers.Sort(new ServerComparer());
-            foreach (var server in UnsortedServers.Where(CheckServerThink)) ServerInfos.Add(CreateServerView(server));
+            foreach (var server in UnsortedServers.Where(a => CheckServerThink(a.StatusData))) ServerInfos.Add(CreateServerView(server));
         });
     }
 
-    private bool CheckServerThink(ServerHubInfo hubInfo)
+    private bool CheckServerThink(ServerStatus hubInfo)
     {
         if (string.IsNullOrEmpty(SearchText)) return true;
-        return hubInfo.StatusData.Name.ToLower().Contains(SearchText.ToLower());
+        return hubInfo.Name.ToLower().Contains(SearchText.ToLower());
     }
 
     private ServerEntryModelView CreateServerView(ServerHubInfo serverHubInfo)
     {
-        var svn = ViewHelperService.GetViewModel<ServerEntryModelView>();
-        svn.ServerHubInfo = serverHubInfo;
+        var svn = ViewHelperService.GetViewModel<ServerEntryModelView>().WithData(serverHubInfo);
+        svn.OnFavoriteToggle += () => AddFavorite(svn);
         return svn;
     }
 
@@ -96,7 +103,7 @@ public partial class ServerListViewModel : ViewModelBase
     }
 }
 
-public class ServerComparer : IComparer<ServerHubInfo>
+public class ServerComparer : IComparer<ServerHubInfo>, IComparer<ServerStatus>, IComparer<(RobustUrl,ServerStatus)>
 {
     public int Compare(ServerHubInfo? x, ServerHubInfo? y)
     {
@@ -107,6 +114,30 @@ public class ServerComparer : IComparer<ServerHubInfo>
         if (ReferenceEquals(null, x))
             return -1;
 
-        return y.StatusData.Players.CompareTo(x.StatusData.Players);
+        return Compare(x.StatusData, y.StatusData);
+    }
+
+    public int Compare(ServerStatus? x, ServerStatus? y)
+    {
+        if (ReferenceEquals(x, y))
+            return 0;
+        if (ReferenceEquals(null, y))
+            return 1;
+        if (ReferenceEquals(null, x))
+            return -1;
+
+        return y.Players.CompareTo(x.Players);
+    }
+
+    public int Compare((RobustUrl, ServerStatus) x, (RobustUrl, ServerStatus) y)
+    {
+        if (ReferenceEquals(x, y))
+            return 0;
+        if (ReferenceEquals(null, y))
+            return 1;
+        if (ReferenceEquals(null, x))
+            return -1;
+
+        return Compare(x.Item2, y.Item2);
     }
 }

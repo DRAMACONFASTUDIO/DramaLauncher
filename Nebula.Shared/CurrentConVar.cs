@@ -29,4 +29,7 @@ public static class CurrentConVar
 
     public static readonly ConVar<AuthLoginPassword> AuthCurrent =
         ConVarBuilder.Build<AuthLoginPassword>("auth.current");
+    
+    public static readonly ConVar<string[]> Favorites =
+        ConVarBuilder.Build<string[]>("server.favorites", []);
 }

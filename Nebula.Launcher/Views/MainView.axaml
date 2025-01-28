@@ -1,5 +1,5 @@
 <UserControl
-    Background="{StaticResource DefaultBackground}"
+    Background="#1a1a1a"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
@@ -39,7 +39,7 @@
                 <SplitView.Pane>
                     <Border
                         Background="{StaticResource DefaultBackground}"
-                        BoxShadow="0 0 5 0 #121212"
+                        BoxShadow="0 0 15 -2 #121212"
                         CornerRadius="0,8,8,0"
                         Grid.Column="0"
                         Grid.Row="0"
@@ -79,7 +79,7 @@
 
             <Border
                 Background="{StaticResource DefaultBackground}"
-                BoxShadow="0 0 5 0 #121212"
+                BoxShadow="{StaticResource DefaultShadow}"
                 CornerRadius="0,0,0,0"
                 Grid.Column="0"
                 Grid.ColumnSpan="2"
@@ -103,7 +103,7 @@
                                 https://cinka.ru/nebula-launcher/
                             </TextBlock>
                         </Button>
-                        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center">prototype-product-v0.01</TextBlock>
+                        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center">v0.02-a</TextBlock>
                     </Panel>
                 </Label>
             </Border>
@@ -118,7 +118,7 @@
                 <Grid RowDefinitions="35,*,20">
                     <Border
                         BorderBrush="{StaticResource DefaultForeground}"
-                        BorderThickness="0,0,0,2"
+                        BoxShadow="0 2 15 -2 #121212"
                         CornerRadius="10,10,0,0"
                         Grid.Row="0">
                         <Panel Margin="12,0,0,0" VerticalAlignment="Center">
@@ -141,7 +141,7 @@
 
                     <Border
                         BorderBrush="{StaticResource DefaultForeground}"
-                        BorderThickness="0,2,0,0"
+                        BoxShadow="0 -2 15 -2 #121212"
                         CornerRadius="0,0,10,10"
                         Grid.Row="2">
                         <Panel Margin="12,0,12,0" VerticalAlignment="Center">
