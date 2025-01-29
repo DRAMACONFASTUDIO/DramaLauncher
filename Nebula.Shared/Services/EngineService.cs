@@ -35,18 +35,52 @@ public sealed class EngineService
 
     public async Task LoadEngineManifest(CancellationToken cancellationToken)
     {
-        var info = await _restService.GetAsync<Dictionary<string, EngineVersionInfo>>(
-            new Uri(_varService.GetConfigValue(CurrentConVar.EngineManifestUrl)!), cancellationToken);
-        var moduleInfo = await _restService.GetAsync<ModulesInfo>(
-            new Uri(_varService.GetConfigValue(CurrentConVar.EngineModuleManifestUrl)!), cancellationToken);
+        try
+        {
+            _debugService.Log("Fetching engine manifest from: " + CurrentConVar.EngineManifestUrl);
+            var info = await _restService.GetAsync<Dictionary<string, EngineVersionInfo>>(
+                new Uri(_varService.GetConfigValue(CurrentConVar.EngineManifestUrl)!), cancellationToken);
+            if (info.Value is null)
+                throw new Exception("Engine version info is null");
 
-        if (info.Value is null) return;
-        VersionInfos = info.Value;
+            VersionInfos = info.Value;
+            
+            _varService.SetConfigValue(CurrentConVar.EngineManifestBackup, info.Value);
+        }
+        catch (Exception e)
+        {
+            _debugService.Debug("Trying fallback engine manifest...");
+            if (!_varService.TryGetConfigValue(CurrentConVar.EngineManifestBackup, out var engineInfo))
+            {
+                throw new Exception("No engine info data available",e);
+            }
 
-        if (moduleInfo.Value is null) return;
-        ModuleInfos = moduleInfo.Value.Modules;
+            VersionInfos = engineInfo;
+        }
 
-        foreach (var f in ModuleInfos.Keys) _debugService.Debug(f);
+        try
+        {
+            _debugService.Log("Fetching module manifest from: " + CurrentConVar.EngineModuleManifestUrl);
+            var moduleInfo = await _restService.GetAsync<ModulesInfo>(
+                new Uri(_varService.GetConfigValue(CurrentConVar.EngineModuleManifestUrl)!), cancellationToken);
+
+            if (moduleInfo.Value is null) 
+                throw new Exception("Module version info is null");
+            
+            ModuleInfos = moduleInfo.Value.Modules;
+            _varService.SetConfigValue(CurrentConVar.ModuleManifestBackup, moduleInfo.Value);
+        }
+        catch (Exception e)
+        {
+            _debugService.Debug("Trying fallback module manifest...");
+            if (!_varService.TryGetConfigValue(CurrentConVar.ModuleManifestBackup, out var modulesInfo))
+            {
+                throw new Exception("No module info data available",e);
+            }
+
+            ModuleInfos = modulesInfo.Modules;
+        }
+        
     }
 
     public EngineBuildInfo? GetVersionInfo(string version)

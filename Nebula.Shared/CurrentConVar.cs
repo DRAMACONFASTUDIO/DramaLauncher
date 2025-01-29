@@ -1,3 +1,4 @@
+using Nebula.Shared.Models;
 using Nebula.Shared.Services;
 
 namespace Nebula.Shared;
@@ -32,4 +33,9 @@ public static class CurrentConVar
     
     public static readonly ConVar<string[]> Favorites =
         ConVarBuilder.Build<string[]>("server.favorites", []);
+
+    public static readonly ConVar<Dictionary<string, EngineVersionInfo>> EngineManifestBackup =
+        ConVarBuilder.Build<Dictionary<string, EngineVersionInfo>>("engine.manifest.backup");
+    public static readonly ConVar<ModulesInfo> ModuleManifestBackup =
+        ConVarBuilder.Build<ModulesInfo>("module.manifest.backup");
 }
