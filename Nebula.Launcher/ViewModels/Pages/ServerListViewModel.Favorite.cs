@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -32,6 +33,7 @@ public partial class ServerListViewModel
     {
         var model = ViewHelperService.GetViewModel<ServerEntryModelView>().WithData(server.Item1, server.Item2);
         model.OnFavoriteToggle += ()=> RemoveFavorite(model);
+        model.IsFavorite = true;
         return model;
     }
 
@@ -51,13 +53,20 @@ public partial class ServerListViewModel
         foreach (var server in servers)
         {
             var uri = server.ToRobustUrl();
-            var serverInfo = await RestService.GetAsync<ServerStatus>(uri.StatusUri, CancellationToken.None);
-            if (serverInfo.Value is null)
+            try
             {
-                continue;
-            }
+                var serverInfo = await RestService.GetAsync<ServerStatus>(uri.StatusUri, CancellationToken.None);
+                if (serverInfo.Value is null)
+                {
+                    throw new Exception("Server info is null");
+                }
             
-            FavoriteServers.Add((uri, serverInfo.Value));
+                FavoriteServers.Add((uri, serverInfo.Value));
+            }
+            catch (Exception e)
+            {
+                FavoriteServers.Add((uri, new ServerStatus("ErrorLand",$"ERROR: {e.Message}",[],"",-1,-1,-1,false,DateTime.Now, -1)));
+            }
         }
         
         SortFavorite();
@@ -65,9 +74,16 @@ public partial class ServerListViewModel
 
     public void AddFavorite(ServerEntryModelView entryModelView)
     {
+        entryModelView.IsFavorite = true;
+        AddFavorite(entryModelView.Address);
+    }
+
+    public void AddFavorite(RobustUrl robustUrl)
+    {
         var servers = (ConfigurationService.GetConfigValue(CurrentConVar.Favorites) ?? []).ToList();
-        servers.Add(entryModelView.Address.ToString());
+        servers.Add(robustUrl.ToString());
         ConfigurationService.SetConfigValue(CurrentConVar.Favorites, servers.ToArray());
+        FetchFavorite();
     }
 
     public void RemoveFavorite(ServerEntryModelView entryModelView)
@@ -75,5 +91,7 @@ public partial class ServerListViewModel
         var servers = (ConfigurationService.GetConfigValue(CurrentConVar.Favorites) ?? []).ToList();
         servers.Remove(entryModelView.Address.ToString());
         ConfigurationService.SetConfigValue(CurrentConVar.Favorites, servers.ToArray());
+        entryModelView.IsFavorite = false;
+        FetchFavorite();
     }
 }

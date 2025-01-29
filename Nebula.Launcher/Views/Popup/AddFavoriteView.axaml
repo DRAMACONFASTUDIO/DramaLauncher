@@ -1,0 +1,28 @@
+<UserControl
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
+    x:Class="Nebula.Launcher.Views.Popup.AddFavoriteView"
+    x:DataType="popup:AddFavoriteViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:popup="clr-namespace:Nebula.Launcher.ViewModels.Popup"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Design.DataContext>
+        <popup:AddFavoriteViewModel />
+    </Design.DataContext>
+    <StackPanel Margin="15" Spacing="10">
+        <Border BoxShadow="{StaticResource DefaultShadow}">
+            <TextBox Text="{Binding IpInput}" Watermark="ss14://localhost" />
+        </Border>
+        <Border Background="{StaticResource DefaultSelected}" BoxShadow="{StaticResource DefaultShadow}">
+            <Button Command="{Binding OnEnter}" HorizontalAlignment="Stretch">
+                <Label HorizontalAlignment="Center">Add</Label>
+            </Button>
+        </Border>
+        <Label>
+            <TextBlock Text="{Binding Error}" />
+        </Label>
+    </StackPanel>
+</UserControl>

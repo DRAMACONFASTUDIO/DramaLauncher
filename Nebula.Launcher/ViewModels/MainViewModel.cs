@@ -20,26 +20,21 @@ public partial class MainViewModel : ViewModelBase
 {
     private readonly List<ListItemTemplate> _templates =
     [
-        new ListItemTemplate(typeof(AccountInfoViewModel), "user", "Account"),
-        new ListItemTemplate(typeof(ServerListViewModel), "file", "Servers"),
-        new ListItemTemplate(typeof(ContentBrowserViewModel), "folder", "Content")
+        new ListItemTemplate(typeof(AccountInfoViewModel), "user", "Account", null),
+        new ListItemTemplate(typeof(ServerListViewModel), "file", "Servers", false),
+        new ListItemTemplate(typeof(ServerListViewModel), "star", "Favorites", true),
+        new ListItemTemplate(typeof(ContentBrowserViewModel), "folder", "Content", null)
     ];
 
     private readonly List<PopupViewModelBase> _viewQueue = new();
 
     [ObservableProperty] private ViewModelBase _currentPage;
-
     [ObservableProperty] private PopupViewModelBase? _currentPopup;
-
     [ObservableProperty] private string _currentTitle = "Default";
-
     [ObservableProperty] private bool _isEnabled = true;
-
     [ObservableProperty] private bool _isPaneOpen;
-
     [ObservableProperty] private bool _isPopupClosable = true;
     [ObservableProperty] private bool _popup;
-
     [ObservableProperty] private ListItemTemplate? _selectedListItem;
 
     [GenerateProperty] private DebugService DebugService { get; } = default!;
@@ -57,22 +52,19 @@ public partial class MainViewModel : ViewModelBase
 
     protected override void Initialise()
     {
-        CurrentPage = ViewHelperService.GetViewModel<AccountInfoViewModel>();
-
-        Items = new ObservableCollection<ListItemTemplate>(_templates);
+        InitialiseInDesignMode();
 
         PopupMessageService.OnPopupRequired += OnPopupRequired;
         PopupMessageService.OnCloseRequired += OnPopupCloseRequired;
-
-        SelectedListItem = Items.First(vm => vm.ModelType == typeof(AccountInfoViewModel));
     }
 
     partial void OnSelectedListItemChanged(ListItemTemplate? value)
     {
         if (value is null) return;
 
-        if (!ViewHelperService.TryGetViewModel(value.ModelType, out var vmb)) return;
+        if (!ViewHelperService.TryGetViewModel(value.ModelType, out var vmb) || vmb is not IViewModelPage viewModelPage) return;
 
+        viewModelPage.OnPageOpen(value.args);
         CurrentPage = vmb;
     }
 

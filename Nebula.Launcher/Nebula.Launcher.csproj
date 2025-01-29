@@ -36,6 +36,10 @@
             <DependentUpon>ServerListTab.axaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
+        <Compile Update="Views\Popup\AddFavoriteView.axaml.cs">
+          <DependentUpon>AddFavoriteView.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
     </ItemGroup>
 
     <Target Name="BuildCheck" AfterTargets="AfterBuild">

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Nebula.Launcher.Services;
+using Nebula.Launcher.ViewModels.Popup;
 using Nebula.Launcher.Views.Pages;
 using Nebula.Shared.Models;
 using Nebula.Shared.Services;
@@ -15,14 +16,17 @@ namespace Nebula.Launcher.ViewModels.Pages;
 
 [ViewModelRegister(typeof(ServerListView))]
 [ConstructGenerator]
-public partial class ServerListViewModel : ViewModelBase
+public partial class ServerListViewModel : ViewModelBase, IViewModelPage
 {
     [ObservableProperty] private string _searchText = string.Empty;
 
+    [ObservableProperty] private bool _isFavoriteMode; 
+
     public Action? OnSearchChange;
     [GenerateProperty] private HubService HubService { get; } = default!;
+    [GenerateProperty] private PopupMessageService PopupMessageService { get; }
     [GenerateProperty, DesignConstruct] private ViewHelperService ViewHelperService { get; } = default!;
-    public ObservableCollection<ServerEntryModelView> ServerInfos { get; } = new();
+    public ObservableCollection<ServerEntryModelView> SortedServers { get; } = new();
     private List<ServerHubInfo> UnsortedServers { get; } = new();
 
     //Design think
@@ -31,11 +35,11 @@ public partial class ServerListViewModel : ViewModelBase
         FavoriteVisible = true;
         SortedFavoriteServers.Add(GetServerEntryModelView(("ss14://localhost".ToRobustUrl(),
             new ServerStatus("Nebula", "TestCraft", ["16+", "RU"], "super", 12, 55, 1, false, DateTime.Now, 20))));
-        ServerInfos.Add(CreateServerView(new ServerHubInfo("ss14://localhost",
+        SortedServers.Add(CreateServerView(new ServerHubInfo("ss14://localhost",
             new ServerStatus("Nebula", "TestCraft", ["16+", "RU"], "super", 12, 55, 1, false, DateTime.Now, 20), [])));
-        ServerInfos.Add(CreateServerView(new ServerHubInfo("ss14://localhost",
+        SortedServers.Add(CreateServerView(new ServerHubInfo("ss14://localhost",
             new ServerStatus("Nebula", "TestCraft", ["16+", "RU"], "super", 12, 55, 1, false, DateTime.Now, 20), [])));
-        ServerInfos.Add(CreateServerView(new ServerHubInfo("ss14://localhost",
+        SortedServers.Add(CreateServerView(new ServerHubInfo("ss14://localhost",
             new ServerStatus("Nebula", "TestCraft", ["16+", "RU"], "super", 12, 55, 1, false, DateTime.Now, 20), [])));
     }
 
@@ -74,9 +78,9 @@ public partial class ServerListViewModel : ViewModelBase
     {
         Task.Run(() =>
         {
-            ServerInfos.Clear();
+            SortedServers.Clear();
             UnsortedServers.Sort(new ServerComparer());
-            foreach (var server in UnsortedServers.Where(a => CheckServerThink(a.StatusData))) ServerInfos.Add(CreateServerView(server));
+            foreach (var server in UnsortedServers.Where(a => CheckServerThink(a.StatusData))) SortedServers.Add(CreateServerView(server));
         });
     }
 
@@ -97,9 +101,23 @@ public partial class ServerListViewModel : ViewModelBase
     {
     }
 
+    public void AddFavoriteRequired()
+    {
+        var p = ViewHelperService.GetViewModel<AddFavoriteViewModel>();
+        PopupMessageService.Popup(p);
+    }
+
     public void UpdateRequired()
     {
         Task.Run(HubService.UpdateHub);
+    }
+
+    public void OnPageOpen(object? args)
+    {
+        if (args is bool fav)
+        {
+            IsFavoriteMode = fav;
+        }
     }
 }
 

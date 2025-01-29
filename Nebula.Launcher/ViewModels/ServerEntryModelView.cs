@@ -38,6 +38,7 @@ public partial class ServerEntryModelView : ViewModelBase
     [ObservableProperty] private string _description = "Fetching info...";
     [ObservableProperty] private bool _expandInfo = false;
     [ObservableProperty] private bool _tagDataVisible = false;
+    [ObservableProperty] private bool _isFavorite = false;
 
     public ServerStatus Status { get; set; } = 
         new("", "", [], "", -1, -1, -1, false, DateTime.Now, -1);
@@ -51,10 +52,18 @@ public partial class ServerEntryModelView : ViewModelBase
     {
         if (_serverInfo == null)
         {
-            var result =
-                await RestService.GetAsync<ServerInfo>(Address.InfoUri, CancellationService.Token);
-            if (result.Value == null) return null;
-            _serverInfo = result.Value;
+            try
+            {
+                var result =
+                    await RestService.GetAsync<ServerInfo>(Address.InfoUri, CancellationService.Token);
+                if (result.Value == null) return null;
+                _serverInfo = result.Value;
+            }
+            catch (Exception e)
+            {
+                Description = e.Message;
+                DebugService.Error(e);
+            }
         }
 
         return _serverInfo;
@@ -248,7 +257,6 @@ public partial class ServerEntryModelView : ViewModelBase
         var info = await GetServerInfo();
         if (info == null)
         {
-            Description = "Error think!";
             return;
         }
         

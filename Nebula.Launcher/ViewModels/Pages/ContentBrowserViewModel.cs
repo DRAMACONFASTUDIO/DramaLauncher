@@ -22,7 +22,7 @@ namespace Nebula.Launcher.ViewModels.Pages;
 
 [ViewModelRegister(typeof(ContentBrowserView))]
 [ConstructGenerator]
-public sealed partial class ContentBrowserViewModel : ViewModelBase
+public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModelPage
 {
     private readonly List<ContentEntry> _root = new();
 
@@ -203,6 +203,10 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase
         var h = _history[0];
         _history.RemoveAt(0);
         return h;
+    }
+
+    public void OnPageOpen(object? args)
+    {
     }
 }
 

@@ -22,24 +22,16 @@
             Grid.RowSpan="2"
             Margin="0,0,0,10"
             Padding="0,0,10,0">
-            <StackPanel Spacing="5">
-                <Border
-                    Background="{StaticResource DefaultSelected}"
-                    BoxShadow="{StaticResource DefaultShadow}"
-                    IsVisible="{Binding FavoriteVisible}"
-                    Margin="5">
-                    <StackPanel Margin="0,10,0,10" Spacing="5">
-                        <Label
-                            HorizontalAlignment="Center"
-                            Margin="5"
-                            VerticalAlignment="Center">
-                            Favorites
-                        </Label>
-                        <ItemsControl ItemsSource="{Binding SortedFavoriteServers}" Padding="0" />
-                    </StackPanel>
-                </Border>
-                <ItemsControl ItemsSource="{Binding ServerInfos}" Padding="0" />
-            </StackPanel>
+            <Panel>
+                <ItemsControl
+                    IsVisible="{Binding IsFavoriteMode}"
+                    ItemsSource="{Binding SortedFavoriteServers}"
+                    Padding="0" />
+                <ItemsControl
+                    IsVisible="{Binding !IsFavoriteMode}"
+                    ItemsSource="{Binding SortedServers}"
+                    Padding="0" />
+            </Panel>
         </ScrollViewer>
 
         <Border
@@ -49,7 +41,7 @@
             Grid.Row="1" />
 
         <Grid
-            ColumnDefinitions="*,40,40"
+            ColumnDefinitions="*,40,40,40"
             Grid.Row="1"
             Margin="5,0,0,0"
             RowDefinitions="*">
@@ -60,14 +52,20 @@
                 VerticalAlignment="Center"
                 Watermark="Server name..." />
             <Button
-                Command="{Binding FilterRequired}"
+                Command="{Binding AddFavoriteRequired}"
                 Grid.Column="1"
+                Padding="10">
+                <Svg IsVisible="{Binding IsFavoriteMode}" Path="/Assets/svg/star.svg" />
+            </Button>
+            <Button
+                Command="{Binding FilterRequired}"
+                Grid.Column="2"
                 Padding="10">
                 <Svg Path="/Assets/svg/filter.svg" />
             </Button>
             <Button
                 Command="{Binding UpdateRequired}"
-                Grid.Column="2"
+                Grid.Column="3"
                 Padding="10">
                 <Svg Path="/Assets/svg/refresh.svg" />
             </Button>

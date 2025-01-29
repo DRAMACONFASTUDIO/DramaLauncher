@@ -23,7 +23,7 @@
         BoxShadow="-2 0 5 -1 #121212"
         CornerRadius="10"
         Margin="5">
-        <Grid ColumnDefinitions="*,80,50" RowDefinitions="35,*,*">
+        <Grid ColumnDefinitions="*,80,50,50" RowDefinitions="35,*,*">
             <Border
                 Background="Transparent"
                 BoxShadow="0 3 3 -1 #121212"
@@ -68,6 +68,28 @@
 
             <Panel
                 Grid.Column="2"
+                Grid.Row="0"
+                Margin="5,0,0,0">
+                <Button
+                    Command="{Binding ToggleFavorites}"
+                    CornerRadius="10,10,10,10"
+                    HorizontalAlignment="Stretch"
+                    IsVisible="{Binding !IsFavorite}"
+                    VerticalAlignment="Stretch">
+                    <Svg Margin="4" Path="/Assets/svg/star.svg" />
+                </Button>
+                <Button
+                    Command="{Binding ToggleFavorites}"
+                    CornerRadius="10,10,10,10"
+                    HorizontalAlignment="Stretch"
+                    IsVisible="{Binding IsFavorite}"
+                    VerticalAlignment="Stretch">
+                    <Svg Margin="4" Path="/Assets/svg/starfull.svg" />
+                </Button>
+            </Panel>
+
+            <Panel
+                Grid.Column="3"
                 Grid.Row="0"
                 Margin="5,0,0,0">
                 <Button
