@@ -15,21 +15,10 @@ public partial class ServerListViewModel
 {
     [GenerateProperty] private ConfigurationService ConfigurationService { get; }
     [GenerateProperty] private RestService RestService { get; }
-
-    [ObservableProperty] private bool _favoriteVisible = false;
     
-    public List<(RobustUrl,ServerStatus)> FavoriteServers = new();
-    public ObservableCollection<ServerEntryModelView> SortedFavoriteServers { get; } = new();
-
-    private void SortFavorite()
-    {
-        SortedFavoriteServers.Clear();
-        FavoriteServers.Sort(new ServerComparer());
-        foreach (var server in FavoriteServers.Where(a => CheckServerThink(a.Item2))) 
-            SortedFavoriteServers.Add(GetServerEntryModelView(server));
-    }
-
-    private ServerEntryModelView GetServerEntryModelView((RobustUrl, ServerStatus) server)
+    public readonly List<(RobustUrl,ServerStatus)> RawFavoriteServers = new();
+    
+    public ServerEntryModelView GetServerEntryModelView((RobustUrl, ServerStatus) server)
     {
         var model = ViewHelperService.GetViewModel<ServerEntryModelView>().WithData(server.Item1, server.Item2);
         model.OnFavoriteToggle += ()=> RemoveFavorite(model);
@@ -39,16 +28,13 @@ public partial class ServerListViewModel
 
     private async void FetchFavorite()
     {
-        FavoriteServers.Clear();
+        RawFavoriteServers.Clear();
         
         var servers = ConfigurationService.GetConfigValue(CurrentConVar.Favorites);
         if (servers is null || servers.Length == 0)
         {
-            FavoriteVisible = false;
             return;
         }
-
-        FavoriteVisible = true;
         
         foreach (var server in servers)
         {
@@ -61,15 +47,13 @@ public partial class ServerListViewModel
                     throw new Exception("Server info is null");
                 }
             
-                FavoriteServers.Add((uri, serverInfo.Value));
+                RawFavoriteServers.Add((uri, serverInfo.Value));
             }
             catch (Exception e)
             {
-                FavoriteServers.Add((uri, new ServerStatus("ErrorLand",$"ERROR: {e.Message}",[],"",-1,-1,-1,false,DateTime.Now, -1)));
+                RawFavoriteServers.Add((uri, new ServerStatus("ErrorLand",$"ERROR: {e.Message}",[],"",-1,-1,-1,false,DateTime.Now, -1)));
             }
         }
-        
-        SortFavorite();
     }
 
     public void AddFavorite(ServerEntryModelView entryModelView)
