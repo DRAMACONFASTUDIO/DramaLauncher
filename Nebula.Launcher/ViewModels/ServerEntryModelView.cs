@@ -54,10 +54,7 @@ public partial class ServerEntryModelView : ViewModelBase
         {
             try
             {
-                var result =
-                    await RestService.GetAsync<ServerInfo>(Address.InfoUri, CancellationService.Token);
-                if (result.Value == null) return null;
-                _serverInfo = result.Value;
+                _serverInfo = await RestService.GetAsync<ServerInfo>(Address.InfoUri, CancellationService.Token);
             }
             catch (Exception e)
             {
@@ -98,23 +95,6 @@ public partial class ServerEntryModelView : ViewModelBase
     protected override void Initialise()
     {
         CurrLog = ViewHelperService.GetViewModel<LogPopupModelView>();
-    }
-
-    public ServerEntryModelView WithData(ServerHubInfo value)
-    {
-        Status = value.StatusData;
-        Address = value.Address.ToRobustUrl();
-        Tags.Clear();
-        foreach (var tag in Status.Tags)
-        {
-            Tags.Add(tag);
-        }
-        foreach (var tag in value.InferredTags)
-        {
-            Tags.Add(tag);
-        }
-        
-        return this;
     }
 
     public ServerEntryModelView WithData(RobustUrl url, ServerStatus serverStatus)

@@ -25,11 +25,11 @@
             <Panel>
                 <ItemsControl
                     IsVisible="{Binding IsFavoriteMode}"
-                    ItemsSource="{Binding Servers.Values}"
+                    ItemsSource="{Binding FavoriteServers}"
                     Padding="0" />
                 <ItemsControl
                     IsVisible="{Binding !IsFavoriteMode}"
-                    ItemsSource="{Binding Servers.Values}"
+                    ItemsSource="{Binding Servers}"
                     Padding="0" />
             </Panel>
         </ScrollViewer>

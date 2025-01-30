@@ -22,27 +22,30 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
     [ObservableProperty] private string _searchText = string.Empty;
 
     [ObservableProperty] private bool _isFavoriteMode;
-    public SortedList<float, ServerEntryModelView> Servers { get; } = new(Comparer<float>.Create((x,y)=>y.CompareTo(x)));
     
-    private ServerViewContainer ServerViewContainer;
-
+    public ObservableCollection<ServerEntryModelView> Servers { get; }= new();
+    
     public Action? OnSearchChange;
-    [GenerateProperty] private HubService HubService { get; } = default!;
+    [GenerateProperty] private HubService HubService { get; }
     [GenerateProperty] private PopupMessageService PopupMessageService { get; }
-    [GenerateProperty, DesignConstruct] private ViewHelperService ViewHelperService { get; } = default!;
+    [GenerateProperty] private CancellationService CancellationService { get; }
+    [GenerateProperty] private DebugService DebugService { get; }
+    [GenerateProperty, DesignConstruct] private ViewHelperService ViewHelperService { get; }
+    
+    private ServerViewContainer ServerViewContainer { get; set; } 
     
     private List<ServerHubInfo> UnsortedServers { get; } = new();
 
     //Design think
     protected override void InitialiseInDesignMode()
     {
-        ServerViewContainer = new ServerViewContainer(this);
+        ServerViewContainer = new ServerViewContainer(this, RestService, CancellationService, DebugService, ViewHelperService);
     }
 
     //real think
     protected override void Initialise()
     {
-        ServerViewContainer = new ServerViewContainer(this);
+        ServerViewContainer = new ServerViewContainer(this, RestService, CancellationService, DebugService, ViewHelperService);
         
         foreach (var info in HubService.ServerList) UnsortedServers.Add(info);
 
@@ -51,40 +54,35 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
         OnSearchChange += OnChangeSearch;
 
         if (!HubService.IsUpdating) UpdateServerEntries();
-        //FetchFavorite();
+        UpdateFavoriteEntries();
     }
 
     private void UpdateServerEntries()
     {
         Servers.Clear();
-        OnPropertyChanged(nameof(Servers));
-        foreach (var info in UnsortedServers.Where(a=>CheckServerThink(a.StatusData)))
+        Task.Run(async () =>
         {
-            var view = ServerViewContainer.Get(info.Address.ToRobustUrl(), info.StatusData);
-            float players = info.StatusData.Players;
-            
-            while (true)
+            UnsortedServers.Sort(new ServerComparer());
+            foreach (var info in UnsortedServers.Where(a => CheckServerThink(a.StatusData)))
             {
-                try
-                {
-                    Servers.Add(players,view);
-                    OnPropertyChanged(nameof(Servers));
-                    break;
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    players += 0.01f;
-                }
+                var view = await ServerViewContainer.Get(info.Address.ToRobustUrl(), info.StatusData);
+                Servers.Add(view);
             }
-        }
+        });
     }
 
     private void OnChangeSearch()
     {
         if(string.IsNullOrEmpty(SearchText)) return;
         
-        UpdateServerEntries();
+        if(IsFavoriteMode)
+        {
+            UpdateFavoriteEntries();
+        }
+        else
+        {
+            UpdateServerEntries();
+        }
     }
 
     private void HubServerChangedEventArgs(HubServerChangedEventArgs obj)
@@ -95,7 +93,13 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
         if (obj.Action == HubServerChangeAction.Remove)
             foreach (var info in obj.Items)
                 UnsortedServers.Remove(info);
-        if (obj.Action == HubServerChangeAction.Clear) UnsortedServers.Clear();
+        if (obj.Action == HubServerChangeAction.Clear)
+        {
+            UnsortedServers.Clear();
+            ServerViewContainer.Clear();
+            Servers.Clear();
+            UpdateFavoriteEntries();
+        }
     }
 
     private bool CheckServerThink(ServerStatus hubInfo)
@@ -128,18 +132,45 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
     }
 }
 
-public class ServerViewContainer(ServerListViewModel serverListViewModel)
+public class ServerViewContainer(
+    ServerListViewModel serverListViewModel, 
+    RestService restService, 
+    CancellationService cancellationService, 
+    DebugService debugService, 
+    ViewHelperService viewHelperService
+    )
 {
     private readonly Dictionary<RobustUrl, ServerEntryModelView> _entries = new();
 
-    public ServerEntryModelView Get(RobustUrl url, ServerStatus serverStatus)
+    public void Clear()
+    {
+        _entries.Clear();
+    }
+
+    public async Task<ServerEntryModelView> Get(RobustUrl url, ServerStatus? serverStatus = null)
     {
         if (_entries.TryGetValue(url, out var entry))
         {
             return entry;
         }
 
-        entry = serverListViewModel.GetServerEntryModelView((url, serverStatus));
+        try
+        {
+            serverStatus ??= await restService.GetAsync<ServerStatus>(url.StatusUri, cancellationService.Token);
+        }
+        catch (Exception e)
+        {
+            debugService.Error(e);
+            serverStatus = new ServerStatus("ErrorLand", $"ERROR: {e.Message}", [], "", -1, -1, -1, false, DateTime.Now,
+                -1);
+        }
+
+        entry = viewHelperService.GetViewModel<ServerEntryModelView>().WithData(url, serverStatus);
+        entry.OnFavoriteToggle += () =>
+        {
+            if (entry.IsFavorite) serverListViewModel.RemoveFavorite(entry);
+            else serverListViewModel.AddFavorite(entry);
+        };
         _entries.Add(url, entry);
 
         return entry;
