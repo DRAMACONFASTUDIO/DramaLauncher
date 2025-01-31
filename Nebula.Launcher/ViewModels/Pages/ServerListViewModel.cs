@@ -140,7 +140,7 @@ public class ServerViewContainer(
     ViewHelperService viewHelperService
     )
 {
-    private readonly Dictionary<RobustUrl, ServerEntryModelView> _entries = new();
+    private readonly Dictionary<string, ServerEntryModelView> _entries = new();
 
     public void Clear()
     {
@@ -149,10 +149,15 @@ public class ServerViewContainer(
 
     public async Task<ServerEntryModelView> Get(RobustUrl url, ServerStatus? serverStatus = null)
     {
-        if (_entries.TryGetValue(url, out var entry))
+        lock (_entries)
         {
-            return entry;
+            if (_entries.TryGetValue(url.ToString(), out var entry1))
+            {
+                return entry1;
+            }
         }
+        
+        Console.WriteLine("Creating new instance... " + url.ToString() + _entries.Keys.ToList().Contains(url.ToString()));
 
         try
         {
@@ -165,13 +170,21 @@ public class ServerViewContainer(
                 -1);
         }
 
-        entry = viewHelperService.GetViewModel<ServerEntryModelView>().WithData(url, serverStatus);
+        var entry = viewHelperService.GetViewModel<ServerEntryModelView>().WithData(url, serverStatus);
         entry.OnFavoriteToggle += () =>
         {
             if (entry.IsFavorite) serverListViewModel.RemoveFavorite(entry);
             else serverListViewModel.AddFavorite(entry);
         };
-        _entries.Add(url, entry);
+        
+        lock (_entries)
+        {
+            if (_entries.TryGetValue(url.ToString(), out var entry1))
+            {
+                return entry1;
+            }
+            _entries.Add(url.ToString(), entry);   
+        }
 
         return entry;
     }
