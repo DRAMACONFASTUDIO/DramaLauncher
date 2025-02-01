@@ -18,7 +18,7 @@ public partial class ServerListViewModel
     
     public ObservableCollection<ServerEntryModelView> FavoriteServers { get; } = new();
     
-    private async void UpdateFavoriteEntries()
+    private void UpdateFavoriteEntries()
     {
         FavoriteServers.Clear();
         
@@ -30,7 +30,7 @@ public partial class ServerListViewModel
         
         foreach (var server in servers)
         {
-            var s = await ServerViewContainer.Get(server.ToRobustUrl());
+            var s =  ServerViewContainer.Get(server.ToRobustUrl());
             s.IsFavorite = true;
             FavoriteServers.Add(s);
         }

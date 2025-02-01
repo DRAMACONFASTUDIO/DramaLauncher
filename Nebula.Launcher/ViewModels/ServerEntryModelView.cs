@@ -40,8 +40,18 @@ public partial class ServerEntryModelView : ViewModelBase
     [ObservableProperty] private bool _tagDataVisible = false;
     [ObservableProperty] private bool _isFavorite = false;
 
-    public ServerStatus Status { get; set; } = 
-        new("", "", [], "", -1, -1, -1, false, DateTime.Now, -1);
+    public ServerStatus Status { get; private set; } = 
+        new ServerStatus(
+            "Fetching data...", 
+            $"Loading...", [], 
+            "", 
+            -1, 
+            -1, 
+            -1, 
+            false,
+            DateTime.Now,
+            -1
+        );
     
     public ObservableCollection<ServerLink> Links { get; } = new();
     public bool RunVisible => Process == null;
@@ -97,18 +107,47 @@ public partial class ServerEntryModelView : ViewModelBase
         CurrLog = ViewHelperService.GetViewModel<LogPopupModelView>();
     }
 
-    public ServerEntryModelView WithData(RobustUrl url, ServerStatus serverStatus)
+    public void SetStatus(ServerStatus serverStatus)
     {
         Status = serverStatus;
-        Address = url;
         Tags.Clear();
         foreach (var tag in Status.Tags)
         {
             Tags.Add(tag);
         }
+        OnPropertyChanged(nameof(Status));
+    }
+
+    public ServerEntryModelView WithData(RobustUrl url, ServerStatus? serverStatus)
+    {
+        Address = url;
+        if (serverStatus is not null)
+        {
+            SetStatus(serverStatus);
+        }
+        else
+        {
+            FetchStatus();
+        }
 
         return this;
     }
+
+    private async void FetchStatus()
+    {
+        try
+        {
+            SetStatus(await RestService.GetAsync<ServerStatus>(Address.StatusUri, CancellationService.Token));
+        }
+        catch (Exception e)
+        {
+            DebugService.Error(e);
+            Status = new ServerStatus("ErrorLand", $"ERROR: {e.Message}", [], "", -1, -1, -1, false,
+                DateTime.Now,
+                -1);
+        }
+    }
+    
     
     public void ToggleFavorites()
     {

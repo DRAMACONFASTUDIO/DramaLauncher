@@ -60,12 +60,12 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
     private void UpdateServerEntries()
     {
         Servers.Clear();
-        Task.Run(async () =>
+        Task.Run(() =>
         {
             UnsortedServers.Sort(new ServerComparer());
             foreach (var info in UnsortedServers.Where(a => CheckServerThink(a.StatusData)))
             {
-                var view = await ServerViewContainer.Get(info.Address.ToRobustUrl(), info.StatusData);
+                var view = ServerViewContainer.Get(info.Address.ToRobustUrl(), info.StatusData);
                 Servers.Add(view);
             }
         });
@@ -147,45 +147,28 @@ public class ServerViewContainer(
         _entries.Clear();
     }
 
-    public async Task<ServerEntryModelView> Get(RobustUrl url, ServerStatus? serverStatus = null)
+    public ServerEntryModelView Get(RobustUrl url, ServerStatus? serverStatus = null)
     {
+        ServerEntryModelView? entry;
+        
         lock (_entries)
         {
-            if (_entries.TryGetValue(url.ToString(), out var entry1))
+            if (_entries.TryGetValue(url.ToString(), out entry))
             {
-                return entry1;
+                return entry;
             }
+
+            entry = viewHelperService.GetViewModel<ServerEntryModelView>().WithData(url, serverStatus);
+            
+            _entries.Add(url.ToString(), entry);
         }
         
-        Console.WriteLine("Creating new instance... " + url.ToString() + _entries.Keys.ToList().Contains(url.ToString()));
-
-        try
-        {
-            serverStatus ??= await restService.GetAsync<ServerStatus>(url.StatusUri, cancellationService.Token);
-        }
-        catch (Exception e)
-        {
-            debugService.Error(e);
-            serverStatus = new ServerStatus("ErrorLand", $"ERROR: {e.Message}", [], "", -1, -1, -1, false, DateTime.Now,
-                -1);
-        }
-
-        var entry = viewHelperService.GetViewModel<ServerEntryModelView>().WithData(url, serverStatus);
         entry.OnFavoriteToggle += () =>
         {
             if (entry.IsFavorite) serverListViewModel.RemoveFavorite(entry);
             else serverListViewModel.AddFavorite(entry);
         };
         
-        lock (_entries)
-        {
-            if (_entries.TryGetValue(url.ToString(), out var entry1))
-            {
-                return entry1;
-            }
-            _entries.Add(url.ToString(), entry);   
-        }
-
         return entry;
     }
 }
