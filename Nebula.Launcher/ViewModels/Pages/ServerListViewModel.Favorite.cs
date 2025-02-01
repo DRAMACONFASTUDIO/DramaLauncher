@@ -22,7 +22,7 @@ public partial class ServerListViewModel
     {
         FavoriteServers.Clear();
         
-        var servers = ConfigurationService.GetConfigValue(CurrentConVar.Favorites);
+        var servers = ConfigurationService.GetConfigValue(LauncherConVar.Favorites);
         if (servers is null || servers.Length == 0)
         {
             return;
@@ -44,17 +44,17 @@ public partial class ServerListViewModel
 
     public void AddFavorite(RobustUrl robustUrl)
     {
-        var servers = (ConfigurationService.GetConfigValue(CurrentConVar.Favorites) ?? []).ToList();
+        var servers = (ConfigurationService.GetConfigValue(LauncherConVar.Favorites) ?? []).ToList();
         servers.Add(robustUrl.ToString());
-        ConfigurationService.SetConfigValue(CurrentConVar.Favorites, servers.ToArray());
+        ConfigurationService.SetConfigValue(LauncherConVar.Favorites, servers.ToArray());
         UpdateFavoriteEntries();
     }
 
     public void RemoveFavorite(ServerEntryModelView entryModelView)
     {
-        var servers = (ConfigurationService.GetConfigValue(CurrentConVar.Favorites) ?? []).ToList();
+        var servers = (ConfigurationService.GetConfigValue(LauncherConVar.Favorites) ?? []).ToList();
         servers.Remove(entryModelView.Address.ToString());
-        ConfigurationService.SetConfigValue(CurrentConVar.Favorites, servers.ToArray());
+        ConfigurationService.SetConfigValue(LauncherConVar.Favorites, servers.ToArray());
         entryModelView.IsFavorite = false;
         UpdateFavoriteEntries();
     }

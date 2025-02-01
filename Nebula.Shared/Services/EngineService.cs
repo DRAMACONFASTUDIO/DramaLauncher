@@ -40,12 +40,10 @@ public sealed class EngineService
             _debugService.Log("Fetching engine manifest from: " + CurrentConVar.EngineManifestUrl);
             var info = await _restService.GetAsync<Dictionary<string, EngineVersionInfo>>(
                 new Uri(_varService.GetConfigValue(CurrentConVar.EngineManifestUrl)!), cancellationToken);
-            if (info.Value is null)
-                throw new Exception("Engine version info is null");
-
-            VersionInfos = info.Value;
             
-            _varService.SetConfigValue(CurrentConVar.EngineManifestBackup, info.Value);
+            VersionInfos = info;
+            
+            _varService.SetConfigValue(CurrentConVar.EngineManifestBackup, info);
         }
         catch (Exception e)
         {
@@ -64,11 +62,11 @@ public sealed class EngineService
             var moduleInfo = await _restService.GetAsync<ModulesInfo>(
                 new Uri(_varService.GetConfigValue(CurrentConVar.EngineModuleManifestUrl)!), cancellationToken);
 
-            if (moduleInfo.Value is null) 
+            if (moduleInfo is null) 
                 throw new Exception("Module version info is null");
             
-            ModuleInfos = moduleInfo.Value.Modules;
-            _varService.SetConfigValue(CurrentConVar.ModuleManifestBackup, moduleInfo.Value);
+            ModuleInfos = moduleInfo.Modules;
+            _varService.SetConfigValue(CurrentConVar.ModuleManifestBackup, moduleInfo);
         }
         catch (Exception e)
         {
@@ -177,7 +175,7 @@ public sealed class EngineService
 
         var engineVersionObj = Version.Parse(engineVersion);
         var module = ModuleInfos[moduleName];
-        var selectedVersion = module.Versions.Select(kv => new { Version = Version.Parse(kv.Key), kv.Key, kv.Value })
+        var selectedVersion = module.Versions.Select(kv => new { Version = Version.Parse(kv.Key), kv.Key, kv })
             .Where(kv => engineVersionObj >= kv.Version)
             .MaxBy(kv => kv.Version);
 

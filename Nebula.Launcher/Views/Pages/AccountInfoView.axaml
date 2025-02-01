@@ -31,7 +31,7 @@
                     ItemsSource="{Binding Accounts}"
                     Padding="0">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type pages:AuthLoginPasswordModel}">
+                        <DataTemplate DataType="{x:Type pages:ProfileAuthCredentials}">
                             <Border
                                 Background="{StaticResource DefaultBackground}"
                                 BoxShadow="0 1 15 -2 #121212"

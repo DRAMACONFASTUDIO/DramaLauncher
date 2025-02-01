@@ -185,10 +185,10 @@ public partial class ServerEntryModelView : ViewModelBase
                     {
                         { "ROBUST_AUTH_USERID", authProv?.UserId.ToString() },
                         { "ROBUST_AUTH_TOKEN", authProv?.Token.Token },
-                        { "ROBUST_AUTH_SERVER", authProv?.AuthLoginPassword.AuthServer },
+                        { "ROBUST_AUTH_SERVER", authProv?.AuthServer },
                         { "ROBUST_AUTH_PUBKEY", buildInfo.BuildInfo.Auth.PublicKey },
                         { "GAME_URL", Address.ToString() },
-                        { "AUTH_LOGIN", authProv?.AuthLoginPassword.Login }
+                        { "AUTH_LOGIN", authProv?.Login }
                     },
                     CreateNoWindow = true,
                     UseShellExecute = false,
@@ -253,8 +253,7 @@ public partial class ServerEntryModelView : ViewModelBase
             CurrLog.Append(e.Data);
         }
     }
-
-
+    
     public void ReadLog()
     {
         PopupMessageService.Popup(CurrLog);
@@ -286,7 +285,6 @@ public partial class ServerEntryModelView : ViewModelBase
         {
             Links.Add(link);
         }
-        
     }
 
     private static string FindDotnetPath()

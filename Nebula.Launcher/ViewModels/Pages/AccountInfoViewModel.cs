@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -38,7 +39,7 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
     [GenerateProperty] private AuthService AuthService { get; } = default!;
     [GenerateProperty, DesignConstruct] private ViewHelperService ViewHelperService { get; } = default!;
 
-    public ObservableCollection<AuthLoginPasswordModel> Accounts { get; } = new();
+    public ObservableCollection<ProfileAuthCredentials> Accounts { get; } = new();
     public ObservableCollection<string> AuthUrls { get; } = new();
 
     private AuthLoginPassword CurrentAlp
@@ -51,6 +52,9 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
             CurrentAuthServer = value.AuthServer;
         }
     }
+
+
+    private CurrentAuthInfo? _currAuthTemp;
 
     public string AuthItemSelect
     {
@@ -71,35 +75,59 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
         ReadAuthConfig();
     }
 
-    public void AuthByAlp(AuthLoginPassword authLoginPassword)
+    public void AuthByProfile(ProfileAuthCredentials credentials)
     {
-        CurrentAlp = authLoginPassword;
+        CurrentAlp = new AuthLoginPassword(credentials.Login, credentials.Password, credentials.AuthServer);
         DoAuth();
     }
 
-    public void DoAuth()
+    public void DoAuth(string? code = null)
     {
         var message = ViewHelperService.GetViewModel<InfoPopupViewModel>();
         message.InfoText = "Auth think, please wait...";
         message.IsInfoClosable = false;
-        Console.WriteLine("AUTH SHIT");
         PopupMessageService.Popup(message);
 
         Task.Run(async () =>
         {
-            if (await AuthService.Auth(CurrentAlp))
+            try
             {
+                await AuthService.Auth(CurrentAlp, code);
                 message.Dispose();
                 IsLogged = true;
-                ConfigurationService.SetConfigValue(CurrentConVar.AuthCurrent, CurrentAlp);
+                ConfigurationService.SetConfigValue(LauncherConVar.AuthCurrent, AuthService.SelectedAuth);
             }
-            else
+            catch (AuthException e)
+            {
+                message.Dispose();
+                
+                switch (e.Error.Code)
+                {
+                    case AuthenticateDenyCode.TfaRequired:
+                    case AuthenticateDenyCode.TfaInvalid:
+                        var p = ViewHelperService.GetViewModel<TfaViewModel>();
+                        p.OnTfaEntered += OnTfaEntered;
+                        PopupMessageService.Popup(p);
+                        break;
+                    case AuthenticateDenyCode.InvalidCredentials:
+                        PopupMessageService.Popup("Invalid Credentials!");
+                        break;
+                    default:
+                        throw;
+                }
+            }
+            catch (Exception e)
             {
                 message.Dispose();
                 Logout();
-                PopupMessageService.Popup("Well, shit is happened: " + AuthService.Reason);
+                PopupMessageService.Popup(e);
             }
         });
+    }
+
+    private void OnTfaEntered(string code)
+    {
+        DoAuth(code);
     }
 
     public void Logout()
@@ -118,10 +146,10 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
 
     private void AddAccount(AuthLoginPassword authLoginPassword)
     {
-        var onDelete = new DelegateCommand<AuthLoginPasswordModel>(OnDeleteProfile);
-        var onSelect = new DelegateCommand<AuthLoginPasswordModel>(AuthByAlp);
+        var onDelete = new DelegateCommand<ProfileAuthCredentials>(OnDeleteProfile);
+        var onSelect = new DelegateCommand<ProfileAuthCredentials>(AuthByProfile);
 
-        var alpm = new AuthLoginPasswordModel(
+        var alpm = new ProfileAuthCredentials(
             authLoginPassword.Login,
             authLoginPassword.Password,
             authLoginPassword.AuthServer,
@@ -134,25 +162,39 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
         Accounts.Add(alpm);
     }
 
-    private void ReadAuthConfig()
+    private async void ReadAuthConfig()
     {
+        var message = ViewHelperService.GetViewModel<InfoPopupViewModel>();
+        message.InfoText = "Read configuration file, please wait...";
+        message.IsInfoClosable = false;
+        PopupMessageService.Popup(message);
         foreach (var profile in
-                 ConfigurationService.GetConfigValue(CurrentConVar.AuthProfiles)!)
-            AddAccount(profile);
+                 ConfigurationService.GetConfigValue(LauncherConVar.AuthProfiles)!)
+            AddAccount(new AuthLoginPassword(profile.Login, profile.Password, profile.AuthServer));
 
         if (Accounts.Count == 0) UpdateAuthMenu();
 
-        var currProfile = ConfigurationService.GetConfigValue(CurrentConVar.AuthCurrent);
+        AuthUrls.Clear();
+        var authUrls = ConfigurationService.GetConfigValue(LauncherConVar.AuthServers)!;
+        foreach (var url in authUrls) AuthUrls.Add(url);
+        
+        var currProfile = ConfigurationService.GetConfigValue(LauncherConVar.AuthCurrent);
 
         if (currProfile != null)
         {
-            CurrentAlp = currProfile;
-            DoAuth();
+            try
+            {
+                CurrentAlp = new AuthLoginPassword(currProfile.Login, string.Empty, currProfile.AuthServer);
+                IsLogged = await AuthService.SetAuth(currProfile);
+            }
+            catch (Exception e)
+            {
+                message.Dispose();
+                PopupMessageService.Popup(e);
+            }
         }
-
-        AuthUrls.Clear();
-        var authUrls = ConfigurationService.GetConfigValue(CurrentConVar.AuthServers)!;
-        foreach (var url in authUrls) AuthUrls.Add(url);
+        
+        message.Dispose();
     }
 
     [RelayCommand]
@@ -164,7 +206,7 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
         DirtyProfile();
     }
 
-    private void OnDeleteProfile(AuthLoginPasswordModel account)
+    private void OnDeleteProfile(ProfileAuthCredentials account)
     {
         Accounts.Remove(account);
         _isProfilesEmpty = Accounts.Count == 0;
@@ -187,20 +229,18 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
 
     private void DirtyProfile()
     {
-        ConfigurationService.SetConfigValue(CurrentConVar.AuthProfiles,
-            Accounts.Select(a => (AuthLoginPassword)a).ToArray());
+        ConfigurationService.SetConfigValue(LauncherConVar.AuthProfiles,
+            Accounts.ToArray());
     }
 
     public void OnPageOpen(object? args)
     {
-        
     }
 }
-
-public record AuthLoginPasswordModel(
+public sealed record ProfileAuthCredentials(
     string Login,
     string Password,
     string AuthServer,
-    ICommand OnSelect = default!,
-    ICommand OnDelete = default!)
-    : AuthLoginPassword(Login, Password, AuthServer);
+    [property: JsonIgnore] ICommand OnSelect = default!,
+    [property: JsonIgnore] ICommand OnDelete = default!
+    );

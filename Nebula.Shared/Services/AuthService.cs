@@ -1,5 +1,9 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Nebula.Shared.Models.Auth;
+using Nebula.Shared.Utils;
 
 namespace Nebula.Shared.Services;
 
@@ -10,11 +14,9 @@ public class AuthService(
     CancellationService cancellationService)
 {
     private readonly HttpClient _httpClient = new();
+    public CurrentAuthInfo? SelectedAuth { get; private set; }
 
-    public string Reason = "";
-    public CurrentAuthInfo? SelectedAuth { get; internal set; }
-
-    public async Task<bool> Auth(AuthLoginPassword authLoginPassword)
+    public async Task Auth(AuthLoginPassword authLoginPassword, string? code = null)
     {
         var authServer = authLoginPassword.AuthServer;
         var login = authLoginPassword.Login;
@@ -24,20 +26,24 @@ public class AuthService(
 
         var authUrl = new Uri($"{authServer}api/auth/authenticate");
 
-        var result =
-            await restService.PostAsync<AuthenticateResponse, AuthenticateRequest>(
-                new AuthenticateRequest(login, password), authUrl, cancellationService.Token);
-
-        if (result.Value is null)
+        try
         {
-            Reason = result.Message;
-            return false;
+            var result =
+                await restService.PostAsync<AuthenticateResponse, AuthenticateRequest>(
+                    new AuthenticateRequest(login, null, password, code), authUrl, cancellationService.Token);
+
+            SelectedAuth = new CurrentAuthInfo(result.UserId,
+                new LoginToken(result.Token, result.ExpireTime), authLoginPassword.Login, authLoginPassword.AuthServer);
         }
-
-        SelectedAuth = new CurrentAuthInfo(result.Value.UserId,
-            new LoginToken(result.Value.Token, result.Value.ExpireTime), authLoginPassword);
-
-        return true;
+        catch (RestRequestException e)
+        {
+            Console.WriteLine(e.Content);
+            if (e.StatusCode != HttpStatusCode.Unauthorized) throw;
+            var err = await e.Content.AsJson<AuthDenyError>();
+            
+            if (err is null) throw;
+            throw new AuthException(err);
+        }
     }
 
     public void ClearAuth()
@@ -45,17 +51,17 @@ public class AuthService(
         SelectedAuth = null;
     }
 
-    public void SetAuth(Guid guid, string token, string login, string authServer)
+    public async Task<bool> SetAuth(CurrentAuthInfo info)
     {
-        SelectedAuth = new CurrentAuthInfo(guid, new LoginToken(token, DateTimeOffset.Now),
-            new AuthLoginPassword(login, "", authServer));
+        SelectedAuth = info;
+        return await EnsureToken();
     }
 
     public async Task<bool> EnsureToken()
     {
         if (SelectedAuth is null) return false;
 
-        var authUrl = new Uri($"{SelectedAuth.AuthLoginPassword.AuthServer}api/auth/ping");
+        var authUrl = new Uri($"{SelectedAuth.AuthServer}api/auth/ping");
 
         using var requestMessage = new HttpRequestMessage(HttpMethod.Get, authUrl);
         requestMessage.Headers.Authorization = new AuthenticationHeaderValue("SS14Auth", SelectedAuth.Token.Token);
@@ -67,6 +73,24 @@ public class AuthService(
     }
 }
 
-public sealed record CurrentAuthInfo(Guid UserId, LoginToken Token, AuthLoginPassword AuthLoginPassword);
+public sealed record CurrentAuthInfo(Guid UserId, LoginToken Token, string Login, string AuthServer);
 
 public record AuthLoginPassword(string Login, string Password, string AuthServer);
+
+public sealed record AuthDenyError(string[] Errors, AuthenticateDenyCode Code);
+
+public sealed class AuthException(AuthDenyError error) : Exception
+{
+    public AuthDenyError Error { get; } = error;
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum AuthenticateDenyCode
+{
+        None               =  0,
+        InvalidCredentials =  1,
+        AccountUnconfirmed =  2,
+        TfaRequired        =  3,
+        TfaInvalid         =  4,
+        AccountLocked      =  5,
+}

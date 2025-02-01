@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:popup="clr-namespace:Nebula.Launcher.ViewModels.Popup"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Nebula.Launcher.Views.Popup.TfaView">
+    <Design.DataContext>
+        <popup:TfaViewModel />
+    </Design.DataContext>
+    <StackPanel HorizontalAlignment="Stretch" Spacing="25" VerticalAlignment="Center">
+        <Label HorizontalAlignment="Center">You have two-factor authentication enabled. Please enter the code.</Label>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10" x:Name="TContainer">
+            <Border BoxShadow="{StaticResource DefaultShadow}">
+                <TextBox MaxLength="1"/>
+            </Border>
+            <Border BoxShadow="{StaticResource DefaultShadow}">
+                <TextBox MaxLength="1"/>
+            </Border>
+            <Border BoxShadow="{StaticResource DefaultShadow}">
+                <TextBox MaxLength="1"/>
+            </Border>
+            <Border BoxShadow="{StaticResource DefaultShadow}">
+                <TextBox MaxLength="1"/>
+            </Border>
+            <Border BoxShadow="{StaticResource DefaultShadow}">
+                <TextBox MaxLength="1"/>
+            </Border>
+            <Border BoxShadow="{StaticResource DefaultShadow}">
+                <TextBox MaxLength="1"/>
+            </Border>
+        </StackPanel>
+        <Border BoxShadow="{StaticResource DefaultShadow}" Background="{StaticResource DefaultSelected}" HorizontalAlignment="Center">
+            <Button Click="Button_OnClick">
+                <Label HorizontalAlignment="Center" Margin="15,5,15,5">OK</Label>
+            </Button>
+        </Border>
+    </StackPanel>
+</UserControl>

@@ -21,19 +21,6 @@ public static class CurrentConVar
         "https://hub.spacestation14.com/api/servers"
     ]);
 
-    public static readonly ConVar<string[]> AuthServers = ConVarBuilder.Build<string[]>("launcher.authServers", [
-        "https://auth.spacestation14.com/"
-    ]);
-
-    public static readonly ConVar<AuthLoginPassword[]> AuthProfiles =
-        ConVarBuilder.Build<AuthLoginPassword[]>("auth.profiles", []);
-
-    public static readonly ConVar<AuthLoginPassword> AuthCurrent =
-        ConVarBuilder.Build<AuthLoginPassword>("auth.current");
-    
-    public static readonly ConVar<string[]> Favorites =
-        ConVarBuilder.Build<string[]>("server.favorites", []);
-
     public static readonly ConVar<Dictionary<string, EngineVersionInfo>> EngineManifestBackup =
         ConVarBuilder.Build<Dictionary<string, EngineVersionInfo>>("engine.manifest.backup");
     public static readonly ConVar<ModulesInfo> ModuleManifestBackup =

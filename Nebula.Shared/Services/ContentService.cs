@@ -17,13 +17,12 @@ public partial class ContentService(
         var info = new RobustBuildInfo();
         info.Url = url;
         var bi = await restService.GetAsync<ServerInfo>(url.InfoUri, cancellationToken);
-        if (bi.Value is null) throw new NoNullAllowedException();
-        info.BuildInfo = bi.Value;
+        info.BuildInfo = bi;
         info.RobustManifestInfo = info.BuildInfo.Build.Acz
             ? new RobustManifestInfo(new RobustPath(info.Url, "manifest.txt"), new RobustPath(info.Url, "download"),
-                bi.Value.Build.ManifestHash)
+                bi.Build.ManifestHash)
             : new RobustManifestInfo(new Uri(info.BuildInfo.Build.ManifestUrl),
-                new Uri(info.BuildInfo.Build.ManifestDownloadUrl), bi.Value.Build.ManifestHash);
+                new Uri(info.BuildInfo.Build.ManifestDownloadUrl), bi.Build.ManifestHash);
 
         return info;
     }

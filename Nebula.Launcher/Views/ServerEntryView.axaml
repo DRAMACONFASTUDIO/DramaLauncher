@@ -228,7 +228,7 @@
                 </StackPanel>
             </Border>
             <StackPanel
-                Grid.Column="2"
+                Grid.Column="3"
                 Grid.Row="1"
                 IsVisible="{Binding ExpandInfo}"
                 Margin="5,5,0,0"

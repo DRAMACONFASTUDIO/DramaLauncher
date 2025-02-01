@@ -23,19 +23,26 @@ public class RestService
         _debug = debug;
     }
 
-    public async Task<RestResult<T>> GetAsync<T>(Uri uri, CancellationToken cancellationToken) where T : notnull
+    public async Task<T> GetAsync<T>(Uri uri, CancellationToken cancellationToken) where T : notnull
     {
         var response = await _client.GetAsync(uri, cancellationToken);
         return await ReadResult<T>(response, cancellationToken);
     }
 
-    public async Task<T> GetAsyncDefault<T>(Uri uri, T defaultValue, CancellationToken cancellationToken)
+    public async Task<T> GetAsyncDefault<T>(Uri uri, T defaultValue, CancellationToken cancellationToken) where T : notnull
     {
-        var result = await GetAsync<T>(uri, cancellationToken);
-        return result.Value ?? defaultValue;
+        try
+        {
+            return await GetAsync<T>(uri, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            _debug.Error(e);
+            return defaultValue;
+        }
     }
 
-    public async Task<RestResult<K>> PostAsync<K, T>(T information, Uri uri, CancellationToken cancellationToken) where K : notnull
+    public async Task<K> PostAsync<K, T>(T information, Uri uri, CancellationToken cancellationToken) where K : notnull
     {
         var json = JsonSerializer.Serialize(information, _serializerOptions);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -43,7 +50,7 @@ public class RestService
         return await ReadResult<K>(response, cancellationToken);
     }
 
-    public async Task<RestResult<T>> PostAsync<T>(Stream stream, Uri uri, CancellationToken cancellationToken) where T : notnull
+    public async Task<T> PostAsync<T>(Stream stream, Uri uri, CancellationToken cancellationToken) where T : notnull
     {
         using var multipartFormContent =
             new MultipartFormDataContent("Upload----" + DateTime.Now.ToString(CultureInfo.InvariantCulture));
@@ -52,61 +59,32 @@ public class RestService
         return await ReadResult<T>(response, cancellationToken);
     }
 
-    public async Task<RestResult<T>> DeleteAsync<T>(Uri uri, CancellationToken cancellationToken) where T : notnull
+    public async Task<T> DeleteAsync<T>(Uri uri, CancellationToken cancellationToken) where T : notnull
     {
         var response = await _client.DeleteAsync(uri, cancellationToken);
         return await ReadResult<T>(response, cancellationToken);
     }
 
-    private async Task<RestResult<T>> ReadResult<T>(HttpResponseMessage response, CancellationToken cancellationToken) where T : notnull
+    private async Task<T> ReadResult<T>(HttpResponseMessage response, CancellationToken cancellationToken) where T : notnull
     {
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
         
-        if (typeof(T) == typeof(RawResult))
-            return (new RestResult<RawResult>(new RawResult(content), null, response.StatusCode) as RestResult<T>)!;
-
+        if (typeof(T) == typeof(string) && content is T t)
+            return t;
+        
         if (response.IsSuccessStatusCode)
         {
             _debug.Debug($"SUCCESSFUL GET CONTENT {typeof(T)}");
 
-            return new RestResult<T>(await response.Content.AsJson<T>(), null,
-                response.StatusCode);
+            return await response.Content.AsJson<T>();
         }
         
-        throw new HttpRequestException();
+        throw new RestRequestException(response.Content, response.StatusCode);
     }
 }
 
-public class RestResult<T>
+public sealed class RestRequestException(HttpContent content, HttpStatusCode statusCode) : Exception
 {
-    public string Message = "Ok";
-    public HttpStatusCode StatusCode;
-    public T Value;
-
-    public RestResult(T value, string? message, HttpStatusCode statusCode)
-    {
-        Value = value;
-        if (message != null) Message = message;
-        StatusCode = statusCode;
-    }
-
-    public static implicit operator T(RestResult<T> result)
-    {
-        return result.Value;
-    }
-}
-
-public class RawResult
-{
-    public string Result;
-
-    public RawResult(string result)
-    {
-        Result = result;
-    }
-
-    public static implicit operator string(RawResult result)
-    {
-        return result.Result;
-    }
+    public HttpStatusCode StatusCode { get; } = statusCode;
+    public HttpContent Content { get; } = content;
 }
