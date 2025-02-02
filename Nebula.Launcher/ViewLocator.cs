@@ -3,6 +3,7 @@ using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Nebula.Launcher.ViewModels;
+using Nebula.Launcher.Views;
 
 namespace Nebula.Launcher;
 
@@ -12,6 +13,11 @@ public class ViewLocator : IDataTemplate
     {
         if (param is null)
             return null;
+        
+        if (param is Exception e)
+        {
+            return new ExceptionView(e);
+        }
 
         var type = param.GetType().GetCustomAttribute<ViewModelRegisterAttribute>()?.Type;
 
@@ -22,6 +28,6 @@ public class ViewLocator : IDataTemplate
 
     public bool Match(object? data)
     {
-        return data is ViewModelBase;
+        return data is ViewModelBase || data is Exception;
     }
 }

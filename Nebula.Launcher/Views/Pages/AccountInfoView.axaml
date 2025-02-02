@@ -18,11 +18,16 @@
         RowDefinitions="*">
         <StackPanel Grid.Column="1" Grid.Row="0">
             <Border
-                Background="{StaticResource DefaultBackground}"
                 BoxShadow="0 -1 15 -2 #121212"
                 CornerRadius="10,10,0,0"
                 Margin="5,5,5,0"
                 Padding="5">
+                <Border.Background>
+                    <LinearGradientBrush EndPoint="50%,100%" StartPoint="50%,0%">
+                        <GradientStop Color="#222222" Offset="0.0" />
+                        <GradientStop Color="#292222" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
                 <Label HorizontalAlignment="Center">Profiles:</Label>
             </Border>
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
@@ -33,11 +38,16 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type pages:ProfileAuthCredentials}">
                             <Border
-                                Background="{StaticResource DefaultBackground}"
                                 BoxShadow="0 1 15 -2 #121212"
                                 CornerRadius="0,10,0,10"
                                 Margin="5,5,5,5"
                                 VerticalAlignment="Center">
+                                <Border.Background>
+                                    <LinearGradientBrush EndPoint="50%,100%" StartPoint="50%,0%">
+                                        <GradientStop Color="#292222" Offset="0.0" />
+                                        <GradientStop Color="#222222" Offset="1.0" />
+                                    </LinearGradientBrush>
+                                </Border.Background>
                                 <Panel>
                                     <StackPanel Margin="10,5,5,5" Orientation="Horizontal">
                                         <Label>Name:</Label>
@@ -76,11 +86,16 @@
             Grid.ColumnSpan="{Binding AuthViewSpan}"
             Grid.Row="0">
             <Border
-                Background="{StaticResource DefaultBackground}"
                 BoxShadow="{StaticResource DefaultShadow}"
                 CornerRadius="10"
                 Margin="5"
                 Padding="15">
+                <Border.Background>
+                    <LinearGradientBrush EndPoint="50%,100%" StartPoint="50%,0%">
+                        <GradientStop Color="#292222" Offset="0.0" />
+                        <GradientStop Color="#222222" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
                 <Panel>
                     <StackPanel IsVisible="{Binding !IsLogged}" Spacing="15">
                         <Svg

@@ -19,14 +19,15 @@
     </Design.DataContext>
 
     <Border
-        Background="{StaticResource DefaultBackground}"
+        Background="{StaticResource DefaultGrad}"
         BoxShadow="-2 0 5 -1 #121212"
         CornerRadius="10"
         Margin="5">
+
         <Grid ColumnDefinitions="*,80,50,50" RowDefinitions="35,*,*">
             <Border
                 Background="Transparent"
-                BoxShadow="0 3 3 -1 #121212"
+                BoxShadow="0 3 3 -2 #121212"
                 CornerRadius="10"
                 Grid.Column="0"
                 Grid.ColumnSpan="2"
@@ -34,7 +35,7 @@
                 IsVisible="{Binding ExpandInfo}" />
 
             <Button
-                Background="#00000000"
+                Background="Transparent"
                 Command="{Binding ExpandInfoRequired}"
                 Grid.Column="0"
                 Grid.Row="0"
@@ -124,7 +125,7 @@
 
             <Border
                 Background="Transparent"
-                BoxShadow="0 -3 3 -1 #121212"
+                BoxShadow="0 -3 3 -2 #121212"
                 CornerRadius="10"
                 Grid.Column="0"
                 Grid.ColumnSpan="3"

@@ -24,6 +24,7 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
     [ObservableProperty] private bool _isFavoriteMode;
     
     public ObservableCollection<ServerEntryModelView> Servers { get; }= new();
+    public ObservableCollection<Exception> HubErrors { get; } = new();
     
     public Action? OnSearchChange;
     [GenerateProperty] private HubService HubService { get; }
@@ -40,6 +41,7 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
     protected override void InitialiseInDesignMode()
     {
         ServerViewContainer = new ServerViewContainer(this, RestService, CancellationService, DebugService, ViewHelperService);
+        HubErrors.Add(new Exception("UVI"));
     }
 
     //real think
@@ -51,10 +53,16 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
 
         HubService.HubServerChangedEventArgs += HubServerChangedEventArgs;
         HubService.HubServerLoaded += UpdateServerEntries;
+        HubService.HubServerLoadingError += HubServerLoadingError;
         OnSearchChange += OnChangeSearch;
 
         if (!HubService.IsUpdating) UpdateServerEntries();
         UpdateFavoriteEntries();
+    }
+
+    private void HubServerLoadingError(Exception obj)
+    {
+        HubErrors.Add(obj);
     }
 
     private void UpdateServerEntries()
@@ -120,6 +128,7 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
 
     public void UpdateRequired()
     {
+        HubErrors.Clear();
         Task.Run(HubService.UpdateHub);
     }
 

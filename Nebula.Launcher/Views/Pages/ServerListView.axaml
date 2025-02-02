@@ -20,9 +20,10 @@
         RowDefinitions="*,40">
         <ScrollViewer
             Grid.RowSpan="2"
-            Margin="0,0,0,10"
+            Margin="5,0,0,10"
             Padding="0,0,10,0">
-            <Panel>
+            <StackPanel>
+                <ItemsControl ItemsSource="{Binding HubErrors}" Margin="10,0,10,0" />
                 <ItemsControl
                     IsVisible="{Binding IsFavoriteMode}"
                     ItemsSource="{Binding FavoriteServers}"
@@ -31,7 +32,7 @@
                     IsVisible="{Binding !IsFavoriteMode}"
                     ItemsSource="{Binding Servers}"
                     Padding="0" />
-            </Panel>
+            </StackPanel>
         </ScrollViewer>
 
         <Border
@@ -43,10 +44,10 @@
         <Grid
             ColumnDefinitions="*,40,40,40"
             Grid.Row="1"
-            Margin="5,0,0,0"
+            Margin="-25,0,0,0"
             RowDefinitions="*">
             <TextBox
-                Margin="0"
+                Margin="25,0,0,0"
                 Text="{Binding SearchText}"
                 TextChanged="TextBox_OnTextChanged"
                 VerticalAlignment="Center"

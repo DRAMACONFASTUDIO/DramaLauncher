@@ -5,9 +5,9 @@ using Nebula.Shared.Services;
 
 namespace Nebula.Launcher.ViewModels.Popup;
 
-[ViewModelRegister(typeof(ExceptionView), false)]
+[ViewModelRegister(typeof(ExceptionListView), false)]
 [ConstructGenerator]
-public sealed partial class ExceptionViewModel : PopupViewModelBase
+public sealed partial class ExceptionListViewModel : PopupViewModelBase
 {
     [GenerateProperty] public override PopupMessageService PopupMessageService { get; }
     public override string Title => "Oopsie! Some shit is happened now!";

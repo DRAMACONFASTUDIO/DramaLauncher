@@ -12,6 +12,7 @@ public class HubService
 
     public Action<HubServerChangedEventArgs>? HubServerChangedEventArgs;
     public Action? HubServerLoaded;
+    public Action<Exception>? HubServerLoadingError;
 
     public HubService(ConfigurationService configurationService, RestService restService)
     {
@@ -36,10 +37,17 @@ public class HubService
 
         foreach (var urlStr in _configurationService.GetConfigValue(CurrentConVar.Hub)!)
         {
-            var servers =
-                await _restService.GetAsyncDefault<List<ServerHubInfo>>(new Uri(urlStr), [], CancellationToken.None);
-            _serverList.AddRange(servers);
-            HubServerChangedEventArgs?.Invoke(new HubServerChangedEventArgs(servers, HubServerChangeAction.Add));
+            try
+            {
+                var servers =
+                    await _restService.GetAsync<List<ServerHubInfo>>(new Uri(urlStr), CancellationToken.None);
+                _serverList.AddRange(servers);
+                HubServerChangedEventArgs?.Invoke(new HubServerChangedEventArgs(servers, HubServerChangeAction.Add));
+            }
+            catch (Exception e)
+            {
+                HubServerLoadingError?.Invoke(e);
+            }
         }
 
         IsUpdating = false;

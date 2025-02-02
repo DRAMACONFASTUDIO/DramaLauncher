@@ -59,7 +59,13 @@
 
     <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
         <Setter Property="CornerRadius" Value="0,8,8,0" />
-        <Setter Property="Background" Value="{StaticResource DefaultSelected}" />
+        <Setter Property="Background">
+            <LinearGradientBrush EndPoint="100%,50%" StartPoint="0%,50%">
+                <GradientStop Color="#ae4c47" Offset="0.0" />
+                <GradientStop Color="#D95F59" Offset="0.2" />
+                <GradientStop Color="#D95F59" Offset="1.0" />
+            </LinearGradientBrush>
+        </Setter>
         <Setter Property="BoxShadow" Value="0 0 15 1 #1212" />
     </Style>
     <Style Selector="ListBoxItem:pointerover">

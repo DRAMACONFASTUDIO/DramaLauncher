@@ -281,6 +281,7 @@ public partial class ServerEntryModelView : ViewModelBase
         Description = info.Desc;
 
         Links.Clear();
+        if(info.Links is null) return;
         foreach (var link in info.Links)
         {
             Links.Add(link);

@@ -115,7 +115,7 @@ public partial class MainViewModel : ViewModelBase
                 PopupMessage(@base);
                 break;
             case Exception error:
-                var err = ViewHelperService.GetViewModel<ExceptionViewModel>();
+                var err = ViewHelperService.GetViewModel<ExceptionListViewModel>();
                 DebugService.Error(error);
                 err.AppendError(error);
                 PopupMessage(err);
