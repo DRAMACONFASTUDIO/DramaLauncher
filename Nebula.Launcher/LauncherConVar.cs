@@ -17,4 +17,6 @@ public static class LauncherConVar
     public static readonly ConVar<string[]> AuthServers = ConVarBuilder.Build<string[]>("launcher.authServers", [
         "https://auth.spacestation14.com/"
     ]);
+
+    public static readonly ConVar<string> CurrentLang = ConVarBuilder.Build<string>("launcher.language", "en-US");
 }
