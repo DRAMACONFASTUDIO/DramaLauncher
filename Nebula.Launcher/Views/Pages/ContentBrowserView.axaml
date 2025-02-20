@@ -17,7 +17,14 @@
         ColumnDefinitions="*,2*,40,40"
         Margin="8"
         RowDefinitions="40,*">
-        <Border CornerRadius="10,10,0,0" Grid.ColumnSpan="4" />
+        <Border CornerRadius="10,10,0,0" Grid.ColumnSpan="4"  Background="{StaticResource DefaultGrad}" BorderThickness="0,0,0,2">
+            <Border.BorderBrush>
+                <LinearGradientBrush EndPoint="100%,50%" StartPoint="0%,50%">
+                    <GradientStop Color="#222222" Offset="0.0" />
+                    <GradientStop Color="#442222" Offset="1.0" />
+                </LinearGradientBrush>
+            </Border.BorderBrush>
+        </Border>
         <TextBox
             Grid.Column="0"
             Grid.Row="0"
@@ -60,6 +67,7 @@
                             CornerRadius="0"
                             Height="30"
                             HorizontalAlignment="Stretch">
+                           
                             <StackPanel Orientation="Horizontal" Spacing="15">
                                 <Border
                                     Background="#00000000"
@@ -69,6 +77,12 @@
                                         Height="15"
                                         Margin="10,0,10,0"
                                         Path="{Binding IconPath}" />
+                                    <Border.BorderBrush>
+                                        <LinearGradientBrush EndPoint="100%,50%" StartPoint="0%,50%">
+                                            <GradientStop Color="#442222" Offset="0.0" />
+                                            <GradientStop Color="#222222" Offset="1.0" />
+                                        </LinearGradientBrush>
+                                    </Border.BorderBrush>
                                 </Border>
                                 <Label>
                                     <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />

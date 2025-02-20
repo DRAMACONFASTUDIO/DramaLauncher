@@ -51,9 +51,9 @@
                         Padding="0,0,-4,0">
                         <Border.Background>
                             <LinearGradientBrush EndPoint="100%,50%" StartPoint="0%,50%">
-                                <GradientStop Color="#1f1f1f" Offset="0.0" />
-                                <GradientStop Color="#222222" Offset="0.2" />
-                                <GradientStop Color="#222222" Offset="1.0" />
+                                <GradientStop Color="#221f1f" Offset="0.0" />
+                                <GradientStop Color="#282222" Offset="0.2" />
+                                <GradientStop Color="#232222" Offset="1.0" />
                             </LinearGradientBrush>
                         </Border.Background>
                         <Grid ColumnDefinitions="*" RowDefinitions="*,40">
