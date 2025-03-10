@@ -50,6 +50,13 @@
         <Copy SourceFiles="..\Nebula.Runner\bin\$(Configuration)\$(TargetFramework)\Nebula.Runner.runtimeconfig.json" DestinationFolder="$(OutDir)"/>
     </Target>
 
+    <Target Name="PublishCheck" AfterTargets="Publish">
+        <Copy SourceFiles="..\Nebula.Runner\bin\$(Configuration)\$(TargetFramework)\Nebula.Runner.dll" DestinationFolder="$(PublishDir)"/>
+        <Copy SourceFiles="..\Nebula.Runner\bin\$(Configuration)\$(TargetFramework)\Nebula.Runner.pdb" DestinationFolder="$(PublishDir)"/>
+        <Copy SourceFiles="..\Nebula.Runner\bin\$(Configuration)\$(TargetFramework)\Nebula.Runner.deps.json" DestinationFolder="$(PublishDir)"/>
+        <Copy SourceFiles="..\Nebula.Runner\bin\$(Configuration)\$(TargetFramework)\Nebula.Runner.runtimeconfig.json" DestinationFolder="$(PublishDir)"/>
+    </Target>
+
     <ItemGroup>
         <ProjectReference Include="..\Nebula.Shared\Nebula.Shared.csproj"/>
         <ProjectReference Include="..\Nebula.SourceGenerators\Nebula.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
