@@ -21,9 +21,9 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build Launcher
-      run: dotnet build Nebula.Launcher --configuration Release -r win10-x64
+      run: dotnet build Nebula.Launcher --configuration Release -r win-x64
     - name: Publish Launcher
-      run: dotnet publish Nebula.Launcher --configuration Release -r win10-x64 --output ./Release
+      run: dotnet publish Nebula.Launcher --configuration Release -r win-x64 --output ./Release
     - name: FTP Deploy
       uses: SamKirkland/FTP-Deploy-Action@3.0.0
       with:
