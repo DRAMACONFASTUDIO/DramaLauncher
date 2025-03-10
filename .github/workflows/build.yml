@@ -44,6 +44,8 @@ jobs:
           @echo off
           dotnet ./bin/Nebula.Launcher.dll
         write-mode: append
+    - name: Create Release dir
+      run: mkdir ./Release/
     - name: ZIP Release
       uses: montudor/action-zip@v1
       with:
