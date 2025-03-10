@@ -29,8 +29,8 @@ jobs:
     - name: ZIP Release
       uses: montudor/action-zip@v1
       with:
-        args: zip -qq -r ./Release/Release.zip ./Release
-    - name: FTP Deploy
+        args: zip -qq -r ./Release.zip ./Release
+    - name: FTP Deploy Data
       uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       with:
         server: ${{ secrets.FTP_SERVER }}
@@ -38,3 +38,11 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./Release/
         server-dir: ./${{ github.sha }}/
+    - name: FTP Deploy Release
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./Release.zip
+        server-dir: ./Release.zip
