@@ -27,10 +27,10 @@ jobs:
     - name: Publish Launcher
       run: dotnet publish Nebula.Launcher --configuration Release -r win-x64 --output ./Release
     - name: FTP Deploy
-      uses: SamKirkland/FTP-Deploy-Action@3.0.0
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       with:
-        ftp-server: ${{ secrets.FTP_SERVER }}
-        ftp-username: ${{ secrets.FTP_USERNAME }}
-        ftp-password: ${{ secrets.FTP_PASSWORD }}
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./Release/
         server-dir: ./${{ github.sha }}
