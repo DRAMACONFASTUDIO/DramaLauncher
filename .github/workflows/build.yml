@@ -21,9 +21,9 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build Runner
-      run: dotnet build Nebula.Runner --configuration Release -r win-x64
+      run: dotnet build Nebula.Runner --configuration Release
     - name: Build Launcher
-      run: dotnet build Nebula.Launcher --configuration Release -r win-x64
+      run: dotnet build Nebula.Launcher --configuration Release
     - name: Publish Launcher
       run: dotnet publish Nebula.Launcher --configuration Release -r win-x64 --output ./Release
     - name: FTP Deploy
