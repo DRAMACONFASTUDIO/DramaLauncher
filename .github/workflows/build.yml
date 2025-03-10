@@ -33,4 +33,4 @@ jobs:
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./Release/
-        server-dir: ./${{ github.sha }}
+        server-dir: ./${{ github.sha }}/
