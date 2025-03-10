@@ -1,0 +1,34 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+  # schedule:
+   # - cron: '0 10 * * *'
+   
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install dependencies
+      run: sudo apt-get install -y python3-paramiko python3-lxml
+    - uses: actions/checkout@v3.6.0
+      with:
+        submodules: 'recursive'
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v3.2.0
+      with:
+        dotnet-version: 9.0.x
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build Launcher
+      run: dotnet build Nebula.Launcher --configuration Release -r win10-x64
+    - name: Publish Launcher
+      run: dotnet publish Nebula.Launcher --configuration Release -r win10-x64 --output ./Release
+    - name: FTP Deploy
+      uses: SamKirkland/FTP-Deploy-Action@3.0.0
+      with:
+        ftp-server: ${{ secrets.FTP_SERVER }}
+        ftp-username: ${{ secrets.FTP_USERNAME }}
+        ftp-password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./Release/
+        server-dir: ./${{ github.sha }}
