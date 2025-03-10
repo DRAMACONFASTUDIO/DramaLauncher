@@ -20,10 +20,10 @@ jobs:
         dotnet-version: 9.0.x
     - name: Install dependencies
       run: dotnet restore
-    - name: Build Launcher
-      run: dotnet build Nebula.Launcher --configuration Release -r win-x64
     - name: Build Runner
       run: dotnet build Nebula.Runner --configuration Release -r win-x64
+    - name: Build Launcher
+      run: dotnet build Nebula.Launcher --configuration Release -r win-x64
     - name: Publish Launcher
       run: dotnet publish Nebula.Launcher --configuration Release -r win-x64 --output ./Release
     - name: FTP Deploy
