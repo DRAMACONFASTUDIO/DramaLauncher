@@ -26,6 +26,10 @@ jobs:
       run: dotnet build Nebula.Launcher --configuration Release
     - name: Publish Launcher
       run: dotnet publish Nebula.Launcher --configuration Release -r win-x64 --output ./Release
+    - name: ZIP Release
+      uses: montudor/action-zip@v1
+      with:
+        args: zip -qq -r ./Release/Release.zip ./Release
     - name: FTP Deploy
       uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       with:
