@@ -25,24 +25,34 @@ jobs:
     - name: Build Launcher
       run: dotnet build Nebula.Launcher --configuration Release
     - name: Publish Launcher
-      run: dotnet publish Nebula.Launcher --configuration Release -r win-x64 --output ./Release
+      run: dotnet publish Nebula.Launcher --configuration Release -r win-x64 --output ./NebulaLauncher/bin
+    - name: Run script creating
+      uses: DamianReeves/write-file-action@master
+      with:
+        path: ./NebulaLauncher/NebulaStart.bat
+        contents: |
+          @echo off
+          cd ./bin
+          echo "You can close that windows. I already start a spessman porn!"
+          start Nebula.Launcher.exe
+        write-mode: append
+    - name: Run with log script creating
+      uses: DamianReeves/write-file-action@master
+      with:
+        path: ./NebulaLauncher/NebulaStartLog.bat
+        contents: |
+          @echo off
+          dotnet ./bin/Nebula.Launcher.dll
+        write-mode: append
     - name: ZIP Release
       uses: montudor/action-zip@v1
       with:
-        args: zip -qq -r ./Release.zip ./Release
-    - name: FTP Deploy Data
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-      with:
-        server: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./Release/
-        server-dir: ./${{ github.sha }}/
+        args: zip -qq -r ./Release/NebulaLauncher.zip ./NebulaLauncher
     - name: FTP Deploy Release
       uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       with:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ./Release.zip
-        server-dir: ./Release.zip
+        local-dir: ./Release/
+        server-dir: ./release/
