@@ -58,6 +58,8 @@ public partial class ServerEntryModelView : ViewModelBase
 
     private ServerInfo? _serverInfo = null;
 
+    private string _lastError = "";
+
     public async Task<ServerInfo?> GetServerInfo()
     {
         if (_serverInfo == null)
@@ -232,6 +234,9 @@ public partial class ServerEntryModelView : ViewModelBase
 
         DebugService.Log("PROCESS EXIT WITH CODE " + Process.ExitCode);
 
+        if(Process.ExitCode != 0) 
+            PopupMessageService.Popup($"Game exit with code {Process.ExitCode}.\nReason: {_lastError}");
+
         Process.Dispose();
         Process = null;
     }
@@ -240,6 +245,7 @@ public partial class ServerEntryModelView : ViewModelBase
     {
         if (e.Data != null)
         {
+            _lastError = e.Data;
             DebugService.Error(e.Data);
             CurrLog.Append(e.Data);
         }

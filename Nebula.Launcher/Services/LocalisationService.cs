@@ -43,3 +43,4 @@ public partial class LocalisationService
         Initialise();
     }
 }
+

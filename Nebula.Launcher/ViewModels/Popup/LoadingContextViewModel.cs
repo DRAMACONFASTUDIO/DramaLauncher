@@ -10,6 +10,7 @@ namespace Nebula.Launcher.ViewModels.Popup;
 public sealed partial class LoadingContextViewModel : PopupViewModelBase, ILoadingHandler
 {
     [GenerateProperty] public override PopupMessageService PopupMessageService { get; }
+    [GenerateProperty] public CancellationService CancellationService { get; }
     
     [ObservableProperty] private int _currJobs;
 
@@ -38,6 +39,11 @@ public sealed partial class LoadingContextViewModel : PopupViewModelBase, ILoadi
     public int GetResolvedJobsCount()
     {
         return ResolvedJobs;
+    }
+
+    public void Cancel(){
+        CancellationService.Cancel();
+        Dispose();
     }
 
     protected override void Initialise()

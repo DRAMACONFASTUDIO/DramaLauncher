@@ -40,14 +40,14 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
     //Design think
     protected override void InitialiseInDesignMode()
     {
-        ServerViewContainer = new ServerViewContainer(this, RestService, CancellationService, DebugService, ViewHelperService);
+        ServerViewContainer = new ServerViewContainer(this, ViewHelperService);
         HubErrors.Add(new Exception("UVI"));
     }
 
     //real think
     protected override void Initialise()
     {
-        ServerViewContainer = new ServerViewContainer(this, RestService, CancellationService, DebugService, ViewHelperService);
+        ServerViewContainer = new ServerViewContainer(this, ViewHelperService);
         
         foreach (var info in HubService.ServerList) UnsortedServers.Add(info);
 
@@ -142,10 +142,7 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
 }
 
 public class ServerViewContainer(
-    ServerListViewModel serverListViewModel, 
-    RestService restService, 
-    CancellationService cancellationService, 
-    DebugService debugService, 
+    ServerListViewModel serverListViewModel,
     ViewHelperService viewHelperService
     )
 {
@@ -210,13 +207,6 @@ public class ServerComparer : IComparer<ServerHubInfo>, IComparer<ServerStatus>,
 
     public int Compare((RobustUrl, ServerStatus) x, (RobustUrl, ServerStatus) y)
     {
-        if (ReferenceEquals(x, y))
-            return 0;
-        if (ReferenceEquals(null, y))
-            return 1;
-        if (ReferenceEquals(null, x))
-            return -1;
-
         return Compare(x.Item2, y.Item2);
     }
 }

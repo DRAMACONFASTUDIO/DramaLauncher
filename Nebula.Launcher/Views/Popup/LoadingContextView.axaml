@@ -24,7 +24,7 @@
                 </Label>
             </StackPanel>
 
-            <Button HorizontalAlignment="Right" VerticalAlignment="Center">
+            <Button HorizontalAlignment="Right" VerticalAlignment="Center" Command="{Binding Cancel}">
                 <Label>Cancel</Label>
             </Button>
         </Panel>

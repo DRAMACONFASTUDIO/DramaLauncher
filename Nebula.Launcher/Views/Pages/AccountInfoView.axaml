@@ -13,7 +13,7 @@
         <pages:AccountInfoViewModel />
     </Design.DataContext>
     <Grid
-        ColumnDefinitions="*,1*"
+        ColumnDefinitions="3*,2*"
         Margin="15"
         RowDefinitions="*">
         <StackPanel Grid.Column="1" Grid.Row="0">
@@ -40,7 +40,7 @@
                             <Border
                                 BoxShadow="0 1 15 -2 #121212"
                                 CornerRadius="0,10,0,10"
-                                Margin="5,5,5,5"
+                                Margin="5,5,5,0"
                                 VerticalAlignment="Center">
                                 <Border.Background>
                                     <LinearGradientBrush EndPoint="50%,100%" StartPoint="50%,0%">
@@ -50,7 +50,6 @@
                                 </Border.Background>
                                 <Panel>
                                     <StackPanel Margin="10,5,5,5" Orientation="Horizontal">
-                                        <Label>Name:</Label>
                                         <Label>
                                             <TextBlock Text="{Binding Login}" />
                                         </Label>
@@ -107,19 +106,19 @@
                                 <Label VerticalAlignment="Center">
                                     Login:
                                 </Label>
-                                <TextBox Text="{Binding CurrentLogin}" />
+                                <TextBox Text="{Binding CurrentLogin}" MinWidth="200" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <Label HorizontalAlignment="Left" VerticalAlignment="Center">
                                     Password:
                                 </Label>
-                                <TextBox PasswordChar="#" Text="{Binding CurrentPassword}" />
+                                <TextBox PasswordChar="#" MinWidth="200" Text="{Binding CurrentPassword}" />
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <Label VerticalAlignment="Center">
                                     Auth server:
                                 </Label>
-                                <TextBox Text="{Binding CurrentAuthServer}" />
+                                <TextBox MinWidth="200" Text="{Binding CurrentAuthServer}" />
                                 <Button Command="{Binding ExpandAuthUrlCommand}" VerticalAlignment="Stretch">
                                     <Label>+</Label>
                                 </Button>
@@ -136,7 +135,7 @@
                                     ItemsSource="{Binding AuthUrls}"
                                     Margin="5"
                                     SelectedItem="{Binding AuthItemSelect}"
-                                    SelectionMode="Toggle">
+                                    SelectionMode="Single">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
                                             <Label>
@@ -153,6 +152,14 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Center">
                                 <Label>Auth</Label>
+                            </Button>
+                        </Border>
+                        <Border BoxShadow="{StaticResource DefaultShadow}">
+                            <Button 
+                                Command="{Binding SaveProfileCommand}" 
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center">
+                                <Label>Save profile</Label>
                             </Button>
                         </Border>
                         <Button Command="{Binding ExpandAuthViewCommand}" HorizontalAlignment="Right">

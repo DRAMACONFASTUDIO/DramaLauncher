@@ -12,6 +12,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Nebula.Launcher.Services;
+using Nebula.Launcher.ViewModels.ContentView;
 using Nebula.Launcher.ViewModels.Popup;
 using Nebula.Launcher.Views.Pages;
 using Nebula.Shared.Models;
@@ -33,6 +34,10 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
 
     private ContentEntry? _selectedEntry;
     [ObservableProperty] private string _serverText = "";
+    [ObservableProperty] private ContentViewBase? _contentView;
+    public bool IsCustomContenView => ContentView != null;
+
+
     [GenerateProperty] private ContentService ContentService { get; } = default!;
     [GenerateProperty] private CancellationService CancellationService { get; } = default!;
     [GenerateProperty] private FileService FileService { get; } = default!;
@@ -43,16 +48,26 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
 
     public ObservableCollection<ContentEntry> Entries { get; } = new();
 
+    private Dictionary<string, Type> _contentContainers = new();
+
     public ContentEntry? SelectedEntry
     {
         get => _selectedEntry;
         set
         {
+            SearchText = value?.GetPath().ToString() ?? "";
+            ContentView = null;
+
             if (value is { Item: not null })
             {
                 if (FileService.ContentFileApi.TryOpen(value.Item.Value.Hash, out var stream))
                 {
                     var ext = Path.GetExtension(value.Item.Value.Path);
+                    if(TryGetContentViewer(ext, out var contentViewBase)){
+                        contentViewBase.InitialiseWithData(value.GetPath(), stream);
+                        ContentView = contentViewBase;
+                        return;
+                    }
 
                     var myTempFile = Path.Combine(Path.GetTempPath(), "tempie" + ext);
 
@@ -81,6 +96,17 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
 
             foreach (var (_, entryCh) in value.Childs) Entries.Add(entryCh);
         }
+    }
+
+    private bool TryGetContentViewer(string type,[NotNullWhen(true)] out ContentViewBase? contentViewBase){
+        contentViewBase = null;
+        if(!_contentContainers.TryGetValue(type, out var contentViewType) || 
+           !contentViewType.IsAssignableTo(typeof(ContentViewBase))) 
+            return false;
+
+        
+        contentViewBase = (ContentViewBase)Activator.CreateInstance(contentViewType)!;
+        return true;
     }
 
 
@@ -144,15 +170,10 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
             if (SelectedEntry == null || !SelectedEntry.GetRoot().TryGetEntry(path, out var centry))
                 throw new Exception("Not found! " + oriPath.Path);
 
-            if (appendHistory) AppendHistory(SearchText);
-            SearchText = oriPath.Path;
-
             SelectedEntry = centry;
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            SearchText = oriPath.Path;
             PopupService.Popup(e);
         }
     }
@@ -170,11 +191,12 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
 
     private async Task<ContentEntry> CreateEntry(string serverUrl)
     {
-        var rurl = serverUrl.ToRobustUrl();
-        var info = await ContentService.GetBuildInfo(rurl, CancellationService.Token);
         var loading = ViewHelperService.GetViewModel<LoadingContextViewModel>();
         loading.LoadingName = "Loading entry";
         PopupService.Popup(loading);
+
+        var rurl = serverUrl.ToRobustUrl();
+        var info = await ContentService.GetBuildInfo(rurl, CancellationService.Token);
         var items = await ContentService.EnsureItems(info.RobustManifestInfo, loading,
             CancellationService.Token);
 

@@ -53,9 +53,6 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
         }
     }
 
-
-    private CurrentAuthInfo? _currAuthTemp;
-
     public string AuthItemSelect
     {
         set => CurrentAuthServer = value;
@@ -65,6 +62,8 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
     protected override void InitialiseInDesignMode()
     {
         AddAccount(new AuthLoginPassword("Binka", "12341", ""));
+        AddAccount(new AuthLoginPassword("Binka", "12341", ""));
+        
         AuthUrls.Add("https://cinka.ru");
         AuthUrls.Add("https://cinka.ru");
     }
@@ -177,6 +176,7 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
         AuthUrls.Clear();
         var authUrls = ConfigurationService.GetConfigValue(LauncherConVar.AuthServers)!;
         foreach (var url in authUrls) AuthUrls.Add(url);
+        if(authUrls.Length > 0) CurrentAuthServer = authUrls[0];
         
         var currProfile = ConfigurationService.GetConfigValue(LauncherConVar.AuthCurrent);
 
