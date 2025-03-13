@@ -7,7 +7,7 @@ using Robust.LoaderApi;
 namespace Nebula.Runner;
 
 [ServiceRegister]
-public sealed class App(DebugService debugService, RunnerService runnerService, ContentService contentService)
+public sealed class App(RunnerService runnerService, ContentService contentService)
     : IRedialApi
 {
     public void Redial(Uri uri, string text = "")
@@ -16,8 +16,6 @@ public sealed class App(DebugService debugService, RunnerService runnerService, 
 
     public async Task Run(string[] args1)
     {
-        debugService.Log("HELLO!!! ");
-
         var login = Environment.GetEnvironmentVariable("AUTH_LOGIN") ?? "Alexandra";
         var urlraw = Environment.GetEnvironmentVariable("GAME_URL") ?? "ss14://localhost";
 

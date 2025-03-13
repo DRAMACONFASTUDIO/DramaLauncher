@@ -197,12 +197,12 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
 
         var rurl = serverUrl.ToRobustUrl();
         var info = await ContentService.GetBuildInfo(rurl, CancellationService.Token);
-        var items = await ContentService.EnsureItems(info.RobustManifestInfo, loading,
+        var hashApi = await ContentService.EnsureItems(info.RobustManifestInfo, loading,
             CancellationService.Token);
 
         var rootEntry = new ContentEntry(this, "", "", serverUrl);
 
-        foreach (var item in items)
+        foreach (var item in hashApi.Manifest.Values)
         {
             var path = new ContentPath(item.Path);
             rootEntry.CreateItem(path, item);

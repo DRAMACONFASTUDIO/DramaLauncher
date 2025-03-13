@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Numerics;
+using Nebula.Shared.FileApis;
 using Nebula.Shared.FileApis.Interfaces;
 using Nebula.Shared.Models;
 using Nebula.Shared.Utils;
@@ -15,7 +16,7 @@ public partial class ContentService
         return fileService.ContentFileApi.Has(item.Hash);
     }
 
-    public async Task<List<RobustManifestItem>> EnsureItems(ManifestReader manifestReader, Uri downloadUri,
+    public async Task<HashApi> EnsureItems(ManifestReader manifestReader, Uri downloadUri,
         ILoadingHandler loadingHandler,
         CancellationToken cancellationToken)
     {
@@ -25,26 +26,22 @@ public partial class ContentService
         while (manifestReader.TryReadItem(out var item))
         {
             if (cancellationToken.IsCancellationRequested)
-            {
-                debugService.Log("ensuring is cancelled!");
-                return [];
-            }
-
-            if (!CheckManifestExist(item.Value))
-                items.Add(item.Value);
+                throw new TaskCanceledException();
+            
             allItems.Add(item.Value);
         }
 
+        var hashApi = new HashApi(allItems, fileService.ContentFileApi);
+
+        items = allItems.Where(a=> !hashApi.Has(a)).ToList();
+
         debugService.Log("Download Count:" + items.Count);
+        await Download(downloadUri, items, hashApi, loadingHandler, cancellationToken);
 
-        await Download(downloadUri, items, loadingHandler, cancellationToken);
-
-        fileService.ManifestItems = allItems;
-
-        return allItems;
+        return hashApi;
     }
 
-    public async Task<List<RobustManifestItem>> EnsureItems(RobustManifestInfo info, ILoadingHandler loadingHandler,
+    public async Task<HashApi> EnsureItems(RobustManifestInfo info, ILoadingHandler loadingHandler,
         CancellationToken cancellationToken)
     {
         debugService.Log("Getting manifest: " + info.Hash);
@@ -71,11 +68,12 @@ public partial class ContentService
         CancellationToken cancellationToken)
     {
         debugService.Log("Unpack manifest files");
-        var items = await EnsureItems(info, loadingHandler, cancellationToken);
+        var hashApi = await EnsureItems(info, loadingHandler, cancellationToken);
+        var items = hashApi.Manifest.Values.ToList();
         loadingHandler.AppendJob(items.Count);
         foreach (var item in items)
         {
-            if (fileService.ContentFileApi.TryOpen(item.Hash, out var stream))
+            if (hashApi.TryOpen(item, out var stream))
             {
                 debugService.Log($"Unpack {item.Hash} to: {item.Path}");
                 otherApi.Save(item.Path, stream);
@@ -90,7 +88,7 @@ public partial class ContentService
         }
     }
 
-    public async Task Download(Uri contentCdn, List<RobustManifestItem> toDownload, ILoadingHandler loadingHandler,
+    public async Task Download(Uri contentCdn, List<RobustManifestItem> toDownload, HashApi hashApi, ILoadingHandler loadingHandler,
         CancellationToken cancellationToken)
     {
         if (toDownload.Count == 0 || cancellationToken.IsCancellationRequested)
@@ -189,10 +187,6 @@ public partial class ContentService
                 EnsureBuffer(ref readBuffer, length);
                 var data = readBuffer.AsMemory(0, length);
 
-                // Data to write to database.
-                var compression = ContentCompressionScheme.None;
-                var writeData = data;
-
                 if (preCompressed)
                 {
                     // Compressed length from extended header.
@@ -210,10 +204,6 @@ public partial class ContentService
 
                         if (decompressedLength != data.Length)
                             throw new Exception($"Compressed blob {i} had incorrect decompressed size!");
-
-                        // Set variables so that the database write down below uses them.
-                        compression = ContentCompressionScheme.ZStd;
-                        writeData = compressedData;
                     }
                     else
                     {
@@ -225,25 +215,8 @@ public partial class ContentService
                     await stream.ReadExactAsync(data, null);
                 }
 
-                if (!preCompressed)
-                {
-                    // File wasn't pre-compressed. We should try to manually compress it to save space in DB.
-
-
-                    EnsureBuffer(ref compressBuffer, ZStd.CompressBound(data.Length));
-                    var compressLength = compressContext!.Compress(compressBuffer, data.Span);
-
-                    // Don't bother saving compressed data if it didn't save enough space.
-                    if (compressLength + 10 < length)
-                    {
-                        // Set variables so that the database write down below uses them.
-                        compression = ContentCompressionScheme.ZStd;
-                        writeData = compressBuffer.AsMemory(0, compressLength);
-                    }
-                }
-
                 using var fileStream = new MemoryStream(data.ToArray());
-                fileService.ContentFileApi.Save(item.Hash, fileStream);
+                hashApi.Save(item, fileStream);
 
                 debugService.Log("file saved:" + item.Path);
                 loadingHandler.AppendResolvedJob();

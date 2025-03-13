@@ -14,14 +14,11 @@ public class FileService
         Environment.SpecialFolder.ApplicationData), "Datum");
 
     private readonly DebugService _debugService;
-    public readonly IReadWriteFileApi ConfigurationApi;
 
+    public readonly IReadWriteFileApi ConfigurationApi;
     public readonly IReadWriteFileApi ContentFileApi;
     public readonly IReadWriteFileApi EngineFileApi;
     public readonly IReadWriteFileApi ManifestFileApi;
-
-    private HashApi? _hashApi;
-
     public FileService(DebugService debugService)
     {
         _debugService = debugService;
@@ -29,21 +26,15 @@ public class FileService
         EngineFileApi = CreateFileApi("engine");
         ManifestFileApi = CreateFileApi("manifest");
         ConfigurationApi = CreateFileApi("config");
-    }
 
-    public List<RobustManifestItem> ManifestItems
-    {
-        set => _hashApi = new HashApi(value, ContentFileApi);
-    }
-
-    public HashApi HashApi
-    {
-        get
-        {
-            if (_hashApi is null) throw new Exception("Hash API is not initialized!");
-            return _hashApi;
+        // Some migrating think
+        foreach(var file in ContentFileApi.AllFiles){
+            if(file.Contains("\\") || !ContentFileApi.TryOpen(file, out var stream)) continue;
+            
+            ContentFileApi.Save(HashApi.GetManifestPath(file), stream);
+            stream.Dispose();
+            ContentFileApi.Remove(file);
         }
-        set => _hashApi = value;
     }
 
     public IReadWriteFileApi CreateFileApi(string path)

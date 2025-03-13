@@ -2,7 +2,7 @@ namespace Nebula.Shared.Models;
 
 public class RobustBuildInfo
 {
-    public ServerInfo BuildInfo;
+    public ServerInfo BuildInfo = default!;
     public RobustManifestInfo RobustManifestInfo;
-    public RobustUrl Url;
+    public RobustUrl Url = default!;
 }

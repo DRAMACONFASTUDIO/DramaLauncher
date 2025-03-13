@@ -8,7 +8,6 @@ public sealed class RunnerService(
     ContentService contentService,
     DebugService debugService,
     ConfigurationService varService,
-    FileService fileService,
     EngineService engineService,
     AssemblyService assemblyService)
 {
@@ -20,7 +19,7 @@ public sealed class RunnerService(
         var engine = await engineService.EnsureEngine(buildInfo.BuildInfo.Build.EngineVersion);
 
         if (engine is null)
-            throw new Exception("Engine version is not usable: " + buildInfo.BuildInfo.Build.EngineVersion);
+            throw new Exception("Engine version not found: " + buildInfo.BuildInfo.Build.EngineVersion);
 
         await contentService.EnsureItems(buildInfo.RobustManifestInfo, loadingHandler, cancellationToken);
         await engineService.EnsureEngineModules("Robust.Client.WebView", buildInfo.BuildInfo.Build.EngineVersion);
@@ -35,13 +34,13 @@ public sealed class RunnerService(
         var engine = await engineService.EnsureEngine(buildInfo.BuildInfo.Build.EngineVersion);
 
         if (engine is null)
-            throw new Exception("Engine version is not usable: " + buildInfo.BuildInfo.Build.EngineVersion);
+            throw new Exception("Engine version not found: " + buildInfo.BuildInfo.Build.EngineVersion);
 
-        await contentService.EnsureItems(buildInfo.RobustManifestInfo, loadingHandler, cancellationToken);
+        var hashApi = await contentService.EnsureItems(buildInfo.RobustManifestInfo, loadingHandler, cancellationToken);
 
         var extraMounts = new List<ApiMount>
         {
-            new(fileService.HashApi, "/")
+            new(hashApi, "/")
         };
 
         var module =

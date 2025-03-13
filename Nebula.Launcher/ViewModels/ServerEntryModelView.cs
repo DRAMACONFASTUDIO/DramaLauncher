@@ -305,7 +305,7 @@ public partial class ServerEntryModelView : ViewModelBase
                 if (File.Exists(dotnetPath)) return dotnetPath;
             }
 
-        throw new Exception("Dotnet not found!");
+        return "dotnet";
     }
 }
 

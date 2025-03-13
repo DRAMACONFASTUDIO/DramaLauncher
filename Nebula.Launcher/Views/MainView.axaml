@@ -120,7 +120,7 @@
                                 https://cinka.ru/nebula-launcher/
                             </TextBlock>
                         </Button>
-                        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center">v0.02-a</TextBlock>
+                        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center">v0.05-a</TextBlock>
                     </Panel>
                 </Label>
             </Border>
