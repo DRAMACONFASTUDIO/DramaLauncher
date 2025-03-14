@@ -26,15 +26,44 @@ public class FileService
         EngineFileApi = CreateFileApi("engine");
         ManifestFileApi = CreateFileApi("manifest");
         ConfigurationApi = CreateFileApi("config");
+    }
 
-        // Some migrating think
-        foreach(var file in ContentFileApi.AllFiles){
-            if(file.Contains("\\") || !ContentFileApi.TryOpen(file, out var stream)) continue;
-            
-            ContentFileApi.Save(HashApi.GetManifestPath(file), stream);
-            stream.Dispose();
-            ContentFileApi.Remove(file);
+    public bool CheckMigration(ILoadingHandler loadingHandler)
+    {
+        _debugService.Log("Checking migration...");
+
+        var migrationList = ContentFileApi.AllFiles.Where(f => !f.Contains("\\")).ToList();
+        if(migrationList.Count == 0) return false;
+        
+        _debugService.Log($"Found {migrationList.Count} migration files. Starting migration...");
+        Task.Run(() => DoMigration(loadingHandler, migrationList));
+        return true;
+    }
+
+    private void DoMigration(ILoadingHandler loadingHandler, List<string> migrationList)
+    {
+        loadingHandler.SetJobsCount(migrationList.Count);
+        
+        Parallel.ForEach(migrationList, (f,_)=>MigrateFile(f,loadingHandler));
+        
+        if (loadingHandler is IDisposable disposable)
+        {
+            disposable.Dispose();
         }
+    }
+
+    private void MigrateFile(string file, ILoadingHandler loadingHandler)
+    {
+        if(!ContentFileApi.TryOpen(file, out var stream))
+        {
+            loadingHandler.AppendResolvedJob();
+            return;
+        }
+            
+        ContentFileApi.Save(HashApi.GetManifestPath(file), stream);
+        stream.Dispose();
+        ContentFileApi.Remove(file);
+        loadingHandler.AppendResolvedJob();
     }
 
     public IReadWriteFileApi CreateFileApi(string path)
@@ -59,5 +88,67 @@ public class FileService
             zipStream?.Dispose();
             throw;
         }
+    }
+}
+
+public sealed class ConsoleLoadingHandler : ILoadingHandler
+{
+    private int _currJobs;
+
+    private float _percent;
+    private int _resolvedJobs;
+
+    public void SetJobsCount(int count)
+    {
+        _currJobs = count;
+
+        UpdatePercent();
+        Draw();
+    }
+
+    public int GetJobsCount()
+    {
+        return _currJobs;
+    }
+
+    public void SetResolvedJobsCount(int count)
+    {
+        _resolvedJobs = count;
+
+        UpdatePercent();
+        Draw();
+    }
+
+    public int GetResolvedJobsCount()
+    {
+        return _resolvedJobs;
+    }
+
+    private void UpdatePercent()
+    {
+        if (_currJobs == 0)
+        {
+            _percent = 0;
+            return;
+        }
+
+        if (_resolvedJobs > _currJobs) return;
+
+        _percent = _resolvedJobs / (float)_currJobs;
+    }
+
+    private void Draw()
+    {
+        var barCount = 10;
+        var fullCount = (int)(barCount * _percent);
+        var emptyCount = barCount - fullCount;
+
+        Console.Write("\r");
+
+        for (var i = 0; i < fullCount; i++) Console.Write("#");
+
+        for (var i = 0; i < emptyCount; i++) Console.Write(" ");
+
+        Console.Write($"\t {_resolvedJobs}/{_currJobs}");
     }
 }

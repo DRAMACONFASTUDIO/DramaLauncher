@@ -40,6 +40,7 @@ public partial class MainViewModel : ViewModelBase
     [GenerateProperty] private DebugService DebugService { get; } = default!;
     [GenerateProperty] private PopupMessageService PopupMessageService { get; } = default!;
     [GenerateProperty, DesignConstruct] private ViewHelperService ViewHelperService { get; } = default!;
+    [GenerateProperty] private FileService FileService { get; } = default!;
 
     public ObservableCollection<ListItemTemplate> Items { get; private set; }
 
@@ -56,6 +57,20 @@ public partial class MainViewModel : ViewModelBase
 
         PopupMessageService.OnPopupRequired += OnPopupRequired;
         PopupMessageService.OnCloseRequired += OnPopupCloseRequired;
+        
+        CheckMigration();
+    }
+
+    private void CheckMigration()
+    {
+        var loadingHandler = ViewHelperService.GetViewModel<LoadingContextViewModel>();
+        loadingHandler.LoadingName = "Migration task, please wait...";
+        loadingHandler.IsCancellable = false;
+
+        if (!FileService.CheckMigration(loadingHandler))
+            return;
+        
+        OnPopupRequired(loadingHandler);
     }
 
     partial void OnSelectedListItemChanged(ListItemTemplate? value)

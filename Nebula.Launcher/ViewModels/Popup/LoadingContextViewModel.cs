@@ -17,6 +17,7 @@ public sealed partial class LoadingContextViewModel : PopupViewModelBase, ILoadi
     [ObservableProperty] private int _resolvedJobs;
 
     public string LoadingName { get; set; } = "Loading...";
+    public bool IsCancellable { get; set; } = true;
     public override bool IsClosable => false;
 
     public override string Title => LoadingName;
@@ -42,6 +43,7 @@ public sealed partial class LoadingContextViewModel : PopupViewModelBase, ILoadi
     }
 
     public void Cancel(){
+        if(!IsCancellable) return;
         CancellationService.Cancel();
         Dispose();
     }
