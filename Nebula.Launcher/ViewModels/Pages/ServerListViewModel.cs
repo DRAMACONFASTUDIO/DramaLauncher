@@ -23,6 +23,8 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
 
     [ObservableProperty] private bool _isFavoriteMode;
     
+    [ObservableProperty] private bool _isFilterVisible;
+    
     public ObservableCollection<ServerEntryModelView> Servers { get; }= new();
     public ObservableCollection<Exception> HubErrors { get; } = new();
     
@@ -36,6 +38,8 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
     private ServerViewContainer ServerViewContainer { get; set; } 
     
     private List<ServerHubInfo> UnsortedServers { get; } = new();
+    
+    private List<string> _filters = new();
 
     //Design think
     protected override void InitialiseInDesignMode()
@@ -60,6 +64,24 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
         UpdateFavoriteEntries();
     }
 
+    public void OnFilterChanged(string name, bool active)
+    {
+        DebugService.Debug($"OnFilterChanged: {name} {active}");
+        if(active)
+            _filters.Add(name);
+        else
+            _filters.Remove(name);
+        
+        if(IsFavoriteMode)
+        {
+            UpdateFavoriteEntries();
+        }
+        else
+        {
+            UpdateServerEntries();
+        }
+    }
+
     private void HubServerLoadingError(Exception obj)
     {
         HubErrors.Add(obj);
@@ -74,7 +96,7 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
         Task.Run(() =>
         {
             UnsortedServers.Sort(new ServerComparer());
-            foreach (var info in UnsortedServers.Where(a => CheckServerThink(a.StatusData)))
+            foreach (var info in UnsortedServers.Where(CheckServerThink))
             {
                 var view = ServerViewContainer.Get(info.Address.ToRobustUrl(), info.StatusData);
                 Servers.Add(view);
@@ -112,14 +134,21 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
         }
     }
 
-    private bool CheckServerThink(ServerStatus hubInfo)
+    private bool CheckServerThink(ServerHubInfo hubInfo)
     {
-        if (string.IsNullOrEmpty(SearchText)) return true;
-        return hubInfo.Name.ToLower().Contains(SearchText.ToLower());
+        var isNameEqual = string.IsNullOrEmpty(SearchText) || hubInfo.StatusData.Name.ToLower().Contains(SearchText.ToLower());
+
+        if (_filters.Count == 0) return isNameEqual;
+        if(_filters.Select(t=>t.Replace('_',':').Replace("ERPYes","18+")).Any(t=>hubInfo.StatusData.Tags.Contains(t) || hubInfo.InferredTags.Contains(t))) 
+            return isNameEqual;
+        
+
+        return false;
     }
 
     public void FilterRequired()
     {
+        IsFilterVisible = !IsFilterVisible;
     }
 
     public void AddFavoriteRequired()

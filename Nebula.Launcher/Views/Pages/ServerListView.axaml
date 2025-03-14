@@ -34,6 +34,28 @@
                     Padding="0" />
             </StackPanel>
         </ScrollViewer>
+        
+        <Border Grid.Row="0" 
+                Background="{StaticResource DefaultGrad}" 
+                Margin="0,0,0,0" CornerRadius="20,20,0,0"
+                VerticalAlignment="Bottom" 
+                IsVisible="{Binding IsFilterVisible}">
+            <StackPanel Orientation="Vertical" Spacing="2" Margin="15">
+                <StackPanel Orientation="Horizontal" Spacing="15">
+                    <TextBlock Text="Roleplay:" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                    <CheckBox Click="Button_OnClick" Name="rp_none"><TextBlock Text="NonRP"/></CheckBox>
+                    <CheckBox Click="Button_OnClick" Name="rp_low"><TextBlock Text="LowRP"/></CheckBox>
+                    <CheckBox Click="Button_OnClick" Name="rp_med"><TextBlock Text="MediumRP"/></CheckBox>
+                    <CheckBox Click="Button_OnClick" Name="rp_high"><TextBlock Text="HardRP"/></CheckBox>
+                    <CheckBox Click="Button_OnClick" Name="ERPYes"><TextBlock Text="18+"/></CheckBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="15">
+                    <TextBlock Text="Language:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                    <CheckBox Click="Button_OnClick" Name="lang_ru"><TextBlock Text="RU"/></CheckBox>
+                    <CheckBox Click="Button_OnClick" Name="lang_en"><TextBlock Text="EN"/></CheckBox>
+                </StackPanel>
+            </StackPanel>
+        </Border>
 
         <Border
             Background="{StaticResource DefaultGrad}"
