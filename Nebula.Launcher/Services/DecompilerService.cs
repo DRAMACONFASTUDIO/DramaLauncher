@@ -1,13 +1,17 @@
 
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Nebula.Launcher.ViewModels.Popup;
 using Nebula.Shared;
 using Nebula.Shared.FileApis;
 using Nebula.Shared.FileApis.Interfaces;
+using Nebula.Shared.Models;
 using Nebula.Shared.Services;
 
 namespace Nebula.Launcher.Services;
@@ -18,19 +22,67 @@ public sealed partial class DecompilerService
     [GenerateProperty] private ConfigurationService ConfigurationService { get; } 
     [GenerateProperty] private PopupMessageService PopupMessageService {get;}
     [GenerateProperty] private ViewHelperService ViewHelperService {get;}
+    [GenerateProperty] private ContentService ContentService {get;}
+    [GenerateProperty] private FileService FileService {get;}
+    [GenerateProperty] private CancellationService CancellationService {get;}
+    [GenerateProperty] private EngineService engineService {get;}
+    [GenerateProperty] private DebugService debugService {get;}
 
     private HttpClient _httpClient = new HttpClient();
 
     private static string fullPath = Path.Join(FileService.RootPath,"ILSpy");
     private static string executePath = Path.Join(fullPath, "ILSpy.exe");
 
-    public async void OpenDecompiler(string path){
+    public async void OpenDecompiler(string arguments){
         await EnsureILSpy();
         var startInfo = new ProcessStartInfo(){
             FileName = executePath,
-            Arguments = path
+            Arguments = arguments
         };
         Process.Start(startInfo);
+    }
+
+    public async void OpenServerDecompiler(RobustUrl url)
+    {
+        var myTempDir = EnsureTempDir(out var tmpDir);
+
+        ILoadingHandler loadingHandler = ViewHelperService.GetViewModel<LoadingContextViewModel>();
+        
+        var buildInfo =
+            await ContentService.GetBuildInfo(url, CancellationService.Token);
+        var engine = await engineService.EnsureEngine(buildInfo.BuildInfo.Build.EngineVersion);
+
+        if (engine is null)
+            throw new Exception("Engine version not found: " + buildInfo.BuildInfo.Build.EngineVersion);
+
+        foreach (var file in engine.AllFiles)
+        {
+            if(!file.Contains(".dll") || !engine.TryOpen(file, out var stream)) continue;
+            myTempDir.Save(file, stream);
+            await stream.DisposeAsync();
+        }
+
+        var hashApi = await ContentService.EnsureItems(buildInfo.RobustManifestInfo, loadingHandler, CancellationService.Token);
+
+        foreach (var (file, hash) in hashApi.Manifest)
+        {
+            if(!file.Contains(".dll") || !hashApi.TryOpen(hash, out var stream)) continue;
+            myTempDir.Save(Path.GetFileName(file), stream);
+            await stream.DisposeAsync();
+        }
+        
+        ((IDisposable)loadingHandler).Dispose();
+        
+        debugService.Log("File extracted. " + tmpDir);
+        
+        OpenDecompiler(string.Join(' ', myTempDir.AllFiles.Select(f=>Path.Join(tmpDir, f))) + " --newinstance");
+    }
+
+    private IReadWriteFileApi EnsureTempDir(out string path)
+    {
+        path = Path.Combine(Path.GetTempPath(), "tempDlls"+Path.GetRandomFileName());
+        Directory.CreateDirectory(path);
+        return new FileApi(path);
     }
 
     private void Initialise(){}

@@ -70,7 +70,8 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
 
                 if(TryGetContentViewer(ext, out var contentViewBase)){
                     DebugService.Debug($"Opening custom context:{item.Value.Path}");
-                    contentViewBase.InitialiseWithData(value.GetPath(), stream);
+                    contentViewBase.InitialiseWithData(value.GetPath(), stream, value);
+                    stream.Dispose();
                     ContentView = contentViewBase;
                     return;
                 }
