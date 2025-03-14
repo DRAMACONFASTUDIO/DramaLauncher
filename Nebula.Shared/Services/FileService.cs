@@ -52,9 +52,7 @@ public class FileService
 
             var zipArchive = new ZipArchive(zipStream, ZipArchiveMode.Read);
 
-            var prefix = "";
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) prefix = "Space Station 14.app/Contents/Resources/";
-            return new ZipFileApi(zipArchive, prefix);
+            return new ZipFileApi(zipArchive, "");
         }
         catch (Exception)
         {

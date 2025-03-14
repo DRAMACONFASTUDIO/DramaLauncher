@@ -7,14 +7,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
-using Avalonia.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Nebula.Launcher.Services;
 using Nebula.Launcher.ViewModels.ContentView;
 using Nebula.Launcher.ViewModels.Popup;
 using Nebula.Launcher.Views.Pages;
+using Nebula.Shared.FileApis;
 using Nebula.Shared.Models;
 using Nebula.Shared.Services;
 using Nebula.Shared.Utils;
@@ -44,6 +42,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
     [GenerateProperty] private DebugService DebugService { get; } = default!;
     [GenerateProperty] private PopupMessageService PopupService { get; } = default!;
     [GenerateProperty] private HubService HubService { get; } = default!;
+    [GenerateProperty] private IServiceProvider ServiceProvider {get;}
     [GenerateProperty, DesignConstruct] private ViewHelperService ViewHelperService { get; } = default!;
 
     public ObservableCollection<ContentEntry> Entries { get; } = new();
@@ -55,44 +54,47 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
         get => _selectedEntry;
         set
         {
+            var oldSearchText = SearchText;
             SearchText = value?.GetPath().ToString() ?? "";
+
             ContentView = null;
-
-            if (value is { Item: not null })
-            {
-                if (FileService.ContentFileApi.TryOpen(value.Item.Value.Hash, out var stream))
-                {
-                    var ext = Path.GetExtension(value.Item.Value.Path);
-                    if(TryGetContentViewer(ext, out var contentViewBase)){
-                        contentViewBase.InitialiseWithData(value.GetPath(), stream);
-                        ContentView = contentViewBase;
-                        return;
-                    }
-
-                    var myTempFile = Path.Combine(Path.GetTempPath(), "tempie" + ext);
-
-                    using (var sw = new FileStream(myTempFile, FileMode.Create, FileAccess.Write, FileShare.None))
-                    {
-                        stream.CopyTo(sw);
-                    }
-
-                    stream.Dispose();
-
-                    var startInfo = new ProcessStartInfo(myTempFile)
-                    {
-                        UseShellExecute = true
-                    };
-
-                    Process.Start(startInfo);
-                }
-
-                return;
-            }
-
             Entries.Clear();
             _selectedEntry = value;
 
             if (value == null) return;
+
+            if(value.TryOpen(out var stream, out var item)){
+
+                var ext = Path.GetExtension(item.Value.Path);
+                var myTempFile = Path.Combine(Path.GetTempPath(), "tempie" + ext);
+
+                if(TryGetContentViewer(ext, out var contentViewBase)){
+                    DebugService.Debug($"Opening custom context:{item.Value.Path}");
+                    contentViewBase.InitialiseWithData(value.GetPath(), stream);
+                    ContentView = contentViewBase;
+                    return;
+                }
+
+                var sw = new FileStream(myTempFile, FileMode.Create, FileAccess.Write, FileShare.None);
+                stream.CopyTo(sw);
+
+                sw.Dispose();
+                stream.Dispose();
+
+                var startInfo = new ProcessStartInfo(myTempFile)
+                {
+                    UseShellExecute = true
+                };
+
+                
+                DebugService.Log("Opening " + myTempFile);
+                Process.Start(startInfo);
+
+                return;
+            }
+            
+            if(SearchText.Length > oldSearchText.Length) 
+                AppendHistory(oldSearchText);
 
             foreach (var (_, entryCh) in value.Childs) Entries.Add(entryCh);
         }
@@ -103,17 +105,16 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
         if(!_contentContainers.TryGetValue(type, out var contentViewType) || 
            !contentViewType.IsAssignableTo(typeof(ContentViewBase))) 
             return false;
-
         
-        contentViewBase = (ContentViewBase)Activator.CreateInstance(contentViewType)!;
+        contentViewBase = (ContentViewBase)ServiceProvider.GetService(contentViewType)!;
         return true;
     }
 
 
     protected override void InitialiseInDesignMode()
     {
-        var a = new ContentEntry(this, "A:", "A", "");
-        var b = new ContentEntry(this, "B", "B", "");
+        var a = new ContentEntry(this, "A:", "A", "", default!);
+        var b = new ContentEntry(this, "B", "B", "", default!);
         a.TryAddChild(b);
         Entries.Add(a);
     }
@@ -126,6 +127,8 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
         HubService.HubServerLoaded += GoHome;
 
         if (!HubService.IsUpdating) GoHome();
+
+        _contentContainers.Add(".dll",typeof(DecompilerContentView));
     }
 
     private void GoHome()
@@ -142,10 +145,10 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
 
     private void FillRoot(IEnumerable<ServerHubInfo> infos)
     {
-        foreach (var info in infos) _root.Add(new ContentEntry(this, info.StatusData.Name, info.Address, info.Address));
+        foreach (var info in infos) _root.Add(new ContentEntry(this, info.StatusData.Name, info.Address, info.Address, default!));
     }
 
-    public async void Go(ContentPath path, bool appendHistory = true)
+    public async void Go(ContentPath path)
     {
         if (path.Pathes.Count > 0 && (path.Pathes[0].StartsWith("ss14://") || path.Pathes[0].StartsWith("ss14s://")))
         {
@@ -181,7 +184,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
 
     public void OnBackEnter()
     {
-        Go(new ContentPath(GetHistory()), false);
+        Go(new ContentPath(GetHistory()));
     }
 
     public void OnGoEnter()
@@ -200,12 +203,12 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
         var hashApi = await ContentService.EnsureItems(info.RobustManifestInfo, loading,
             CancellationService.Token);
 
-        var rootEntry = new ContentEntry(this, "", "", serverUrl);
+        var rootEntry = new ContentEntry(this, "", "", serverUrl, default!);
 
         foreach (var item in hashApi.Manifest.Values)
         {
             var path = new ContentPath(item.Path);
-            rootEntry.CreateItem(path, item);
+            rootEntry.CreateItem(path, item, hashApi);
         }
 
         loading.Dispose();
@@ -236,15 +239,17 @@ public class ContentEntry
 {
     private readonly Dictionary<string, ContentEntry> _childs = new();
     private readonly ContentBrowserViewModel _viewModel;
+    private HashApi _fileApi;
 
-    public RobustManifestItem? Item;
+    public RobustManifestItem? Item { get; private set; }
 
-    internal ContentEntry(ContentBrowserViewModel viewModel, string name, string pathName, string serverName)
+    internal ContentEntry(ContentBrowserViewModel viewModel, string name, string pathName, string serverName, HashApi fileApi)
     {
         Name = name;
         ServerName = serverName;
         PathName = pathName;
         _viewModel = viewModel;
+        _fileApi = fileApi;
     }
 
     public bool IsDirectory => Item == null;
@@ -258,6 +263,22 @@ public class ContentEntry
     public bool IsRoot => Parent == null;
 
     public IReadOnlyDictionary<string, ContentEntry> Childs => _childs.ToFrozenDictionary();
+
+    public Stream Open()
+    {
+        _fileApi.TryOpen(Item!.Value, out var stream);
+        return stream!;
+    }
+
+    public bool TryOpen([NotNullWhen(true)] out Stream? stream,[NotNullWhen(true)] out RobustManifestItem? item){
+        stream = null;
+        item = null;
+        if(Item is null || !_fileApi.TryOpen(Item.Value, out stream))
+            return false;
+
+        item = Item;
+        return true;
+    }
 
     public bool TryGetChild(string name, [NotNullWhen(true)] out ContentEntry? child)
     {
@@ -295,7 +316,7 @@ public class ContentEntry
 
         if (!TryGetChild(fName, out var child))
         {
-            child = new ContentEntry(_viewModel, fName, fName, ServerName);
+            child = new ContentEntry(_viewModel, fName, fName, ServerName, _fileApi);
             TryAddChild(child);
         }
 
@@ -308,13 +329,13 @@ public class ContentEntry
         return Parent.GetRoot();
     }
 
-    public ContentEntry CreateItem(ContentPath path, RobustManifestItem item)
+    public ContentEntry CreateItem(ContentPath path, RobustManifestItem item, HashApi fileApi)
     {
         var dir = path.GetDirectory();
         var dirEntry = GetOrCreateDirectory(dir);
 
         var name = path.GetName();
-        var entry = new ContentEntry(_viewModel, name, name, ServerName)
+        var entry = new ContentEntry(_viewModel, name, name, ServerName, fileApi)
         {
             Item = item
         };

@@ -19,4 +19,6 @@ public static class LauncherConVar
     ]);
 
     public static readonly ConVar<string> CurrentLang = ConVarBuilder.Build<string>("launcher.language", "en-US");
+    public static readonly ConVar<string> ILSpyUrl = ConVarBuilder.Build<string>("decompiler.url",
+    "https://github.com/icsharpcode/ILSpy/releases/download/v9.0/ILSpy_binaries_9.0.0.7889-x64.zip");
 }

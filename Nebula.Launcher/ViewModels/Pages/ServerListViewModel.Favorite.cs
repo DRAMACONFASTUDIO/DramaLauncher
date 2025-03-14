@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading;
-using CommunityToolkit.Mvvm.ComponentModel;
-using Nebula.Shared;
 using Nebula.Shared.Models;
 using Nebula.Shared.Services;
 using Nebula.Shared.Utils;
@@ -16,11 +11,13 @@ public partial class ServerListViewModel
     [GenerateProperty] private ConfigurationService ConfigurationService { get; }
     [GenerateProperty] private RestService RestService { get; }
     
-    public ObservableCollection<ServerEntryModelView> FavoriteServers { get; } = new();
+    public ObservableCollection<ServerEntryModelView> FavoriteServers { get; } = [];
     
     private void UpdateFavoriteEntries()
     {
-        FavoriteServers.Clear();
+        foreach(var fav in FavoriteServers.ToList()){
+            FavoriteServers.Remove(fav);
+        }
         
         var servers = ConfigurationService.GetConfigValue(LauncherConVar.Favorites);
         if (servers is null || servers.Length == 0)

@@ -67,7 +67,10 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
 
     private void UpdateServerEntries()
     {
-        Servers.Clear();
+        foreach(var fav in Servers.ToList()){
+            Servers.Remove(fav);
+        }
+        
         Task.Run(() =>
         {
             UnsortedServers.Sort(new ServerComparer());
@@ -105,7 +108,6 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
         {
             UnsortedServers.Clear();
             ServerViewContainer.Clear();
-            Servers.Clear();
             UpdateFavoriteEntries();
         }
     }
