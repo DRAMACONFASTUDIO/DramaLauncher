@@ -22,6 +22,10 @@ public class FileService
     public FileService(DebugService debugService)
     {
         _debugService = debugService;
+
+        if(!Directory.Exists(RootPath)) 
+            Directory.CreateDirectory(RootPath);
+
         ContentFileApi = CreateFileApi("content");
         EngineFileApi = CreateFileApi("engine");
         ManifestFileApi = CreateFileApi("manifest");
