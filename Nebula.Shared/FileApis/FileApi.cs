@@ -75,5 +75,11 @@ public sealed class FileApi : IReadWriteFileApi
         return File.Exists(fullPath);
     }
 
-    public IEnumerable<string> AllFiles => Directory.EnumerateFiles(RootPath, "*.*", SearchOption.AllDirectories).Select(p=>p.Replace(RootPath,"").Substring(1));
+    private IEnumerable<string> GetAllFiles(){
+
+        if(!Directory.Exists(RootPath)) return [];
+        return Directory.EnumerateFiles(RootPath, "*.*", SearchOption.AllDirectories).Select(p=>p.Replace(RootPath,"").Substring(1));
+    }
+
+    public IEnumerable<string> AllFiles => GetAllFiles();
 }
