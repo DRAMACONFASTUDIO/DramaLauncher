@@ -97,7 +97,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
             if(SearchText.Length > oldSearchText.Length) 
                 AppendHistory(oldSearchText);
 
-            foreach (var (_, entryCh) in value.Childs) Entries.Add(entryCh);
+            foreach (var entryCh in value.Childs) Entries.Add(entryCh);
         }
     }
 
@@ -239,6 +239,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
 public class ContentEntry
 {
     private readonly Dictionary<string, ContentEntry> _childs = new();
+    
     private readonly ContentBrowserViewModel _viewModel;
     private HashApi _fileApi;
 
@@ -263,13 +264,8 @@ public class ContentEntry
     public ContentEntry? Parent { get; private set; }
     public bool IsRoot => Parent == null;
 
-    public IReadOnlyDictionary<string, ContentEntry> Childs => _childs.ToFrozenDictionary();
-
-    public Stream Open()
-    {
-        _fileApi.TryOpen(Item!.Value, out var stream);
-        return stream!;
-    }
+    //TODO: Remove LINQ later...
+    public IReadOnlyList<ContentEntry> Childs => _childs.Values.OrderBy(v => v,new ContentComparer()).ToList();
 
     public bool TryOpen([NotNullWhen(true)] out Stream? stream,[NotNullWhen(true)] out RobustManifestItem? item){
         stream = null;
@@ -423,5 +419,20 @@ public struct ContentPath
     public override string ToString()
     {
         return Path;
+    }
+}
+
+public sealed class ContentComparer : IComparer<ContentEntry>
+{
+    public int Compare(ContentEntry? x, ContentEntry? y)
+    {
+        if (ReferenceEquals(x, y)) return 0;
+        if (y is null) return 1;
+        if (x is null) return -1;
+        var iconComparison = string.Compare(x.IconPath, y.IconPath, StringComparison.Ordinal);
+        if (iconComparison != 0) return -iconComparison;
+        var nameComparison = string.Compare(x.Name, y.Name, StringComparison.Ordinal);
+        if (nameComparison != 0) return nameComparison;
+        return string.Compare(x.ServerName, y.ServerName, StringComparison.Ordinal);
     }
 }
