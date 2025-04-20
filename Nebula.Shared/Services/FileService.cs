@@ -74,6 +74,13 @@ public class FileService
     {
         return new FileApi(Path.Join(RootPath, path));
     }
+    
+    public IReadWriteFileApi EnsureTempDir(out string path)
+    {
+        path = Path.Combine(Path.GetTempPath(), "tempThink"+Path.GetRandomFileName());
+        Directory.CreateDirectory(path);
+        return new FileApi(path);
+    }
 
     public ZipFileApi? OpenZip(string path, IFileApi fileApi)
     {

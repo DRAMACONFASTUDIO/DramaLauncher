@@ -193,6 +193,24 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
         Go(new ContentPath(SearchText));
     }
 
+    public void OnUnpack()
+    {
+        if (SelectedEntry == null) return;
+        var myTempDir = FileService.EnsureTempDir(out var tmpDir);
+        
+        var loading = ViewHelperService.GetViewModel<LoadingContextViewModel>();
+        loading.LoadingName = "Unpacking entry";
+        PopupService.Popup(loading);
+
+        Task.Run(() => ContentService.Unpack(SelectedEntry.FileApi, myTempDir, loading));
+        var startInfo = new ProcessStartInfo(){
+            FileName = "explorer.exe",
+            Arguments = tmpDir,
+        };
+        DebugService.Log("Opening " + tmpDir);
+        Process.Start(startInfo);
+    }
+
     private async Task<ContentEntry> CreateEntry(string serverUrl)
     {
         var loading = ViewHelperService.GetViewModel<LoadingContextViewModel>();
@@ -204,12 +222,12 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
         var hashApi = await ContentService.EnsureItems(info.RobustManifestInfo, loading,
             CancellationService.Token);
 
-        var rootEntry = new ContentEntry(this, "", "", serverUrl, default!);
+        var rootEntry = new ContentEntry(this, "", "", serverUrl, hashApi);
 
         foreach (var item in hashApi.Manifest.Values)
         {
             var path = new ContentPath(item.Path);
-            rootEntry.CreateItem(path, item, hashApi);
+            rootEntry.CreateItem(path, item);
         }
 
         loading.Dispose();
@@ -241,17 +259,17 @@ public class ContentEntry
     private readonly Dictionary<string, ContentEntry> _childs = new();
     
     private readonly ContentBrowserViewModel _viewModel;
-    private HashApi _fileApi;
+    public readonly HashApi FileApi;
+    public readonly RobustManifestItem? Item;
 
-    public RobustManifestItem? Item { get; private set; }
-
-    internal ContentEntry(ContentBrowserViewModel viewModel, string name, string pathName, string serverName, HashApi fileApi)
+    internal ContentEntry(ContentBrowserViewModel viewModel, string name, string pathName, string serverName, HashApi fileApi, RobustManifestItem? item = null)
     {
         Name = name;
         ServerName = serverName;
         PathName = pathName;
         _viewModel = viewModel;
-        _fileApi = fileApi;
+        FileApi = fileApi;
+        Item = item;
     }
 
     public bool IsDirectory => Item == null;
@@ -270,7 +288,7 @@ public class ContentEntry
     public bool TryOpen([NotNullWhen(true)] out Stream? stream,[NotNullWhen(true)] out RobustManifestItem? item){
         stream = null;
         item = null;
-        if(Item is null || !_fileApi.TryOpen(Item.Value, out stream))
+        if(Item is null || !FileApi.TryOpen(Item.Value, out stream))
             return false;
 
         item = Item;
@@ -313,7 +331,7 @@ public class ContentEntry
 
         if (!TryGetChild(fName, out var child))
         {
-            child = new ContentEntry(_viewModel, fName, fName, ServerName, _fileApi);
+            child = new ContentEntry(_viewModel, fName, fName, ServerName, FileApi);
             TryAddChild(child);
         }
 
@@ -326,16 +344,13 @@ public class ContentEntry
         return Parent.GetRoot();
     }
 
-    public ContentEntry CreateItem(ContentPath path, RobustManifestItem item, HashApi fileApi)
+    public ContentEntry CreateItem(ContentPath path, RobustManifestItem item)
     {
         var dir = path.GetDirectory();
         var dirEntry = GetOrCreateDirectory(dir);
 
         var name = path.GetName();
-        var entry = new ContentEntry(_viewModel, name, name, ServerName, fileApi)
-        {
-            Item = item
-        };
+        var entry = new ContentEntry(_viewModel, name, name, ServerName, FileApi, item);
 
         dirEntry.TryAddChild(entry);
         entry.IconPath = "/Assets/svg/file.svg";

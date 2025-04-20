@@ -14,10 +14,10 @@
     </Design.DataContext>
 
     <Grid
-        ColumnDefinitions="*,2*,40,40"
+        ColumnDefinitions="*,2*,40,40,40"
         Margin="8"
         RowDefinitions="40,*">
-        <Border CornerRadius="10,10,0,0" Grid.ColumnSpan="4"  Background="{StaticResource DefaultGrad}" BorderThickness="0,0,0,2">
+        <Border CornerRadius="10,10,0,0" Grid.ColumnSpan="5"  Background="{StaticResource DefaultGrad}" BorderThickness="0,0,0,2">
             <Border.BorderBrush>
                 <LinearGradientBrush EndPoint="100%,50%" StartPoint="0%,50%">
                     <GradientStop Color="#222222" Offset="0.0" />
@@ -47,8 +47,15 @@
             <Svg Path="/Assets/svg/undo.svg" />
         </Button>
         <Button
-            Command="{Binding OnGoEnter}"
+            Command="{Binding OnUnpack}"
             Grid.Column="3"
+            Grid.Row="0"
+            Padding="10">
+            <Svg Path="/Assets/svg/folder.svg" />
+        </Button>
+        <Button
+            Command="{Binding OnGoEnter}"
+            Grid.Column="4"
             Grid.Row="0"
             Padding="10">
             <Svg Path="/Assets/svg/next.svg" />

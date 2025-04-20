@@ -44,7 +44,7 @@ public sealed partial class DecompilerService
 
     public async void OpenServerDecompiler(RobustUrl url)
     {
-        var myTempDir = EnsureTempDir(out var tmpDir);
+        var myTempDir = FileService.EnsureTempDir(out var tmpDir);
 
         ILoadingHandler loadingHandler = ViewHelperService.GetViewModel<LoadingContextViewModel>();
         
@@ -76,13 +76,6 @@ public sealed partial class DecompilerService
         debugService.Log("File extracted. " + tmpDir);
         
         OpenDecompiler(string.Join(' ', myTempDir.AllFiles.Select(f=>Path.Join(tmpDir, f))) + " --newinstance");
-    }
-
-    private IReadWriteFileApi EnsureTempDir(out string path)
-    {
-        path = Path.Combine(Path.GetTempPath(), "tempDlls"+Path.GetRandomFileName());
-        Directory.CreateDirectory(path);
-        return new FileApi(path);
     }
 
     private void Initialise(){}

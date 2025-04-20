@@ -16,18 +16,6 @@ public sealed partial class DecompilerContentView: ContentViewBase
         decompilerService.OpenServerDecompiler(contentEntry.ServerName.ToRobustUrl());
     }
 
-    private void unpackContent(Stream stream)
-    {
-        var myTempFile = Path.Combine(Path.GetTempPath(), "tempie.dll");
-
-        var sw = new FileStream(myTempFile, FileMode.Create, FileAccess.Write, FileShare.None);
-        stream.CopyTo(sw);
-        sw.Dispose();
-        stream.Dispose();
-
-        decompilerService.OpenDecompiler(myTempFile);
-    }
-
     protected override void Initialise()
     {
     }

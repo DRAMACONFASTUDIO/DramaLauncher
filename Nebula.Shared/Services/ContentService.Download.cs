@@ -64,11 +64,9 @@ public partial class ContentService
         return await EnsureItems(manifestReader, info.DownloadUri, loadingHandler, cancellationToken);
     }
 
-    public async Task Unpack(RobustManifestInfo info, IWriteFileApi otherApi, ILoadingHandler loadingHandler,
-        CancellationToken cancellationToken)
+    public void Unpack(HashApi hashApi, IWriteFileApi otherApi, ILoadingHandler loadingHandler)
     {
         debugService.Log("Unpack manifest files");
-        var hashApi = await EnsureItems(info, loadingHandler, cancellationToken);
         var items = hashApi.Manifest.Values.ToList();
         loadingHandler.AppendJob(items.Count);
         foreach (var item in items)
@@ -85,6 +83,11 @@ public partial class ContentService
             }
 
             loadingHandler.AppendResolvedJob();
+        }
+
+        if (loadingHandler is IDisposable disposable)
+        {
+            disposable.Dispose();
         }
     }
 
