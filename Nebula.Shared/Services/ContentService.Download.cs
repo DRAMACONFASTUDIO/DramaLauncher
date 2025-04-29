@@ -69,12 +69,18 @@ public partial class ContentService
         debugService.Log("Unpack manifest files");
         var items = hashApi.Manifest.Values.ToList();
         loadingHandler.AppendJob(items.Count);
-        foreach (var item in items)
+        
+        var options = new ParallelOptions
+        {
+            MaxDegreeOfParallelism = 10
+        };
+
+        Parallel.ForEach(items, options, item =>
         {
             if (hashApi.TryOpen(item, out var stream))
             {
                 debugService.Log($"Unpack {item.Hash} to: {item.Path}");
-                otherApi.Save(item.Path, stream);
+                otherApi.Save(item.Hash, stream);
                 stream.Close();
             }
             else
@@ -83,7 +89,9 @@ public partial class ContentService
             }
 
             loadingHandler.AppendResolvedJob();
-        }
+        });
+        
+       
 
         if (loadingHandler is IDisposable disposable)
         {
