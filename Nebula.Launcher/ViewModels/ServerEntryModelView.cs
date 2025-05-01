@@ -179,8 +179,8 @@ public partial class ServerEntryModelView : ViewModelBase
 
                 await RunnerService.PrepareRun(buildInfo, loadingContext, CancellationService.Token);
 
-                var path = Path.GetDirectoryName(Environment.ProcessPath);
-
+                var path = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
+                
                 Process = Process.Start(new ProcessStartInfo
                 {
                     FileName = "dotnet.exe",
