@@ -20,8 +20,10 @@ jobs:
           dotnet-version: 9.0.x
       - name: Install dependencies
         run: dotnet restore
+      - name: Build whole project
+        run: dotnet build
       - name: Package launcher files
-        run: dotnet run Nebula.Packager 
+        run: dotnet run --project Nebula.Packager
       - name: FTP Deploy Release
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
