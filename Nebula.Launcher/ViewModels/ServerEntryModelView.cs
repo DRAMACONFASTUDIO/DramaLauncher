@@ -179,10 +179,12 @@ public partial class ServerEntryModelView : ViewModelBase
 
                 await RunnerService.PrepareRun(buildInfo, loadingContext, CancellationService.Token);
 
+                var path = Path.GetDirectoryName(Environment.ProcessPath);
+
                 Process = Process.Start(new ProcessStartInfo
                 {
                     FileName = "dotnet.exe",
-                    Arguments = "./Nebula.Runner.dll",
+                    Arguments = Path.Join(path, "Nebula.Runner.dll"),
                     Environment =
                     {
                         { "ROBUST_AUTH_USERID", authProv?.UserId.ToString() },

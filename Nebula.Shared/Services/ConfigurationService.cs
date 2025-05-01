@@ -64,6 +64,34 @@ public class ConfigurationService
         _debugService.Log($"Using default value for config: {conVar.Name}");
         return conVar.DefaultValue;
     }
+    
+    public bool TryGetConfigValue<T>(ConVar<T> conVar,
+        [NotNullWhen(true)] out T? value)
+    {
+        ArgumentNullException.ThrowIfNull(conVar);
+        value = default;
+        try
+        {
+            if (_fileService.ConfigurationApi.TryOpen(GetFileName(conVar), out var stream))
+                using (stream)
+                {
+                    var obj = JsonSerializer.Deserialize<T>(stream);
+                    if (obj != null)
+                    {
+                        _debugService.Log($"Successfully loaded config: {conVar.Name}");
+                        value = obj;
+                        return true;
+                    }
+                }
+        }
+        catch (Exception e)
+        {
+            _debugService.Error($"Error loading config for {conVar.Name}: {e.Message}");
+        }
+
+        _debugService.Log($"Using default value for config: {conVar.Name}");
+        return false;
+    }
 
     public void SetConfigValue<T>(ConVar<T> conVar, T value)
     {
@@ -99,18 +127,5 @@ public class ConfigurationService
     private static string GetFileName<T>(ConVar<T> conVar)
     {
         return $"{conVar.Name}.json";
-    }
-}
-
-public static class ConfigExtensions
-{
-    public static bool TryGetConfigValue<T>(this ConfigurationService configurationService, ConVar<T> conVar,
-        [NotNullWhen(true)] out T? value)
-    {
-        ArgumentNullException.ThrowIfNull(configurationService);
-        ArgumentNullException.ThrowIfNull(conVar);
-
-        value = configurationService.GetConfigValue(conVar);
-        return value != null;
     }
 }
