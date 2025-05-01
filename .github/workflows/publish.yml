@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: dotnet restore
       - name: Build whole project
-        run: dotnet build
+        run: dotnet build --configuration Release
       - name: Package launcher files
         run: dotnet run --project Nebula.Packager
       - name: FTP Deploy Release
