@@ -22,15 +22,19 @@ jobs:
       run: dotnet restore
     - name: Build Update resolver
       run: dotnet publish -c Release -r win-x64 -o ~/publish -p:IncludeNativeLibrariesForSelfExtract=true Nebula.UpdateResolver
+    - name: Build Updater for linux
+      run: dotnet publish -c Release -r linux-x64 -o ~/publish -p:IncludeNativeLibrariesForSelfExtract=true Nebula.UpdateResolver
     - name: Rename file
       run: mv ~/publish/Nebula.UpdateResolver.exe ~/publish/NebulaLauncher.exe
     - name: Rename file
       run: mv ~/publish/Nebula.UpdateResolver.pdb ~/publish/NebulaLauncher.pdb
+    - name: Rename file
+      run: mv ~/publish/Nebula.UpdateResolver ~/publish/NebulaLauncher
     - name: FTP Deploy Release
       uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       with:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        local-dir: ~/publish/
+        local-dir: ./publish/
         server-dir: ./publish/
