@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build Update resolver
-      run: dotnet publish -c Release -o ~/publish -p:IncludeNativeLibrariesForSelfExtract=true Nebula.UpdateResolver
+      run: dotnet publish -c Release -r win-x64 -o ~/publish -p:IncludeNativeLibrariesForSelfExtract=true Nebula.UpdateResolver
     - name: Rename file
       run: mv ~/publish/Nebula.UpdateResolver.exe ~/publish/NebulaLauncher.exe
     - name: Rename file
