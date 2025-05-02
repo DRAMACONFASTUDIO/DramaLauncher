@@ -79,7 +79,7 @@ public partial class MainViewModel : ViewModelBase
 
         if (!ViewHelperService.TryGetViewModel(value.ModelType, out var vmb)) return;
 
-        OpenPage(vmb, value.args);
+        OpenPage(vmb, value.args, false);
     }
 
     public T RequirePage<T>() where T : ViewModelBase, IViewModelPage
@@ -91,14 +91,17 @@ public partial class MainViewModel : ViewModelBase
         return page;
     }
 
-    private void OpenPage(ViewModelBase obj, object? args) 
+    private void OpenPage(ViewModelBase obj, object? args, bool selectListView = true) 
     {
         var tabItems = Items.Where(vm => vm.ModelType == obj.GetType());
 
-        var listItemTemplates = tabItems as ListItemTemplate[] ?? tabItems.ToArray();
-        if (listItemTemplates.Length != 0)
+        if(selectListView)
         {
-            SelectedListItem = listItemTemplates.First();
+            var listItemTemplates = tabItems as ListItemTemplate[] ?? tabItems.ToArray();
+            if (listItemTemplates.Length != 0)
+            {
+                SelectedListItem = listItemTemplates.First();
+            }
         }
         
         if (obj is IViewModelPage page)
