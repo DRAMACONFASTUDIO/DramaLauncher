@@ -8,7 +8,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Nebula.Launcher.ViewModels.Pages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Nebula.Launcher.Controls">
 
     <Design.DataContext>
         <pages:ServerListViewModel />
@@ -22,7 +23,7 @@
             Grid.RowSpan="2"
             Margin="5,0,0,10"
             Padding="0,0,10,0">
-            <StackPanel>
+            <StackPanel Margin="0,0,0,30">
                 <ItemsControl ItemsSource="{Binding HubErrors}" Margin="10,0,10,0" />
                 <ItemsControl
                     IsVisible="{Binding IsFavoriteMode}"
@@ -41,19 +42,8 @@
                 VerticalAlignment="Bottom" 
                 IsVisible="{Binding IsFilterVisible}">
             <StackPanel Orientation="Vertical" Spacing="2" Margin="15">
-                <StackPanel Orientation="Horizontal" Spacing="15">
-                    <TextBlock Text="Roleplay:" VerticalAlignment="Center" Margin="0,0,15,0"/>
-                    <CheckBox Click="Button_OnClick" Name="rp_none"><TextBlock Text="NonRP"/></CheckBox>
-                    <CheckBox Click="Button_OnClick" Name="rp_low"><TextBlock Text="LowRP"/></CheckBox>
-                    <CheckBox Click="Button_OnClick" Name="rp_med"><TextBlock Text="MediumRP"/></CheckBox>
-                    <CheckBox Click="Button_OnClick" Name="rp_high"><TextBlock Text="HardRP"/></CheckBox>
-                    <CheckBox Click="Button_OnClick" Name="ERPYes"><TextBlock Text="18+"/></CheckBox>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="15">
-                    <TextBlock Text="Language:" VerticalAlignment="Center" Margin="0,0,4,0"/>
-                    <CheckBox Click="Button_OnClick" Name="lang_ru"><TextBlock Text="RU"/></CheckBox>
-                    <CheckBox Click="Button_OnClick" Name="lang_en"><TextBlock Text="EN"/></CheckBox>
-                </StackPanel>
+                <controls:FilterBox Name="EssentialFilters" FilterBoxName="Roleplay" FilterCommand="{Binding OnFilterChanged}"/>
+                <controls:FilterBox Name="LanguageFilters" FilterBoxName="Language" FilterCommand="{Binding OnFilterChanged}"/>
             </StackPanel>
         </Border>
 

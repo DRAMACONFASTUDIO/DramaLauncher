@@ -146,7 +146,14 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
 
     private void FillRoot(IEnumerable<ServerHubInfo> infos)
     {
-        foreach (var info in infos) _root.Add(new ContentEntry(this, info.StatusData.Name, info.Address, info.Address, default!));
+        foreach (var info in infos) 
+            _root.Add(new ContentEntry(this, info.StatusData.Name, info.Address, info.Address, default!));
+    }
+
+    public void Go(string server, ContentPath path)
+    {
+        ServerText = server;
+        Go(path);
     }
 
     public async void Go(ContentPath path)
@@ -383,6 +390,11 @@ public class ContentEntry
 public struct ContentPath
 {
     public List<string> Pathes { get; }
+
+    public ContentPath()
+    {
+        Pathes = [];
+    }
 
     public ContentPath(List<string> pathes)
     {

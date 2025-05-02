@@ -2,13 +2,16 @@ using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Nebula.Launcher.Services;
+using Nebula.Launcher.ViewModels.Pages;
 using Nebula.Launcher.ViewModels.Popup;
 using Nebula.Launcher.Views;
 using Nebula.Shared.Models;
@@ -17,15 +20,25 @@ using Nebula.Shared.Utils;
 
 namespace Nebula.Launcher.ViewModels;
 
-[ViewModelRegister(typeof(ServerEntryView), isSingleton: false)]
+[ViewModelRegister(typeof(ServerEntryView), false)]
 [ConstructGenerator]
 public partial class ServerEntryModelView : ViewModelBase
 {
+    [ObservableProperty] private string _description = "Fetching info...";
+    [ObservableProperty] private bool _expandInfo;
+    [ObservableProperty] private bool _isFavorite;
+    [ObservableProperty] private bool _isVisible;
+
+    private string _lastError = "";
     private Process? _p;
-    public RobustUrl Address { get; private set; }
-    public Action? OnFavoriteToggle;
-    
+
+    private ServerInfo? _serverInfo;
+    [ObservableProperty] private bool _tagDataVisible;
+
     public LogPopupModelView CurrLog;
+    public Action? OnFavoriteToggle;
+    public RobustUrl Address { get; private set; }
+
     [GenerateProperty] private AuthService AuthService { get; } = default!;
     [GenerateProperty] private ContentService ContentService { get; } = default!;
     [GenerateProperty] private CancellationService CancellationService { get; } = default!;
@@ -34,53 +47,27 @@ public partial class ServerEntryModelView : ViewModelBase
     [GenerateProperty] private PopupMessageService PopupMessageService { get; } = default!;
     [GenerateProperty] private ViewHelperService ViewHelperService { get; } = default!;
     [GenerateProperty] private RestService RestService { get; } = default!;
+    [GenerateProperty] private MainViewModel MainViewModel { get; } = default!;
 
-    [ObservableProperty] private string _description = "Fetching info...";
-    [ObservableProperty] private bool _expandInfo = false;
-    [ObservableProperty] private bool _tagDataVisible = false;
-    [ObservableProperty] private bool _isFavorite = false;
-
-    public ServerStatus Status { get; private set; } = 
-        new ServerStatus(
-            "Fetching data...", 
-            $"Loading...", [], 
-            "", 
-            -1, 
-            -1, 
-            -1, 
+    public ServerStatus Status { get; private set; } =
+        new(
+            "Fetching data...",
+            "Loading...", [],
+            "",
+            -1,
+            -1,
+            -1,
             false,
             DateTime.Now,
             -1
         );
-    
+
     public ObservableCollection<ServerLink> Links { get; } = new();
     public bool RunVisible => Process == null;
 
-    private ServerInfo? _serverInfo = null;
-
-    private string _lastError = "";
-
-    public async Task<ServerInfo?> GetServerInfo()
-    {
-        if (_serverInfo == null)
-        {
-            try
-            {
-                _serverInfo = await RestService.GetAsync<ServerInfo>(Address.InfoUri, CancellationService.Token);
-            }
-            catch (Exception e)
-            {
-                Description = e.Message;
-                DebugService.Error(e);
-            }
-        }
-
-        return _serverInfo;
-    }
-
     public ObservableCollection<string> Tags { get; } = [];
 
-    public ICommand OnLinkGo { get; }= new LinkGoCommand();
+    public ICommand OnLinkGo { get; } = new LinkGoCommand();
 
     private Process? Process
     {
@@ -92,10 +79,26 @@ public partial class ServerEntryModelView : ViewModelBase
         }
     }
 
+    public async Task<ServerInfo?> GetServerInfo()
+    {
+        if (_serverInfo == null)
+            try
+            {
+                _serverInfo = await RestService.GetAsync<ServerInfo>(Address.InfoUri, CancellationService.Token);
+            }
+            catch (Exception e)
+            {
+                Description = e.Message;
+                DebugService.Error(e);
+            }
+
+        return _serverInfo;
+    }
+
     protected override void InitialiseInDesignMode()
     {
         Description = "Server of meow girls! Nya~ \nNyaMeow\nOOOINK!!";
-        Links.Add(new ServerLink("Discord","discord","https://cinka.ru"));
+        Links.Add(new ServerLink("Discord", "discord", "https://cinka.ru"));
         Status = new ServerStatus("Ameba",
             "Locala meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow meow ",
             ["rp:hrp", "18+"],
@@ -109,14 +112,16 @@ public partial class ServerEntryModelView : ViewModelBase
         CurrLog = ViewHelperService.GetViewModel<LogPopupModelView>();
     }
 
+    public void ProcessFilter(ServerFilter serverFilter)
+    {
+        IsVisible = serverFilter.IsMatch(Status.Name, Tags);
+    }
+
     public void SetStatus(ServerStatus serverStatus)
     {
         Status = serverStatus;
         Tags.Clear();
-        foreach (var tag in Status.Tags)
-        {
-            Tags.Add(tag);
-        }
+        foreach (var tag in Status.Tags) Tags.Add(tag);
         OnPropertyChanged(nameof(Status));
     }
 
@@ -124,13 +129,9 @@ public partial class ServerEntryModelView : ViewModelBase
     {
         Address = url;
         if (serverStatus is not null)
-        {
             SetStatus(serverStatus);
-        }
         else
-        {
             FetchStatus();
-        }
 
         return this;
     }
@@ -149,8 +150,13 @@ public partial class ServerEntryModelView : ViewModelBase
                 -1);
         }
     }
-    
-    
+
+    public void OpenContentViewer()
+    {
+        MainViewModel.RequirePage<ContentBrowserViewModel>().Go(Address.ToString(), new ContentPath());
+    }
+
+
     public void ToggleFavorites()
     {
         OnFavoriteToggle?.Invoke();
@@ -179,8 +185,8 @@ public partial class ServerEntryModelView : ViewModelBase
 
                 await RunnerService.PrepareRun(buildInfo, loadingContext, CancellationService.Token);
 
-                var path = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
-                
+                var path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+
                 Process = Process.Start(new ProcessStartInfo
                 {
                     FileName = "dotnet.exe",
@@ -236,7 +242,7 @@ public partial class ServerEntryModelView : ViewModelBase
 
         DebugService.Log("PROCESS EXIT WITH CODE " + Process.ExitCode);
 
-        if(Process.ExitCode != 0) 
+        if (Process.ExitCode != 0)
             PopupMessageService.Popup($"Game exit with code {Process.ExitCode}.\nReason: {_lastError}");
 
         Process.Dispose();
@@ -261,7 +267,7 @@ public partial class ServerEntryModelView : ViewModelBase
             CurrLog.Append(e.Data);
         }
     }
-    
+
     public void ReadLog()
     {
         PopupMessageService.Popup(CurrLog);
@@ -275,25 +281,16 @@ public partial class ServerEntryModelView : ViewModelBase
     public async void ExpandInfoRequired()
     {
         ExpandInfo = !ExpandInfo;
-        if (Avalonia.Controls.Design.IsDesignMode)
-        {
-            return;
-        }
-        
+        if (Design.IsDesignMode) return;
+
         var info = await GetServerInfo();
-        if (info == null)
-        {
-            return;
-        }
-        
+        if (info == null) return;
+
         Description = info.Desc;
 
         Links.Clear();
-        if(info.Links is null) return;
-        foreach (var link in info.Links)
-        {
-            Links.Add(link);
-        }
+        if (info.Links is null) return;
+        foreach (var link in info.Links) Links.Add(link);
     }
 
     private static string FindDotnetPath()
@@ -353,6 +350,7 @@ public class LinkGoCommand : ICommand
     {
         CanExecuteChanged?.Invoke(this, EventArgs.Empty);
     }
+
     public bool CanExecute(object? parameter)
     {
         return true;
@@ -360,7 +358,7 @@ public class LinkGoCommand : ICommand
 
     public void Execute(object? parameter)
     {
-        if(parameter is not string str) return;
+        if (parameter is not string str) return;
         Helper.SafeOpenBrowser(str);
     }
 

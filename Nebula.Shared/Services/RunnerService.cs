@@ -43,11 +43,21 @@ public sealed class RunnerService(
             new(hashApi, "/")
         };
 
-        var module =
-            await engineService.EnsureEngineModules("Robust.Client.WebView", buildInfo.BuildInfo.Build.EngineVersion);
-        if (module is not null)
-            extraMounts.Add(new ApiMount(module, "/"));
+        if (hashApi.TryOpen("manifest.yml", out var stream))
+        {
+            var modules = ContentManifestParser.ExtractModules(stream);
 
+            foreach (var moduleStr in modules)
+            {
+                var module =
+                    await engineService.EnsureEngineModules(moduleStr, buildInfo.BuildInfo.Build.EngineVersion);
+                if (module is not null)
+                    extraMounts.Add(new ApiMount(module, "/"));
+            }
+            
+            await stream.DisposeAsync();
+        }
+        
         var args = new MainArgs(runArgs, engine, redialApi, extraMounts);
 
         if (!assemblyService.TryOpenAssembly(varService.GetConfigValue(CurrentConVar.RobustAssemblyName)!, engine,
@@ -58,5 +68,47 @@ public sealed class RunnerService(
             return;
 
         await Task.Run(() => loader.Main(args), cancellationToken);
+    }
+}
+
+public static class ContentManifestParser
+{
+    public static List<string> ExtractModules(Stream manifestStream)
+    {
+        using var reader = new StreamReader(manifestStream);
+        return ExtractModules(reader.ReadToEnd());
+    }
+    
+    public static List<string> ExtractModules(string manifestContent)
+    {
+        var modules = new List<string>();
+        var lines = manifestContent.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+        bool inModulesSection = false;
+
+        foreach (var rawLine in lines)
+        {
+            var line = rawLine.Trim();
+
+            if (line.StartsWith("modules:"))
+            {
+                inModulesSection = true;
+                continue;
+            }
+
+            if (inModulesSection)
+            {
+                if (line.StartsWith("- "))
+                {
+                    modules.Add(line.Substring(2).Trim());
+                }
+                else if (!line.StartsWith(" "))
+                {
+                    break;
+                }
+            }
+        }
+
+        return modules;
     }
 }

@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Nebula.Shared.FileApis;
+using Nebula.Shared.FileApis.Interfaces;
 using Nebula.Shared.Models;
 using Nebula.Shared.Utils;
 
@@ -12,80 +13,68 @@ public sealed class EngineService
     private readonly DebugService _debugService;
     private readonly FileService _fileService;
     private readonly RestService _restService;
-    private readonly IServiceProvider _serviceProvider;
     private readonly ConfigurationService _varService;
-
     private readonly Task _currInfoTask;
-
-    public Dictionary<string, Module> ModuleInfos = default!;
-    public Dictionary<string, EngineVersionInfo> VersionInfos = default!;
+    private readonly IReadWriteFileApi _engineFileApi;
+    
+    private ModulesInfo _modulesInfo = default!;
+    private Dictionary<string, EngineVersionInfo> _versionsInfo = default!;
 
     public EngineService(RestService restService, DebugService debugService, ConfigurationService varService,
-        FileService fileService, IServiceProvider serviceProvider, AssemblyService assemblyService)
+        FileService fileService, AssemblyService assemblyService)
     {
         _restService = restService;
         _debugService = debugService;
         _varService = varService;
         _fileService = fileService;
-        _serviceProvider = serviceProvider;
         _assemblyService = assemblyService;
+
+        _engineFileApi = fileService.CreateFileApi("engine");
 
         _currInfoTask = Task.Run(() => LoadEngineManifest(CancellationToken.None));
     }
 
     public async Task LoadEngineManifest(CancellationToken cancellationToken)
     {
-        try
+        _versionsInfo = await LoadExacManifest(CurrentConVar.EngineManifestUrl, CurrentConVar.EngineManifestBackup, cancellationToken);
+        _modulesInfo = await LoadExacManifest(CurrentConVar.EngineModuleManifestUrl, CurrentConVar.ModuleManifestBackup, cancellationToken);
+    }
+
+    private async Task<T> LoadExacManifest<T>(ConVar<string[]> conVar,ConVar<T> backup,CancellationToken cancellationToken)
+    {
+        var manifestUrls = _varService.GetConfigValue(conVar)!;
+
+        foreach (var manifestUrl in manifestUrls)
         {
-            _debugService.Log("Fetching engine manifest from: " + CurrentConVar.EngineManifestUrl);
-            var info = await _restService.GetAsync<Dictionary<string, EngineVersionInfo>>(
-                new Uri(_varService.GetConfigValue(CurrentConVar.EngineManifestUrl)!), cancellationToken);
-            
-            VersionInfos = info;
-            
-            _varService.SetConfigValue(CurrentConVar.EngineManifestBackup, info);
-        }
-        catch (Exception e)
-        {
-            _debugService.Debug("Trying fallback engine manifest...");
-            if (!_varService.TryGetConfigValue(CurrentConVar.EngineManifestBackup, out var engineInfo))
+            try
             {
-                throw new Exception("No engine info data available",e);
-            }
-
-            VersionInfos = engineInfo;
-        }
-
-        try
-        {
-            _debugService.Log("Fetching module manifest from: " + CurrentConVar.EngineModuleManifestUrl);
-            var moduleInfo = await _restService.GetAsync<ModulesInfo>(
-                new Uri(_varService.GetConfigValue(CurrentConVar.EngineModuleManifestUrl)!), cancellationToken);
-
-            if (moduleInfo is null) 
-                throw new Exception("Module version info is null");
+                _debugService.Log("Fetching engine manifest from: " + manifestUrl);
+                var info = await _restService.GetAsync<T>(
+                    new Uri(manifestUrl), cancellationToken);
             
-            ModuleInfos = moduleInfo.Modules;
-            _varService.SetConfigValue(CurrentConVar.ModuleManifestBackup, moduleInfo);
-        }
-        catch (Exception e)
-        {
-            _debugService.Debug("Trying fallback module manifest...");
-            if (!_varService.TryGetConfigValue(CurrentConVar.ModuleManifestBackup, out var modulesInfo))
-            {
-                throw new Exception("No module info data available",e);
+                _varService.SetConfigValue(backup, info);
+                return info;
             }
-
-            ModuleInfos = modulesInfo.Modules;
+            catch (Exception e)
+            {
+                _debugService.Error($"error while attempt fetch engine manifest: {e.Message}");
+            }
         }
         
+        _debugService.Debug("Trying fallback module manifest...");
+        if (!_varService.TryGetConfigValue(backup, out var moduleInfo))
+        {
+            throw new Exception("No module info data available");
+        }
+        
+        return moduleInfo;
     }
 
     public EngineBuildInfo? GetVersionInfo(string version)
     {
         CheckAndWaitValidation();
 
-        if (!VersionInfos.TryGetValue(version, out var foundVersion))
+        if (!_versionsInfo.TryGetValue(version, out var foundVersion))
             return null;
 
         if (foundVersion.RedirectVersion != null)
@@ -113,12 +102,12 @@ public sealed class EngineService
 
         try
         {
-            var api = _fileService.OpenZip(version, _fileService.EngineFileApi);
+            var api = _fileService.OpenZip(version, _engineFileApi);
             if (api != null) return _assemblyService.Mount(api);
         }
         catch (Exception)
         {
-            _fileService.EngineFileApi.Remove(version);
+            _engineFileApi.Remove(version);
             throw;
         }
 
@@ -133,13 +122,13 @@ public sealed class EngineService
         _debugService.Log("Downloading engine version " + version);
         using var client = new HttpClient();
         var s = await client.GetStreamAsync(info.Url);
-        _fileService.EngineFileApi.Save(version, s);
+        _engineFileApi.Save(version, s);
         await s.DisposeAsync();
     }
 
     public bool TryOpen(string version, [NotNullWhen(true)] out Stream? stream)
     {
-        return _fileService.EngineFileApi.TryOpen(version, out stream);
+        return _engineFileApi.TryOpen(version, out stream);
     }
 
     public bool TryOpen(string version)
@@ -153,7 +142,7 @@ public sealed class EngineService
     {
         CheckAndWaitValidation();
 
-        if (!ModuleInfos.TryGetValue(moduleName, out var module) ||
+        if (!_modulesInfo.Modules.TryGetValue(moduleName, out var module) ||
             !module.Versions.TryGetValue(version, out var value))
             return null;
 
@@ -174,7 +163,7 @@ public sealed class EngineService
         CheckAndWaitValidation();
 
         var engineVersionObj = Version.Parse(engineVersion);
-        var module = ModuleInfos[moduleName];
+        var module = _modulesInfo.Modules[moduleName];
         var selectedVersion = module.Versions.Select(kv => new { Version = Version.Parse(kv.Key), kv.Key, kv })
             .Where(kv => engineVersionObj >= kv.Version)
             .MaxBy(kv => kv.Version);
@@ -196,11 +185,11 @@ public sealed class EngineService
 
         try
         {
-            return _assemblyService.Mount(_fileService.OpenZip(fileName, _fileService.EngineFileApi) ?? throw new InvalidOperationException($"{fileName} is not exist!"));
+            return _assemblyService.Mount(_fileService.OpenZip(fileName, _engineFileApi) ?? throw new InvalidOperationException($"{fileName} is not exist!"));
         }
         catch (Exception)
         {
-            _fileService.EngineFileApi.Remove(fileName);
+            _engineFileApi.Remove(fileName);
             throw;
         }
     }
@@ -213,7 +202,7 @@ public sealed class EngineService
         _debugService.Log("Downloading engine module version " + moduleVersion);
         using var client = new HttpClient();
         var s = await client.GetStreamAsync(info.Url);
-        _fileService.EngineFileApi.Save(ConcatName(moduleName, moduleVersion), s);
+        _engineFileApi.Save(ConcatName(moduleName, moduleVersion), s);
         await s.DisposeAsync();
     }
 

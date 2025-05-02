@@ -5,11 +5,11 @@ namespace Nebula.Shared;
 
 public static class CurrentConVar
 {
-    public static readonly ConVar<string> EngineManifestUrl =
-        ConVarBuilder.Build("engine.manifestUrl", "https://robust-builds.cdn.spacestation14.com/manifest.json");
+    public static readonly ConVar<string[]> EngineManifestUrl =
+        ConVarBuilder.Build<string[]>("engine.manifestUrl", ["https://robust-builds.cdn.spacestation14.com/manifest.json"]);
 
-    public static readonly ConVar<string> EngineModuleManifestUrl =
-        ConVarBuilder.Build("engine.moduleManifestUrl", "https://robust-builds.cdn.spacestation14.com/modules.json");
+    public static readonly ConVar<string[]> EngineModuleManifestUrl =
+        ConVarBuilder.Build<string[]>("engine.moduleManifestUrl", ["https://robust-builds.cdn.spacestation14.com/modules.json"]);
 
     public static readonly ConVar<int> ManifestDownloadProtocolVersion =
         ConVarBuilder.Build("engine.manifestDownloadProtocolVersion", 1);

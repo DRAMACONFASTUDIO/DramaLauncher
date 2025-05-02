@@ -5,7 +5,6 @@
     x:Class="Nebula.Launcher.Views.ServerEntryView"
     x:DataType="viewModels:ServerEntryModelView"
     xmlns="https://github.com/avaloniaui"
-    xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:converters="clr-namespace:Nebula.Launcher.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -13,7 +12,8 @@
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels"
     xmlns:views="clr-namespace:Nebula.Launcher.Views"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    IsVisible="{Binding IsVisible}">
     <Design.DataContext>
         <viewModels:ServerEntryModelView />
     </Design.DataContext>
@@ -234,6 +234,10 @@
                 IsVisible="{Binding ExpandInfo}"
                 Margin="5,5,0,0"
                 Spacing="5">
+                <Button
+                    Command="{Binding OpenContentViewer}">
+                    <Svg Margin="4" Path="/Assets/svg/folder.svg" />
+                </Button>
                 <Button
                     Command="{Binding StopInstance}"
                     CornerRadius="10"

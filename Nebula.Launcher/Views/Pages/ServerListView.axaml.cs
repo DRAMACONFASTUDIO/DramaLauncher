@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using ServerListViewModel = Nebula.Launcher.ViewModels.Pages.ServerListViewModel;
 
 namespace Nebula.Launcher.Views.Pages;
@@ -12,6 +9,15 @@ public partial class ServerListView : UserControl
     public ServerListView()
     {
         InitializeComponent();
+        
+        EssentialFilters.AddFilter("Non RP", "rp:none");
+        EssentialFilters.AddFilter("Low RP", "rp:low");
+        EssentialFilters.AddFilter("Medium RP", "rp:med");
+        EssentialFilters.AddFilter("Hard RP", "rp:high");
+        EssentialFilters.AddFilter("18+", "18+");
+        
+        LanguageFilters.AddFilter("RU","lang:ru");
+        LanguageFilters.AddFilter("EN","lang:en");
     }
 
     // This constructor is used when the view is created via dependency injection
@@ -25,12 +31,5 @@ public partial class ServerListView : UserControl
     {
         var context = (ServerListViewModel?)DataContext;
         context?.OnSearchChange?.Invoke();
-    }
-
-    private void Button_OnClick(object? sender, RoutedEventArgs e)
-    {
-        var send = sender as CheckBox;
-        var context = (ServerListViewModel?)DataContext;
-        context?.OnFilterChanged(send.Name, send.IsChecked.Value);
     }
 }

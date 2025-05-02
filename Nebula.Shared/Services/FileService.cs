@@ -14,62 +14,15 @@ public class FileService
         Environment.SpecialFolder.ApplicationData), "Datum");
 
     private readonly DebugService _debugService;
-
-    public readonly IReadWriteFileApi ConfigurationApi;
-    public readonly IReadWriteFileApi ContentFileApi;
-    public readonly IReadWriteFileApi EngineFileApi;
-    public readonly IReadWriteFileApi ManifestFileApi;
+    
     public FileService(DebugService debugService)
     {
         _debugService = debugService;
 
         if(!Directory.Exists(RootPath)) 
             Directory.CreateDirectory(RootPath);
-
-        ContentFileApi = CreateFileApi("content");
-        EngineFileApi = CreateFileApi("engine");
-        ManifestFileApi = CreateFileApi("manifest");
-        ConfigurationApi = CreateFileApi("config");
     }
-
-    public bool CheckMigration(ILoadingHandler loadingHandler)
-    {
-        _debugService.Log("Checking migration...");
-
-        var migrationList = ContentFileApi.AllFiles.Where(f => !f.Contains("\\")).ToList();
-        if(migrationList.Count == 0) return false;
-        
-        _debugService.Log($"Found {migrationList.Count} migration files. Starting migration...");
-        Task.Run(() => DoMigration(loadingHandler, migrationList));
-        return true;
-    }
-
-    private void DoMigration(ILoadingHandler loadingHandler, List<string> migrationList)
-    {
-        loadingHandler.SetJobsCount(migrationList.Count);
-        
-        Parallel.ForEach(migrationList, (f,_)=>MigrateFile(f,loadingHandler));
-        
-        if (loadingHandler is IDisposable disposable)
-        {
-            disposable.Dispose();
-        }
-    }
-
-    private void MigrateFile(string file, ILoadingHandler loadingHandler)
-    {
-        if(!ContentFileApi.TryOpen(file, out var stream))
-        {
-            loadingHandler.AppendResolvedJob();
-            return;
-        }
-            
-        ContentFileApi.Save(HashApi.GetManifestPath(file), stream);
-        stream.Dispose();
-        ContentFileApi.Remove(file);
-        loadingHandler.AppendResolvedJob();
-    }
-
+    
     public IReadWriteFileApi CreateFileApi(string path)
     {
         return new FileApi(Path.Join(RootPath, path));

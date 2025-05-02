@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Nebula.Launcher.Controls;
 using Nebula.Launcher.Services;
 using Nebula.Launcher.ViewModels.Popup;
 using Nebula.Launcher.Views;
@@ -27,6 +28,7 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
     
     public ObservableCollection<ServerEntryModelView> Servers { get; }= new();
     public ObservableCollection<Exception> HubErrors { get; } = new();
+    public readonly ServerFilter CurrentFilter = new ServerFilter();
     
     public Action? OnSearchChange;
     [GenerateProperty] private HubService HubService { get; }
@@ -38,8 +40,6 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
     private ServerViewContainer ServerViewContainer { get; set; } 
     
     private List<ServerHubInfo> UnsortedServers { get; } = new();
-    
-    private List<string> _filters = new();
 
     //Design think
     protected override void InitialiseInDesignMode()
@@ -63,23 +63,22 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
         if (!HubService.IsUpdating) UpdateServerEntries();
         UpdateFavoriteEntries();
     }
-
-    public void OnFilterChanged(string name, bool active)
+    
+    public void ApplyFilter()
     {
-        DebugService.Debug($"OnFilterChanged: {name} {active}");
-        if(active)
-            _filters.Add(name);
-        else
-            _filters.Remove(name);
-        
-        if(IsFavoriteMode)
+        foreach (var entry in ServerViewContainer.Items)
         {
-            UpdateFavoriteEntries();
+            entry.ProcessFilter(CurrentFilter);
         }
+    }
+    
+    public void OnFilterChanged(FilterBoxChangedEventArgs args)
+    {
+        if (args.Checked)
+            CurrentFilter.Tags.Add(args.Tag);
         else
-        {
-            UpdateServerEntries();
-        }
+            CurrentFilter.Tags.Remove(args.Tag);
+        ApplyFilter();
     }
 
     private void HubServerLoadingError(Exception obj)
@@ -96,26 +95,19 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
         Task.Run(() =>
         {
             UnsortedServers.Sort(new ServerComparer());
-            foreach (var info in UnsortedServers.Where(CheckServerThink))
+            foreach (var info in UnsortedServers)
             {
                 var view = ServerViewContainer.Get(info.Address.ToRobustUrl(), info.StatusData);
                 Servers.Add(view);
             }
+            ApplyFilter();
         });
     }
 
     private void OnChangeSearch()
     {
-        if(string.IsNullOrEmpty(SearchText)) return;
-        
-        if(IsFavoriteMode)
-        {
-            UpdateFavoriteEntries();
-        }
-        else
-        {
-            UpdateServerEntries();
-        }
+        CurrentFilter.SearchText = SearchText;
+        ApplyFilter();
     }
 
     private void HubServerChangedEventArgs(HubServerChangedEventArgs obj)
@@ -132,18 +124,6 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
             ServerViewContainer.Clear();
             UpdateFavoriteEntries();
         }
-    }
-
-    private bool CheckServerThink(ServerHubInfo hubInfo)
-    {
-        var isNameEqual = string.IsNullOrEmpty(SearchText) || hubInfo.StatusData.Name.ToLower().Contains(SearchText.ToLower());
-
-        if (_filters.Count == 0) return isNameEqual;
-        if(_filters.Select(t=>t.Replace('_',':').Replace("ERPYes","18+")).Any(t=>hubInfo.StatusData.Tags.Contains(t) || hubInfo.InferredTags.Contains(t))) 
-            return isNameEqual;
-        
-
-        return false;
     }
 
     public void FilterRequired()
@@ -178,6 +158,8 @@ public class ServerViewContainer(
     )
 {
     private readonly Dictionary<string, ServerEntryModelView> _entries = new();
+    
+    public ICollection<ServerEntryModelView> Items => _entries.Values;
 
     public void Clear()
     {
@@ -239,5 +221,32 @@ public class ServerComparer : IComparer<ServerHubInfo>, IComparer<ServerStatus>,
     public int Compare((RobustUrl, ServerStatus) x, (RobustUrl, ServerStatus) y)
     {
         return Compare(x.Item2, y.Item2);
+    }
+}
+
+public sealed class ServerFilter
+{
+    public string SearchText { get; set; } = "";
+    public HashSet<string> Tags { get; } = new();
+    public bool IsMatchByName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(SearchText))
+            return true;
+
+        return name.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
+    }
+
+    public bool IsMatchByTags(IEnumerable<string> itemTags)
+    {
+        if (Tags.Count == 0)
+            return true;
+        
+        var itemTagSet = new HashSet<string>(itemTags);
+        return Tags.All(tag => itemTagSet.Contains(tag));
+    }
+
+    public bool IsMatch(string name, IEnumerable<string> itemTags)
+    {
+        return IsMatchByName(name) && IsMatchByTags(itemTags);
     }
 }

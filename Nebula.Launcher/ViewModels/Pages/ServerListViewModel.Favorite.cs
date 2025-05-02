@@ -31,6 +31,8 @@ public partial class ServerListViewModel
             s.IsFavorite = true;
             FavoriteServers.Add(s);
         }
+        
+        ApplyFilter();
     }
 
     public void AddFavorite(ServerEntryModelView entryModelView)

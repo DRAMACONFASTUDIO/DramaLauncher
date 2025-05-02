@@ -11,9 +11,12 @@ namespace Nebula.Shared.Services;
 
 public partial class ContentService
 {
+    public readonly IReadWriteFileApi ContentFileApi = fileService.CreateFileApi("content");
+    public readonly IReadWriteFileApi ManifestFileApi = fileService.CreateFileApi("manifest");
+    
     public bool CheckManifestExist(RobustManifestItem item)
     {
-        return fileService.ContentFileApi.Has(item.Hash);
+        return ContentFileApi.Has(item.Hash);
     }
 
     public async Task<HashApi> EnsureItems(ManifestReader manifestReader, Uri downloadUri,
@@ -31,7 +34,7 @@ public partial class ContentService
             allItems.Add(item.Value);
         }
 
-        var hashApi = new HashApi(allItems, fileService.ContentFileApi);
+        var hashApi = new HashApi(allItems, ContentFileApi);
 
         items = allItems.Where(a=> !hashApi.Has(a)).ToList();
 
@@ -46,7 +49,7 @@ public partial class ContentService
     {
         debugService.Log("Getting manifest: " + info.Hash);
 
-        if (fileService.ManifestFileApi.TryOpen(info.Hash, out var stream))
+        if (ManifestFileApi.TryOpen(info.Hash, out var stream))
         {
             debugService.Log("Loading manifest from: " + info.Hash);
             return await EnsureItems(new ManifestReader(stream), info.DownloadUri, loadingHandler, cancellationToken);
@@ -58,7 +61,7 @@ public partial class ContentService
         if (!response.IsSuccessStatusCode) throw new Exception();
 
         await using var streamContent = await response.Content.ReadAsStreamAsync(cancellationToken);
-        fileService.ManifestFileApi.Save(info.Hash, streamContent);
+        ManifestFileApi.Save(info.Hash, streamContent);
         streamContent.Seek(0, SeekOrigin.Begin);
         using var manifestReader = new ManifestReader(streamContent);
         return await EnsureItems(manifestReader, info.DownloadUri, loadingHandler, cancellationToken);
@@ -90,8 +93,6 @@ public partial class ContentService
 
             loadingHandler.AppendResolvedJob();
         });
-        
-       
 
         if (loadingHandler is IDisposable disposable)
         {

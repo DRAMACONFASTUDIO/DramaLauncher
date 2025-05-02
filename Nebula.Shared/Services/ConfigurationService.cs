@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
+using Nebula.Shared.FileApis.Interfaces;
+using Robust.LoaderApi;
 
 namespace Nebula.Shared.Services;
 
@@ -31,21 +33,24 @@ public static class ConVarBuilder
 public class ConfigurationService
 {
     private readonly DebugService _debugService;
-    private readonly FileService _fileService;
+    
+    public IReadWriteFileApi ConfigurationApi { get; init; }
 
     public ConfigurationService(FileService fileService, DebugService debugService)
     {
-        _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
         _debugService = debugService ?? throw new ArgumentNullException(nameof(debugService));
+        
+        ConfigurationApi = fileService.CreateFileApi("config");
     }
 
+    
     public T? GetConfigValue<T>(ConVar<T> conVar)
     {
         ArgumentNullException.ThrowIfNull(conVar);
 
         try
         {
-            if (_fileService.ConfigurationApi.TryOpen(GetFileName(conVar), out var stream))
+            if (ConfigurationApi.TryOpen(GetFileName(conVar), out var stream))
                 using (stream)
                 {
                     var obj = JsonSerializer.Deserialize<T>(stream);
@@ -72,7 +77,7 @@ public class ConfigurationService
         value = default;
         try
         {
-            if (_fileService.ConfigurationApi.TryOpen(GetFileName(conVar), out var stream))
+            if (ConfigurationApi.TryOpen(GetFileName(conVar), out var stream))
                 using (stream)
                 {
                     var obj = JsonSerializer.Deserialize<T>(stream);
@@ -116,7 +121,7 @@ public class ConfigurationService
             writer.Flush();
             stream.Seek(0, SeekOrigin.Begin);
 
-            _fileService.ConfigurationApi.Save(GetFileName(conVar), stream);
+            ConfigurationApi.Save(GetFileName(conVar), stream);
         }
         catch (Exception e)
         {

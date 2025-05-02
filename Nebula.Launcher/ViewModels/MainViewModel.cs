@@ -39,6 +39,7 @@ public partial class MainViewModel : ViewModelBase
 
     [GenerateProperty] private DebugService DebugService { get; } = default!;
     [GenerateProperty] private PopupMessageService PopupMessageService { get; } = default!;
+    [GenerateProperty] private ContentService ContentService { get; } = default!;
     [GenerateProperty, DesignConstruct] private ViewHelperService ViewHelperService { get; } = default!;
     [GenerateProperty] private FileService FileService { get; } = default!;
 
@@ -46,9 +47,8 @@ public partial class MainViewModel : ViewModelBase
 
     protected override void InitialiseInDesignMode()
     {
-        CurrentPage = ViewHelperService.GetViewModel<AccountInfoViewModel>();
         Items = new ObservableCollection<ListItemTemplate>(_templates);
-        SelectedListItem = Items.First(vm => vm.ModelType == typeof(AccountInfoViewModel));
+        RequirePage<AccountInfoViewModel>();
     }
 
     protected override void Initialise()
@@ -67,7 +67,7 @@ public partial class MainViewModel : ViewModelBase
         loadingHandler.LoadingName = "Migration task, please wait...";
         loadingHandler.IsCancellable = false;
 
-        if (!FileService.CheckMigration(loadingHandler))
+        if (!ContentService.CheckMigration(loadingHandler))
             return;
         
         OnPopupRequired(loadingHandler);
@@ -77,10 +77,36 @@ public partial class MainViewModel : ViewModelBase
     {
         if (value is null) return;
 
-        if (!ViewHelperService.TryGetViewModel(value.ModelType, out var vmb) || vmb is not IViewModelPage viewModelPage) return;
+        if (!ViewHelperService.TryGetViewModel(value.ModelType, out var vmb)) return;
 
-        viewModelPage.OnPageOpen(value.args);
-        CurrentPage = vmb;
+        OpenPage(vmb, value.args);
+    }
+
+    public T RequirePage<T>() where T : ViewModelBase, IViewModelPage
+    {
+        if (CurrentPage is T vam) return vam;
+        
+        var page = ViewHelperService.GetViewModel<T>();
+        OpenPage(page, null);
+        return page;
+    }
+
+    private void OpenPage(ViewModelBase obj, object? args) 
+    {
+        var tabItems = Items.Where(vm => vm.ModelType == obj.GetType());
+
+        var listItemTemplates = tabItems as ListItemTemplate[] ?? tabItems.ToArray();
+        if (listItemTemplates.Length != 0)
+        {
+            SelectedListItem = listItemTemplates.First();
+        }
+        
+        if (obj is IViewModelPage page)
+        {
+            page.OnPageOpen(args);
+        }
+        
+        CurrentPage = obj;
     }
 
     public void PopupMessage(PopupViewModelBase viewModelBase)
