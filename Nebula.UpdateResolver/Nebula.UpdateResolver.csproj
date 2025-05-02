@@ -6,6 +6,9 @@
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <PublishSingleFile>true</PublishSingleFile>
+        <!--<PublishTrimmed>true</PublishTrimmed>-->
+        <SelfContained>true</SelfContained>
     </PropertyGroup>
 
     <ItemGroup>
@@ -22,10 +25,5 @@
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\Nebula.Shared\Nebula.Shared.csproj" />
     </ItemGroup>
 </Project>

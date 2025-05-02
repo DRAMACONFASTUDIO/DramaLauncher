@@ -7,75 +7,77 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using Nebula.Shared.FileApis;
-using Nebula.Shared.FileApis.Interfaces;
-using Nebula.Shared.Models;
-using Nebula.Shared.Services;
-using Tmds.DBus.Protocol;
+using Nebula.UpdateResolver.Configuration;
+using Nebula.UpdateResolver.Rest;
 
 namespace Nebula.UpdateResolver;
 
 public partial class MainWindow : Window
 {
-    private readonly ConfigurationService _configurationService;
-    private readonly RestService _restService;
-    private readonly HttpClient _httpClient = new HttpClient();
-    public FileApi FileApi { get; set; }
+    public static readonly string RootPath = Path.Join(Environment.GetFolderPath(
+        Environment.SpecialFolder.ApplicationData), "Datum");
     
-    public MainWindow(FileService fileService, ConfigurationService configurationService, RestService restService)
+    private readonly HttpClient _httpClient = new HttpClient();
+    public readonly FileApi FileApi = new FileApi(Path.Join(RootPath,"app"));
+    
+    public MainWindow()
     {
-        _configurationService = configurationService;
-        _restService = restService;
         InitializeComponent();
-        FileApi = (FileApi)fileService.CreateFileApi("app");
-
         Start();
     }
 
     private async Task Start()
     {
-        var info = await EnsureFiles();
-        Log("Downloading files...");
-
-        foreach (var file in info.ToDelete)
+        try
         {
-            Log("Deleting " + file.Path);
-            FileApi.Remove(file.Path);
-        }
+            var info = await EnsureFiles();
+            Log("Downloading files...");
 
-        var loadedManifest = info.FilesExist;
-        Save(loadedManifest);
+            foreach (var file in info.ToDelete)
+            {
+                Log("Deleting " + file.Path);
+                FileApi.Remove(file.Path);
+            }
 
-        var count = info.ToDownload.Count;
-        var resolved = 0;
-
-        foreach (var file in info.ToDownload)
-        {
-            using var response = await _httpClient.GetAsync(
-                _configurationService.GetConfigValue(UpdateConVars.UpdateCacheUrl) 
-                + "/" + file.Hash);
-            
-            response.EnsureSuccessStatusCode();
-            await using var stream = await response.Content.ReadAsStreamAsync();
-            FileApi.Save(file.Path, stream);
-            resolved++;
-            Log("Saving " + file.Path, (int)(resolved/(float)count*100f));
-            
-            loadedManifest.Add(file);
+            var loadedManifest = info.FilesExist;
             Save(loadedManifest);
+
+            var count = info.ToDownload.Count;
+            var resolved = 0;
+
+            foreach (var file in info.ToDownload)
+            {
+                using var response = await _httpClient.GetAsync(
+                    ConfigurationStandalone.GetConfigValue(UpdateConVars.UpdateCacheUrl)
+                    + "/" + file.Hash);
+
+                response.EnsureSuccessStatusCode();
+                await using var stream = await response.Content.ReadAsStreamAsync();
+                FileApi.Save(file.Path, stream);
+                resolved++;
+                Log("Saving " + file.Path, (int)(resolved / (float)count * 100f));
+
+                loadedManifest.Add(file);
+                Save(loadedManifest);
+            }
+
+            Log("Download finished. Running launcher...");
+
+            var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = "dotnet.exe",
+                Arguments = Path.Join(FileApi.RootPath, "Nebula.Launcher.dll"),
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                StandardOutputEncoding = Encoding.UTF8
+            });
         }
-        Log("Download finished. Running launcher...");
-        
-        var process = Process.Start(new ProcessStartInfo
+        catch (Exception e)
         {
-            FileName = "dotnet.exe",
-            Arguments = Path.Join(FileApi.RootPath,"Nebula.Launcher.dll"),
-            CreateNoWindow = true,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            StandardOutputEncoding = Encoding.UTF8
-        });
+            Log("Error! " + e.Message);
+        }
         
         Thread.Sleep(2000);
         
@@ -85,29 +87,29 @@ public partial class MainWindow : Window
     private async Task<ManifestEnsureInfo> EnsureFiles()
     {
         Log("Ensuring launcher manifest...");
-        var manifest = await _restService.GetAsync<LauncherManifest>(
-            new Uri(_configurationService.GetConfigValue(UpdateConVars.UpdateCacheUrl)! + "/manifest.json"), CancellationToken.None);
+        var manifest = await RestStandalone.GetAsync<LauncherManifest>(
+            new Uri(ConfigurationStandalone.GetConfigValue(UpdateConVars.UpdateCacheUrl)! + "/manifest.json"), CancellationToken.None);
         
         var toDownload = new HashSet<LauncherManifestEntry>();
         var toDelete = new HashSet<LauncherManifestEntry>();
         var filesExist = new HashSet<LauncherManifestEntry>();
         
         Log("Manifest loaded!");
-        if (_configurationService.TryGetConfigValue(UpdateConVars.CurrentLauncherManifest, out var currentManifest))
+        if (ConfigurationStandalone.TryGetConfigValue(UpdateConVars.CurrentLauncherManifest, out var currentManifest))
         {
             Log("Delta manifest loaded!");
             foreach (var file in currentManifest.Entries)
             {
                 if (!manifest.Entries.Contains(file))
-                    toDelete.Add(file);
+                    toDelete.Add(EnsurePath(file));
                 else
-                    filesExist.Add(file);
+                    filesExist.Add(EnsurePath(file));
             }
 
             foreach (var file in manifest.Entries)
             {
                 if(!currentManifest.Entries.Contains(file))
-                    toDownload.Add(file);
+                    toDownload.Add(EnsurePath(file));
             }
         }
         else
@@ -133,8 +135,43 @@ public partial class MainWindow : Window
 
     private void Save(HashSet<LauncherManifestEntry> entries)
     {
-        _configurationService.SetConfigValue(UpdateConVars.CurrentLauncherManifest, new LauncherManifest(entries));
+        ConfigurationStandalone.SetConfigValue(UpdateConVars.CurrentLauncherManifest, new LauncherManifest(entries));
+    }
+
+    private LauncherManifestEntry EnsurePath(LauncherManifestEntry entry)
+    {
+        if(!PathValidator.IsSafePath(FileApi.RootPath, entry.Path)) 
+            throw new ArgumentException("Path contains invalid characters. Manifest hash: " + entry.Hash);
+
+        return entry;
     }
 }
 
-public record struct ManifestEnsureInfo(HashSet<LauncherManifestEntry> ToDownload, HashSet<LauncherManifestEntry> ToDelete, HashSet<LauncherManifestEntry> FilesExist);
+
+public static class PathValidator
+{
+    public static bool IsSafePath(string baseDirectory, string relativePath)
+    {
+        if (Path.IsPathRooted(relativePath))
+            return false;
+        
+        var fullBase = Path.GetFullPath(baseDirectory);
+
+      
+        var combinedPath = Path.Combine(fullBase, relativePath);
+        var fullPath = Path.GetFullPath(combinedPath);
+
+
+        if (!fullPath.StartsWith(fullBase, StringComparison.Ordinal))
+            return false;
+        
+        if (File.Exists(fullPath) || Directory.Exists(fullPath))
+        {
+            FileInfo fileInfo = new FileInfo(fullPath);
+            if (fileInfo.Attributes.HasFlag(FileAttributes.ReparsePoint))
+                return false;
+        }
+
+        return true;
+    }
+}

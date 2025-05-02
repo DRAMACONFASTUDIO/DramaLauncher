@@ -1,6 +1,4 @@
-using System;
-using Nebula.Shared.Models;
-using Nebula.Shared.Services;
+using Nebula.UpdateResolver.Configuration;
 
 namespace Nebula.UpdateResolver;
 
