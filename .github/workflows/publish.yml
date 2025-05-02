@@ -1,4 +1,4 @@
-name: Publish
+name: Publish launcher manifest and files
 
 on:
   workflow_dispatch:
