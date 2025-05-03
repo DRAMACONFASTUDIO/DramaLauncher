@@ -26,7 +26,7 @@ public class RestService
     public async Task<T> GetAsync<T>(Uri uri, CancellationToken cancellationToken) where T : notnull
     {
         var response = await _client.GetAsync(uri, cancellationToken);
-        return await ReadResult<T>(response, cancellationToken);
+        return await ReadResult<T>(response, cancellationToken, uri);
     }
 
     public async Task<T> GetAsyncDefault<T>(Uri uri, T defaultValue, CancellationToken cancellationToken) where T : notnull
@@ -47,7 +47,7 @@ public class RestService
         var json = JsonSerializer.Serialize(information, _serializerOptions);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _client.PostAsync(uri, content, cancellationToken);
-        return await ReadResult<K>(response, cancellationToken);
+        return await ReadResult<K>(response, cancellationToken, uri);
     }
 
     public async Task<T> PostAsync<T>(Stream stream, Uri uri, CancellationToken cancellationToken) where T : notnull
@@ -56,16 +56,16 @@ public class RestService
             new MultipartFormDataContent("Upload----" + DateTime.Now.ToString(CultureInfo.InvariantCulture));
         multipartFormContent.Add(new StreamContent(stream), "formFile", "image.png");
         var response = await _client.PostAsync(uri, multipartFormContent, cancellationToken);
-        return await ReadResult<T>(response, cancellationToken);
+        return await ReadResult<T>(response, cancellationToken, uri);
     }
 
     public async Task<T> DeleteAsync<T>(Uri uri, CancellationToken cancellationToken) where T : notnull
     {
         var response = await _client.DeleteAsync(uri, cancellationToken);
-        return await ReadResult<T>(response, cancellationToken);
+        return await ReadResult<T>(response, cancellationToken, uri);
     }
 
-    private async Task<T> ReadResult<T>(HttpResponseMessage response, CancellationToken cancellationToken) where T : notnull
+    private async Task<T> ReadResult<T>(HttpResponseMessage response, CancellationToken cancellationToken, Uri uri) where T : notnull
     {
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
         
@@ -74,16 +74,14 @@ public class RestService
         
         if (response.IsSuccessStatusCode)
         {
-            _debug.Debug($"SUCCESSFUL GET CONTENT {typeof(T)}");
-
             return await response.Content.AsJson<T>();
         }
         
-        throw new RestRequestException(response.Content, response.StatusCode);
+        throw new RestRequestException(response.Content, response.StatusCode, $"Error while processing {uri.ToString()}: {response.ReasonPhrase}");
     }
 }
 
-public sealed class RestRequestException(HttpContent content, HttpStatusCode statusCode) : Exception
+public sealed class RestRequestException(HttpContent content, HttpStatusCode statusCode, string message) : Exception(message)
 {
     public HttpStatusCode StatusCode { get; } = statusCode;
     public HttpContent Content { get; } = content;
