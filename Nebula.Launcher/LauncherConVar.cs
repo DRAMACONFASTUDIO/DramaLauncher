@@ -15,7 +15,12 @@ public static class LauncherConVar
         ConVarBuilder.Build<string[]>("server.favorites", []);
     
     public static readonly ConVar<AuthServerCredentials[]> AuthServers = ConVarBuilder.Build<AuthServerCredentials[]>("launcher.authServers", [
-        new AuthServerCredentials("WizDen", ["https://auth.spacestation14.com/", "https://auth.fallback.spacestation14.com/"])
+        new AuthServerCredentials(
+            "WizDen", 
+            [
+                "https://auth.spacestation14.com/",
+                "https://auth.fallback.spacestation14.com/"
+            ])
     ]);
 
     public static readonly ConVar<string> CurrentLang = ConVarBuilder.Build<string>("launcher.language", "en-US");
