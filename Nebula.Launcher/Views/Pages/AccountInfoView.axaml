@@ -118,7 +118,6 @@
                                 <Label VerticalAlignment="Center">
                                     Auth server:
                                 </Label>
-                                <TextBox MinWidth="200" Text="{Binding CurrentAuthServer}" />
                                 <Button Command="{Binding ExpandAuthUrlCommand}" VerticalAlignment="Stretch">
                                     <Label>+</Label>
                                 </Button>
@@ -139,7 +138,7 @@
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
                                             <Label>
-                                                <TextBlock Text="{Binding}" />
+                                                <TextBlock Text="{Binding Name}" />
                                             </Label>
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>

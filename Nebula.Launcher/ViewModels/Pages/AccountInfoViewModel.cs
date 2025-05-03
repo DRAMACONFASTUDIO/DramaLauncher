@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.Json.Serialization;
@@ -40,23 +41,9 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
     [GenerateProperty, DesignConstruct] private ViewHelperService ViewHelperService { get; } = default!;
 
     public ObservableCollection<ProfileAuthCredentials> Accounts { get; } = new();
-    public ObservableCollection<string> AuthUrls { get; } = new();
+    public ObservableCollection<AuthServerCredentials> AuthUrls { get; } = new();
 
-    private AuthLoginPassword CurrentAlp
-    {
-        get => new(CurrentLogin, CurrentPassword, CurrentAuthServer);
-        set
-        {
-            CurrentLogin = value.Login;
-            CurrentPassword = value.Password;
-            CurrentAuthServer = value.AuthServer;
-        }
-    }
-
-    public string AuthItemSelect
-    {
-        set => CurrentAuthServer = value;
-    }
+    [ObservableProperty] private AuthServerCredentials _authItemSelect;
 
     //Design think
     protected override void InitialiseInDesignMode()
@@ -64,8 +51,7 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
         AddAccount(new AuthLoginPassword("Binka", "12341", ""));
         AddAccount(new AuthLoginPassword("Binka", "12341", ""));
         
-        AuthUrls.Add("https://cinka.ru");
-        AuthUrls.Add("https://cinka.ru");
+        AuthUrls.Add(new AuthServerCredentials("Test",["example.com"]));
     }
 
     //Real think
@@ -76,7 +62,10 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
 
     public void AuthByProfile(ProfileAuthCredentials credentials)
     {
-        CurrentAlp = new AuthLoginPassword(credentials.Login, credentials.Password, credentials.AuthServer);
+        CurrentLogin = credentials.Login;
+        CurrentPassword = credentials.Password;
+        CurrentAuthServer = credentials.AuthServer;
+        
         DoAuth();
     }
 
@@ -87,41 +76,67 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
         message.IsInfoClosable = false;
         PopupMessageService.Popup(message);
 
+        var serverCandidates = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(CurrentAuthServer))
+            serverCandidates.AddRange(AuthItemSelect.Servers);
+        else
+            serverCandidates.Add(CurrentAuthServer);
+
         Task.Run(async () =>
         {
-            try
+            Exception? exception = null;
+            foreach (var server in serverCandidates)
             {
-                await AuthService.Auth(CurrentAlp, code);
-                message.Dispose();
-                IsLogged = true;
-                ConfigurationService.SetConfigValue(LauncherConVar.AuthCurrent, AuthService.SelectedAuth);
-            }
-            catch (AuthException e)
-            {
-                message.Dispose();
-                
-                switch (e.Error.Code)
+                try
                 {
-                    case AuthenticateDenyCode.TfaRequired:
-                    case AuthenticateDenyCode.TfaInvalid:
-                        var p = ViewHelperService.GetViewModel<TfaViewModel>();
-                        p.OnTfaEntered += OnTfaEntered;
-                        PopupMessageService.Popup(p);
-                        break;
-                    case AuthenticateDenyCode.InvalidCredentials:
-                        PopupMessageService.Popup("Invalid Credentials!");
-                        break;
-                    default:
-                        throw;
+                    await TryAuth(CurrentLogin, CurrentPassword, server,code);
+                    break;
+                }
+                catch (Exception e)
+                {
+                    exception = e;
                 }
             }
-            catch (Exception e)
+            
+            message.Dispose();
+
+            if (!IsLogged)
             {
-                message.Dispose();
-                Logout();
-                PopupMessageService.Popup(e);
+                PopupMessageService.Popup(new Exception("No one of auth server is available.", exception));
             }
         });
+    }
+
+    private async Task TryAuth(string login, string password, string authServer,string? code)
+    {
+        try
+        {
+            await AuthService.Auth(new AuthLoginPassword(login, password, authServer), code);
+            CurrentLogin = login;
+            CurrentPassword = password;
+            CurrentAuthServer = authServer;
+            IsLogged = true;
+            ConfigurationService.SetConfigValue(LauncherConVar.AuthCurrent, AuthService.SelectedAuth);
+        }
+        catch (AuthException e)
+        {
+                
+            switch (e.Error.Code)
+            {
+                case AuthenticateDenyCode.TfaRequired:
+                case AuthenticateDenyCode.TfaInvalid:
+                    var p = ViewHelperService.GetViewModel<TfaViewModel>();
+                    p.OnTfaEntered += OnTfaEntered;
+                    PopupMessageService.Popup(p);
+                    break;
+                case AuthenticateDenyCode.InvalidCredentials:
+                    PopupMessageService.Popup("Invalid Credentials!");
+                    break;
+                default:
+                    throw;
+            }
+        }
     }
 
     private void OnTfaEntered(string code)
@@ -176,7 +191,7 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
         AuthUrls.Clear();
         var authUrls = ConfigurationService.GetConfigValue(LauncherConVar.AuthServers)!;
         foreach (var url in authUrls) AuthUrls.Add(url);
-        if(authUrls.Length > 0) CurrentAuthServer = authUrls[0];
+        if(authUrls.Length > 0) AuthItemSelect = authUrls[0];
         
         var currProfile = ConfigurationService.GetConfigValue(LauncherConVar.AuthCurrent);
 
@@ -184,7 +199,9 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
         {
             try
             {
-                CurrentAlp = new AuthLoginPassword(currProfile.Login, string.Empty, currProfile.AuthServer);
+                CurrentLogin = currProfile.Login;
+                CurrentAuthServer = currProfile.AuthServer;
+
                 IsLogged = await AuthService.SetAuth(currProfile);
             }
             catch (Exception e)
@@ -200,7 +217,7 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
     [RelayCommand]
     private void OnSaveProfile()
     {
-        AddAccount(CurrentAlp);
+        AddAccount(new AuthLoginPassword(CurrentLogin, CurrentPassword, CurrentAuthServer));
         _isProfilesEmpty = Accounts.Count == 0;
         UpdateAuthMenu();
         DirtyProfile();
@@ -243,4 +260,9 @@ public sealed record ProfileAuthCredentials(
     string AuthServer,
     [property: JsonIgnore] ICommand OnSelect = default!,
     [property: JsonIgnore] ICommand OnDelete = default!
-    );
+);
+    
+public sealed record AuthServerCredentials(
+    string Name, 
+    string[] Servers
+);

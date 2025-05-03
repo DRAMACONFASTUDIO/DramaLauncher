@@ -7,6 +7,7 @@ public class HubService
 {
     private readonly ConfigurationService _configurationService;
     private readonly RestService _restService;
+    private readonly DebugService _debugService;
 
     private readonly List<ServerHubInfo> _serverList = new();
 
@@ -14,10 +15,11 @@ public class HubService
     public Action? HubServerLoaded;
     public Action<Exception>? HubServerLoadingError;
 
-    public HubService(ConfigurationService configurationService, RestService restService)
+    public HubService(ConfigurationService configurationService, RestService restService, DebugService debugService)
     {
         _configurationService = configurationService;
         _restService = restService;
+        _debugService = debugService;
 
         UpdateHub();
     }
@@ -37,17 +39,29 @@ public class HubService
 
         foreach (var urlStr in _configurationService.GetConfigValue(CurrentConVar.Hub)!)
         {
-            try
+            var invoked = false;
+            Exception? exception = null;
+            foreach (var uri in urlStr)
             {
-                var servers =
-                    await _restService.GetAsync<List<ServerHubInfo>>(new Uri(urlStr), CancellationToken.None);
-                _serverList.AddRange(servers);
-                HubServerChangedEventArgs?.Invoke(new HubServerChangedEventArgs(servers, HubServerChangeAction.Add));
+                try
+                {
+                    var servers =
+                        await _restService.GetAsync<List<ServerHubInfo>>(new Uri(uri), CancellationToken.None);
+                    _serverList.AddRange(servers);
+                    HubServerChangedEventArgs?.Invoke(new HubServerChangedEventArgs(servers, HubServerChangeAction.Add));
+                    invoked = true;
+                    break;
+                }
+                catch (Exception e)
+                {
+                    _debugService.Error($"Failed to get servers for {uri}");
+                    _debugService.Error(e);
+                    exception = e;
+                }
             }
-            catch (Exception e)
-            {
-                HubServerLoadingError?.Invoke(e);
-            }
+            
+            if(exception is not null && !invoked) 
+                HubServerLoadingError?.Invoke(new Exception("No hub is available.", exception));
         }
 
         IsUpdating = false;
