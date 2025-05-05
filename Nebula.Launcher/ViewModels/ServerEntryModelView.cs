@@ -160,7 +160,6 @@ public partial class ServerEntryModelView : ViewModelBase
         MainViewModel.RequirePage<ContentBrowserViewModel>().Go(Address.ToString(), new ContentPath());
     }
 
-
     public void ToggleFavorites()
     {
         OnFavoriteToggle?.Invoke();
@@ -228,9 +227,11 @@ public partial class ServerEntryModelView : ViewModelBase
 
             Process.Exited += OnExited;
         }
-        catch (TaskCanceledException)
+        catch (TaskCanceledException e)
         {
-            PopupMessageService.Popup("Task canceled");
+            PopupMessageService.Popup("Task canceled: " + e.Message);
+            _logger.Error("Task canceled");
+            _logger.Error(e);
         }
         catch (Exception e)
         {

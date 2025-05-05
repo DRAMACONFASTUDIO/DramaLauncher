@@ -12,6 +12,7 @@ using Nebula.Launcher.ViewModels.Popup;
 using Nebula.Launcher.Views.Pages;
 using Nebula.Shared;
 using Nebula.Shared.Services;
+using Nebula.Shared.Services.Logging;
 using Nebula.Shared.Utils;
 
 namespace Nebula.Launcher.ViewModels.Pages;
@@ -37,6 +38,7 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
     private bool _isProfilesEmpty;
     [GenerateProperty] private PopupMessageService PopupMessageService { get; } = default!;
     [GenerateProperty] private ConfigurationService ConfigurationService { get; } = default!;
+    [GenerateProperty] private DebugService DebugService { get; }
     [GenerateProperty] private AuthService AuthService { get; } = default!;
     [GenerateProperty, DesignConstruct] private ViewHelperService ViewHelperService { get; } = default!;
 
@@ -44,6 +46,8 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
     public ObservableCollection<AuthServerCredentials> AuthUrls { get; } = new();
 
     [ObservableProperty] private AuthServerCredentials _authItemSelect;
+
+    private ILogger _logger;
 
     //Design think
     protected override void InitialiseInDesignMode()
@@ -57,6 +61,7 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
     //Real think
     protected override void Initialise()
     {
+        _logger = DebugService.GetLogger(this);
         ReadAuthConfig();
     }
 
@@ -121,7 +126,6 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
         }
         catch (AuthException e)
         {
-                
             switch (e.Error.Code)
             {
                 case AuthenticateDenyCode.TfaRequired:
@@ -129,9 +133,11 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
                     var p = ViewHelperService.GetViewModel<TfaViewModel>();
                     p.OnTfaEntered += OnTfaEntered;
                     PopupMessageService.Popup(p);
+                    _logger.Log("TFA required");
                     break;
                 case AuthenticateDenyCode.InvalidCredentials:
                     PopupMessageService.Popup("Invalid Credentials!");
+                    _logger.Error($"Invalid credentials");
                     break;
                 default:
                     throw;
