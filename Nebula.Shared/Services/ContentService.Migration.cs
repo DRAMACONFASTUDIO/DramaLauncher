@@ -7,12 +7,12 @@ public partial class ContentService
 {
     public bool CheckMigration(ILoadingHandler loadingHandler)
     {
-        debugService.Log("Checking migration...");
+        _logger.Log("Checking migration...");
 
         var migrationList = ContentFileApi.AllFiles.Where(f => !f.Contains("\\")).ToList();
         if(migrationList.Count == 0) return false;
         
-        debugService.Log($"Found {migrationList.Count} migration files. Starting migration...");
+        _logger.Log($"Found {migrationList.Count} migration files. Starting migration...");
         Task.Run(() => DoMigration(loadingHandler, migrationList));
         return true;
     }

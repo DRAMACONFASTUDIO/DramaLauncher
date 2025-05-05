@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using Nebula.Launcher.ViewModels.Pages;
 using Nebula.Launcher.Views.Pages;
 using Nebula.Shared.Services;
+using Nebula.Shared.Services.Logging;
 using Nebula.Shared.Utils;
 using AddFavoriteView = Nebula.Launcher.Views.Popup.AddFavoriteView;
 
@@ -12,12 +13,15 @@ namespace Nebula.Launcher.ViewModels.Popup;
 [ConstructGenerator]
 public partial class AddFavoriteViewModel : PopupViewModelBase
 {
+    private ILogger _logger;
+    
     protected override void InitialiseInDesignMode()
     {
     }
 
     protected override void Initialise()
     {
+        _logger = DebugService.GetLogger(this);
     }
 
     [GenerateProperty] 
@@ -41,7 +45,7 @@ public partial class AddFavoriteViewModel : PopupViewModelBase
         catch (Exception e)
         {
             Error = e.Message;
-            DebugService.Error(e);
+            _logger.Error(e);
         }
     }
 }

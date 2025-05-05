@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 using Nebula.Shared.FileApis;
+using Nebula.Shared.Services.Logging;
 using Robust.LoaderApi;
 using SharpZstd.Interop;
 
@@ -12,19 +13,19 @@ namespace Nebula.Shared.Services;
 public class AssemblyService
 {
     private readonly List<Assembly> _assemblies = new();
-    private readonly DebugService _debugService;
+    private readonly ILogger _logger;
 
     private readonly HashSet<string> _resolvingAssemblies = new();
 
     public AssemblyService(DebugService debugService)
     {
-        _debugService = debugService;
-
+        _logger = debugService.GetLogger(this);
+        
         ZstdImportResolver.ResolveLibrary += (name, assembly1, path) =>
         {
             if (name.Equals("SharpZstd.Native"))
             {
-                _debugService.Debug("RESOLVING SHARPZSTD THINK: " + name + " " + path);
+                _logger.Debug("RESOLVING SHARPZSTD THINK: " + name + " " + path);
                 GetRuntimeInfo(out var platform, out var architecture, out var extension);
                 var fileName = GetDllName(platform, architecture, extension);
 
@@ -77,7 +78,7 @@ public class AssemblyService
         }
 
         assembly = AssemblyLoadContext.Default.LoadFromStream(asm, pdb);
-        _debugService.Log("LOADED ASSEMBLY " + name);
+        _logger.Log("LOADED ASSEMBLY " + name);
 
 
         if (!_assemblies.Contains(assembly)) _assemblies.Add(assembly);
@@ -104,14 +105,14 @@ public class AssemblyService
     {
         if (_resolvingAssemblies.Contains(name.FullName))
         {
-            _debugService.Debug($"Already resolving {name.Name}, skipping.");
+            _logger.Debug($"Already resolving {name.Name}, skipping.");
             return null; // Prevent recursive resolution
         }
 
         try
         {
             _resolvingAssemblies.Add(name.FullName);
-            _debugService.Debug($"Resolving assembly from FileAPI: {name.Name}");
+            _logger.Debug($"Resolving assembly from FileAPI: {name.Name}");
             return TryOpenAssembly(name.Name!, assemblyApi, out var assembly) ? assembly : null;
         }
         finally
@@ -125,12 +126,12 @@ public class AssemblyService
         var ourDir = Path.GetDirectoryName(typeof(AssemblyApi).Assembly.Location);
         var a = Path.Combine(ourDir!, unmanaged);
 
-        _debugService.Debug($"Loading dll lib: {a}");
+        _logger.Debug($"Loading dll lib: {a}");
 
         if (NativeLibrary.TryLoad(a, out var handle))
             return handle;
 
-        _debugService.Error("Loading dll error! Not found");
+        _logger.Error("Loading dll error! Not found");
 
         return IntPtr.Zero;
     }

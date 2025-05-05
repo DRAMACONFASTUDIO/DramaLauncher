@@ -1,4 +1,5 @@
 ﻿using Nebula.Shared.Models;
+using Nebula.Shared.Services.Logging;
 using Robust.LoaderApi;
 
 namespace Nebula.Shared.Services;
@@ -11,10 +12,12 @@ public sealed class RunnerService(
     EngineService engineService,
     AssemblyService assemblyService)
 {
+    private ILogger _logger = debugService.GetLogger("RunnerService");
+    
     public async Task PrepareRun(RobustBuildInfo buildInfo, ILoadingHandler loadingHandler,
         CancellationToken cancellationToken)
     {
-        debugService.Log("Prepare Content!");
+        _logger.Log("Prepare Content!");
 
         var engine = await engineService.EnsureEngine(buildInfo.BuildInfo.Build.EngineVersion);
 
@@ -29,7 +32,7 @@ public sealed class RunnerService(
         ILoadingHandler loadingHandler,
         CancellationToken cancellationToken)
     {
-        debugService.Log("Start Content!");
+        _logger.Log("Start Content!");
 
         var engine = await engineService.EnsureEngine(buildInfo.BuildInfo.Build.EngineVersion);
 

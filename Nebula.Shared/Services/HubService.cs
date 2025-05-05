@@ -1,4 +1,5 @@
 using Nebula.Shared.Models;
+using Nebula.Shared.Services.Logging;
 
 namespace Nebula.Shared.Services;
 
@@ -7,7 +8,7 @@ public class HubService
 {
     private readonly ConfigurationService _configurationService;
     private readonly RestService _restService;
-    private readonly DebugService _debugService;
+    private readonly ILogger _logger;
 
     private readonly List<ServerHubInfo> _serverList = new();
 
@@ -19,7 +20,7 @@ public class HubService
     {
         _configurationService = configurationService;
         _restService = restService;
-        _debugService = debugService;
+        _logger = debugService.GetLogger(this);
 
         UpdateHub();
     }
@@ -54,8 +55,8 @@ public class HubService
                 }
                 catch (Exception e)
                 {
-                    _debugService.Error($"Failed to get servers for {uri}");
-                    _debugService.Error(e);
+                    _logger.Error($"Failed to get servers for {uri}");
+                    _logger.Error(e);
                     exception = e;
                 }
             }

@@ -38,7 +38,7 @@ public partial class ContentService
 
         items = allItems.Where(a=> !hashApi.Has(a)).ToList();
 
-        debugService.Log("Download Count:" + items.Count);
+        _logger.Log("Download Count:" + items.Count);
         await Download(downloadUri, items, hashApi, loadingHandler, cancellationToken);
 
         return hashApi;
@@ -47,15 +47,15 @@ public partial class ContentService
     public async Task<HashApi> EnsureItems(RobustManifestInfo info, ILoadingHandler loadingHandler,
         CancellationToken cancellationToken)
     {
-        debugService.Log("Getting manifest: " + info.Hash);
+        _logger.Log("Getting manifest: " + info.Hash);
 
         if (ManifestFileApi.TryOpen(info.Hash, out var stream))
         {
-            debugService.Log("Loading manifest from: " + info.Hash);
+            _logger.Log("Loading manifest from: " + info.Hash);
             return await EnsureItems(new ManifestReader(stream), info.DownloadUri, loadingHandler, cancellationToken);
         }
 
-        debugService.Log("Fetching manifest from: " + info.ManifestUri);
+        _logger.Log("Fetching manifest from: " + info.ManifestUri);
 
         var response = await _http.GetAsync(info.ManifestUri, cancellationToken);
         if (!response.IsSuccessStatusCode) throw new Exception();
@@ -69,7 +69,7 @@ public partial class ContentService
 
     public void Unpack(HashApi hashApi, IWriteFileApi otherApi, ILoadingHandler loadingHandler)
     {
-        debugService.Log("Unpack manifest files");
+        _logger.Log("Unpack manifest files");
         var items = hashApi.Manifest.Values.ToList();
         loadingHandler.AppendJob(items.Count);
         
@@ -82,13 +82,13 @@ public partial class ContentService
         {
             if (hashApi.TryOpen(item, out var stream))
             {
-                debugService.Log($"Unpack {item.Hash} to: {item.Path}");
+                _logger.Log($"Unpack {item.Hash} to: {item.Path}");
                 otherApi.Save(item.Hash, stream);
                 stream.Close();
             }
             else
             {
-                debugService.Error("OH FUCK!! " + item.Path);
+                _logger.Error("OH FUCK!! " + item.Path);
             }
 
             loadingHandler.AppendResolvedJob();
@@ -105,13 +105,13 @@ public partial class ContentService
     {
         if (toDownload.Count == 0 || cancellationToken.IsCancellationRequested)
         {
-            debugService.Log("Nothing to download! Fuck this!");
+            _logger.Log("Nothing to download! Fuck this!");
             return;
         }
 
         var downloadJobWatch = loadingHandler.GetQueryJob();
 
-        debugService.Log("Downloading from: " + contentCdn);
+        _logger.Log("Downloading from: " + contentCdn);
 
         var requestBody = new byte[toDownload.Count * 4];
         var reqI = 0;
@@ -135,7 +135,7 @@ public partial class ContentService
 
         if (cancellationToken.IsCancellationRequested)
         {
-            debugService.Log("Downloading is cancelled!");
+            _logger.Log("Downloading is cancelled!");
             return;
         }
 
@@ -185,7 +185,7 @@ public partial class ContentService
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    debugService.Log("Downloading is cancelled!");
+                    _logger.Log("Downloading is cancelled!");
                     decompressContext?.Dispose();
                     compressContext?.Dispose();
                     return;
@@ -230,7 +230,7 @@ public partial class ContentService
                 using var fileStream = new MemoryStream(data.ToArray());
                 hashApi.Save(item, fileStream);
 
-                debugService.Log("file saved:" + item.Path);
+                _logger.Log("file saved:" + item.Path);
                 loadingHandler.AppendResolvedJob();
                 i += 1;
             }

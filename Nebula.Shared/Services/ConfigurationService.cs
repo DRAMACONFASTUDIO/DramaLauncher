@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Nebula.Shared.FileApis.Interfaces;
+using Nebula.Shared.Services.Logging;
 using Robust.LoaderApi;
 
 namespace Nebula.Shared.Services;
@@ -32,14 +33,12 @@ public static class ConVarBuilder
 [ServiceRegister]
 public class ConfigurationService
 {
-    private readonly DebugService _debugService;
-    
     public IReadWriteFileApi ConfigurationApi { get; init; }
+    private readonly ILogger _logger;
 
     public ConfigurationService(FileService fileService, DebugService debugService)
     {
-        _debugService = debugService ?? throw new ArgumentNullException(nameof(debugService));
-        
+        _logger = debugService.GetLogger(this);
         ConfigurationApi = fileService.CreateFileApi("config");
     }
 
@@ -56,17 +55,17 @@ public class ConfigurationService
                     var obj = JsonSerializer.Deserialize<T>(stream);
                     if (obj != null)
                     {
-                        _debugService.Log($"Successfully loaded config: {conVar.Name}");
+                        _logger.Log($"Successfully loaded config: {conVar.Name}");
                         return obj;
                     }
                 }
         }
         catch (Exception e)
         {
-            _debugService.Error($"Error loading config for {conVar.Name}: {e.Message}");
+            _logger.Error($"Error loading config for {conVar.Name}: {e.Message}");
         }
 
-        _debugService.Log($"Using default value for config: {conVar.Name}");
+        _logger.Log($"Using default value for config: {conVar.Name}");
         return conVar.DefaultValue;
     }
     
@@ -83,7 +82,7 @@ public class ConfigurationService
                     var obj = JsonSerializer.Deserialize<T>(stream);
                     if (obj != null)
                     {
-                        _debugService.Log($"Successfully loaded config: {conVar.Name}");
+                        _logger.Log($"Successfully loaded config: {conVar.Name}");
                         value = obj;
                         return true;
                     }
@@ -91,10 +90,10 @@ public class ConfigurationService
         }
         catch (Exception e)
         {
-            _debugService.Error($"Error loading config for {conVar.Name}: {e.Message}");
+            _logger.Error($"Error loading config for {conVar.Name}: {e.Message}");
         }
 
-        _debugService.Log($"Using default value for config: {conVar.Name}");
+        _logger.Log($"Using default value for config: {conVar.Name}");
         return false;
     }
 
@@ -105,14 +104,14 @@ public class ConfigurationService
 
         if (!conVar.Type.IsInstanceOfType(value))
         {
-            _debugService.Error(
+            _logger.Error(
                 $"Type mismatch for config {conVar.Name}. Expected {conVar.Type}, got {value.GetType()}.");
             return;
         }
 
         try
         {
-            _debugService.Log($"Saving config: {conVar.Name}");
+            _logger.Log($"Saving config: {conVar.Name}");
             var serializedData = JsonSerializer.Serialize(value);
 
             using var stream = new MemoryStream();
@@ -125,7 +124,7 @@ public class ConfigurationService
         }
         catch (Exception e)
         {
-            _debugService.Error($"Error saving config for {conVar.Name}: {e.Message}");
+            _logger.Error($"Error saving config for {conVar.Name}: {e.Message}");
         }
     }
 

@@ -10,6 +10,7 @@ using Nebula.Launcher.ViewModels.Popup;
 using Nebula.Launcher.Views;
 using Nebula.Shared.Models;
 using Nebula.Shared.Services;
+using Nebula.Shared.Services.Logging;
 using Nebula.Shared.Utils;
 
 namespace Nebula.Launcher.ViewModels;
@@ -43,6 +44,8 @@ public partial class MainViewModel : ViewModelBase
     [GenerateProperty, DesignConstruct] private ViewHelperService ViewHelperService { get; } = default!;
     [GenerateProperty] private FileService FileService { get; } = default!;
 
+    private ILogger _logger;
+
     public ObservableCollection<ListItemTemplate> Items { get; private set; }
 
     protected override void InitialiseInDesignMode()
@@ -53,6 +56,7 @@ public partial class MainViewModel : ViewModelBase
 
     protected override void Initialise()
     {
+        _logger = DebugService.GetLogger(this);
         InitialiseInDesignMode();
 
         PopupMessageService.OnPopupRequired += OnPopupRequired;
@@ -160,7 +164,7 @@ public partial class MainViewModel : ViewModelBase
                 break;
             case Exception error:
                 var err = ViewHelperService.GetViewModel<ExceptionListViewModel>();
-                DebugService.Error(error);
+                _logger.Error(error);
                 err.AppendError(error);
                 PopupMessage(err);
                 break;

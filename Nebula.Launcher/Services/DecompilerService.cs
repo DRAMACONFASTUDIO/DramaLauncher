@@ -13,6 +13,7 @@ using Nebula.Shared.FileApis;
 using Nebula.Shared.FileApis.Interfaces;
 using Nebula.Shared.Models;
 using Nebula.Shared.Services;
+using Nebula.Shared.Services.Logging;
 
 namespace Nebula.Launcher.Services;
 
@@ -25,10 +26,11 @@ public sealed partial class DecompilerService
     [GenerateProperty] private ContentService ContentService {get;}
     [GenerateProperty] private FileService FileService {get;}
     [GenerateProperty] private CancellationService CancellationService {get;}
-    [GenerateProperty] private EngineService engineService {get;}
-    [GenerateProperty] private DebugService debugService {get;}
+    [GenerateProperty] private EngineService EngineService {get;}
+    [GenerateProperty] private DebugService DebugService {get;}
 
     private HttpClient _httpClient = new HttpClient();
+    private ILogger _logger;
 
     private static string fullPath = Path.Join(FileService.RootPath,"ILSpy");
     private static string executePath = Path.Join(fullPath, "ILSpy.exe");
@@ -50,7 +52,7 @@ public sealed partial class DecompilerService
         
         var buildInfo =
             await ContentService.GetBuildInfo(url, CancellationService.Token);
-        var engine = await engineService.EnsureEngine(buildInfo.BuildInfo.Build.EngineVersion);
+        var engine = await EngineService.EnsureEngine(buildInfo.BuildInfo.Build.EngineVersion);
 
         if (engine is null)
             throw new Exception("Engine version not found: " + buildInfo.BuildInfo.Build.EngineVersion);
@@ -73,12 +75,15 @@ public sealed partial class DecompilerService
         
         ((IDisposable)loadingHandler).Dispose();
         
-        debugService.Log("File extracted. " + tmpDir);
+        _logger.Log("File extracted. " + tmpDir);
         
         OpenDecompiler(string.Join(' ', myTempDir.AllFiles.Select(f=>Path.Join(tmpDir, f))) + " --newinstance");
     }
 
-    private void Initialise(){}
+    private void Initialise()
+    {
+        _logger = DebugService.GetLogger(this);
+    }
     private void InitialiseInDesignMode(){}
 
     private async Task EnsureILSpy(){

@@ -15,6 +15,7 @@ using Nebula.Launcher.Views.Pages;
 using Nebula.Shared.FileApis;
 using Nebula.Shared.Models;
 using Nebula.Shared.Services;
+using Nebula.Shared.Services.Logging;
 using Nebula.Shared.Utils;
 
 namespace Nebula.Launcher.ViewModels.Pages;
@@ -31,6 +32,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
     [ObservableProperty] private string _searchText = "";
 
     private ContentEntry? _selectedEntry;
+    private ILogger _logger;
     [ObservableProperty] private string _serverText = "";
     [ObservableProperty] private ContentViewBase? _contentView;
     public bool IsCustomContenView => ContentView != null;
@@ -69,7 +71,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
                 var myTempFile = Path.Combine(Path.GetTempPath(), "tempie" + ext);
 
                 if(TryGetContentViewer(ext, out var contentViewBase)){
-                    DebugService.Debug($"Opening custom context:{item.Value.Path}");
+                    _logger.Debug($"Opening custom context:{item.Value.Path}");
                     contentViewBase.InitialiseWithData(value.GetPath(), stream, value);
                     stream.Dispose();
                     ContentView = contentViewBase;
@@ -88,7 +90,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
                 };
 
                 
-                DebugService.Log("Opening " + myTempFile);
+                _logger.Log("Opening " + myTempFile);
                 Process.Start(startInfo);
 
                 return;
@@ -122,6 +124,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
 
     protected override void Initialise()
     {
+        _logger = DebugService.GetLogger(this);
         FillRoot(HubService.ServerList);
 
         HubService.HubServerChangedEventArgs += HubServerChangedEventArgs;
@@ -173,7 +176,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
 
         if (ServerText != SelectedEntry?.ServerName) SelectedEntry = await CreateEntry(ServerText);
 
-        DebugService.Debug("Going to:" + path.Path);
+        _logger.Debug("Going to:" + path.Path);
 
         var oriPath = path.Clone();
         try
@@ -214,7 +217,7 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModel
             FileName = "explorer.exe",
             Arguments = tmpDir,
         };
-        DebugService.Log("Opening " + tmpDir);
+        _logger.Log("Opening " + tmpDir);
         Process.Start(startInfo);
     }
 

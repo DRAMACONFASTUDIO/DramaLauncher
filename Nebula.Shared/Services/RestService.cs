@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Nebula.Shared.Services.Logging;
 using Nebula.Shared.Utils;
 
 namespace Nebula.Shared.Services;
@@ -10,7 +11,7 @@ namespace Nebula.Shared.Services;
 public class RestService
 {
     private readonly HttpClient _client = new();
-    private readonly DebugService _debug;
+    private readonly ILogger _logger;
 
     private readonly JsonSerializerOptions _serializerOptions = new()
     {
@@ -20,7 +21,7 @@ public class RestService
 
     public RestService(DebugService debug)
     {
-        _debug = debug;
+        _logger = debug.GetLogger(this);
     }
 
     public async Task<T> GetAsync<T>(Uri uri, CancellationToken cancellationToken) where T : notnull
@@ -37,7 +38,7 @@ public class RestService
         }
         catch (Exception e)
         {
-            _debug.Error(e);
+            _logger.Error(e);
             return defaultValue;
         }
     }

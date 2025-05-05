@@ -7,6 +7,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
+using Nebula.Launcher.MessageBox;
 using Nebula.Launcher.ViewModels.ContentView;
 using Nebula.Launcher.Views;
 using Nebula.Shared;
@@ -22,6 +23,25 @@ public class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        if (!Program.IsNewInstance)
+        {
+            IMessageContainerProvider? provider = null;
+            switch (ApplicationLifetime)
+            {
+                case IClassicDesktopStyleApplicationLifetime desktop:
+                    DisableAvaloniaDataAnnotationValidation();
+                    desktop.MainWindow = new MessageWindow(out provider);
+                    break;
+                case ISingleViewApplicationLifetime singleViewPlatform:
+                    singleViewPlatform.MainView = new MessageView(out provider);
+                    break;
+            }
+            
+            provider?.ShowMessage("Launcher is already running.","hey shithead!");
+            
+            return;
+        }
+        
         if (Design.IsDesignMode)
         {
             switch (ApplicationLifetime)

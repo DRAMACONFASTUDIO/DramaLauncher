@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Nebula.Shared.Models.Auth;
+using Nebula.Shared.Services.Logging;
 using Nebula.Shared.Utils;
 
 namespace Nebula.Shared.Services;
@@ -15,6 +16,7 @@ public class AuthService(
 {
     private readonly HttpClient _httpClient = new();
     public CurrentAuthInfo? SelectedAuth { get; private set; }
+    private readonly ILogger _logger = debugService.GetLogger("AuthService");
 
     public async Task Auth(AuthLoginPassword authLoginPassword, string? code = null)
     {
@@ -22,7 +24,7 @@ public class AuthService(
         var login = authLoginPassword.Login;
         var password = authLoginPassword.Password;
 
-        debugService.Debug($"Auth to {authServer}api/auth/authenticate {login}");
+        _logger.Debug($"Auth to {authServer}api/auth/authenticate {login}");
 
         var authUrl = new Uri($"{authServer}api/auth/authenticate");
 

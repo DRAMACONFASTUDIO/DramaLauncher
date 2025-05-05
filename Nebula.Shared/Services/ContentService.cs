@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using Nebula.Shared.Models;
+using Nebula.Shared.Services.Logging;
 
 namespace Nebula.Shared.Services;
 
@@ -11,6 +12,7 @@ public partial class ContentService(
     FileService fileService)
 {
     private readonly HttpClient _http = new();
+    private readonly ILogger _logger = debugService.GetLogger("ContentService");
 
     public async Task<RobustBuildInfo> GetBuildInfo(RobustUrl url, CancellationToken cancellationToken)
     {

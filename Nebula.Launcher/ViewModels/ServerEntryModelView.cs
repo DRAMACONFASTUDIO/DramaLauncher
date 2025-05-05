@@ -16,6 +16,7 @@ using Nebula.Launcher.ViewModels.Popup;
 using Nebula.Launcher.Views;
 using Nebula.Shared.Models;
 using Nebula.Shared.Services;
+using Nebula.Shared.Services.Logging;
 using Nebula.Shared.Utils;
 
 namespace Nebula.Launcher.ViewModels;
@@ -31,6 +32,8 @@ public partial class ServerEntryModelView : ViewModelBase
 
     private string _lastError = "";
     private Process? _p;
+    private ILogger _logger;
+    private ILogger? _processLogger;
 
     private ServerInfo? _serverInfo;
     [ObservableProperty] private bool _tagDataVisible;
@@ -89,7 +92,7 @@ public partial class ServerEntryModelView : ViewModelBase
             catch (Exception e)
             {
                 Description = e.Message;
-                DebugService.Error(e);
+                _logger.Error(e);
             }
 
         return _serverInfo;
@@ -109,6 +112,7 @@ public partial class ServerEntryModelView : ViewModelBase
 
     protected override void Initialise()
     {
+        _logger = DebugService.GetLogger(this);
         CurrLog = ViewHelperService.GetViewModel<LogPopupModelView>();
     }
 
@@ -144,7 +148,7 @@ public partial class ServerEntryModelView : ViewModelBase
         }
         catch (Exception e)
         {
-            DebugService.Error(e);
+            _logger.Error(e);
             Status = new ServerStatus("ErrorLand", $"ERROR: {e.Message}", [], "", -1, -1, -1, false,
                 DateTime.Now,
                 -1);
@@ -211,6 +215,8 @@ public partial class ServerEntryModelView : ViewModelBase
             }
 
             if (Process is null) return;
+            
+            _processLogger = DebugService.GetLogger(buildInfo.BuildInfo.Build.Hash);
 
             Process.EnableRaisingEvents = true;
 
@@ -240,11 +246,13 @@ public partial class ServerEntryModelView : ViewModelBase
         Process.ErrorDataReceived -= OnErrorDataReceived;
         Process.Exited -= OnExited;
 
-        DebugService.Log("PROCESS EXIT WITH CODE " + Process.ExitCode);
+        _processLogger?.Log("PROCESS EXIT WITH CODE " + Process.ExitCode);
 
         if (Process.ExitCode != 0)
             PopupMessageService.Popup($"Game exit with code {Process.ExitCode}.\nReason: {_lastError}");
 
+        _processLogger?.Dispose();
+        
         Process.Dispose();
         Process = null;
     }
@@ -254,7 +262,7 @@ public partial class ServerEntryModelView : ViewModelBase
         if (e.Data != null)
         {
             _lastError = e.Data;
-            DebugService.Error(e.Data);
+            _processLogger?.Error(e.Data);
             CurrLog.Append(e.Data);
         }
     }
@@ -263,7 +271,7 @@ public partial class ServerEntryModelView : ViewModelBase
     {
         if (e.Data != null)
         {
-            DebugService.Log(e.Data);
+            _processLogger?.Log(e.Data);
             CurrLog.Append(e.Data);
         }
     }
