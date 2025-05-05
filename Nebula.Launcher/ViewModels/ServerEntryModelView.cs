@@ -216,7 +216,7 @@ public partial class ServerEntryModelView : ViewModelBase
 
             if (Process is null) return;
             
-            _processLogger = DebugService.GetLogger(buildInfo.BuildInfo.Build.Hash);
+            _processLogger = DebugService.GetLogger($"PROCESS_{Process.Id}");
 
             Process.EnableRaisingEvents = true;
 

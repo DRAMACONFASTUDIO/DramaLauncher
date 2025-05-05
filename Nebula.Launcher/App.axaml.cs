@@ -11,6 +11,7 @@ using Nebula.Launcher.MessageBox;
 using Nebula.Launcher.ViewModels.ContentView;
 using Nebula.Launcher.Views;
 using Nebula.Shared;
+using Nebula.Shared.Services;
 
 namespace Nebula.Launcher;
 
@@ -57,6 +58,7 @@ public class App : Application
         }
         else
         {
+            DebugService.DoFileLog = true;
             var services = new ServiceCollection();
             services.AddAvaloniaServices();
             services.AddServices();

@@ -8,11 +8,17 @@ namespace Nebula.Shared.Services;
 [ServiceRegister]
 public class DebugService : IDisposable
 {
+    public static bool DoFileLog;
     private ServiceLogger Root {get; set;}
+
+    private readonly string _path =
+        Path.Combine(FileService.RootPath, "log", Assembly.GetEntryAssembly()?.GetName().Name ?? "App");
     
     public DebugService()
     {
-        Root = new ServiceLogger("Root");
+        ClearLog();
+        Root = new ServiceLogger("Root",_path);
+        Root.GetLogger("DebugService").Log("Initializing debug service " + (DoFileLog ? "with file logging" : "without file logging"));
     }
 
     public ILogger GetLogger(string loggerName)
@@ -29,6 +35,22 @@ public class DebugService : IDisposable
     {
         Root.Dispose();
     }
+
+    private void ClearLog()
+    {
+        if(!Directory.Exists(_path)) 
+            return;
+        var di = new DirectoryInfo(_path);
+
+        foreach (var file in di.GetFiles())
+        {
+            file.Delete(); 
+        }
+        foreach (var dir in di.GetDirectories())
+        {
+            dir.Delete(true); 
+        }
+    }
 }
 
 public enum LoggerCategory
@@ -40,12 +62,15 @@ public enum LoggerCategory
 
 internal class ServiceLogger : ILogger
 {
+    private readonly string _directory;
     public ServiceLogger? Root { get; private set; }
-    public ServiceLogger(string category)
+    public ServiceLogger(string category, string directory)
     {
+        _directory = directory;
         Category = category;
 
-        var directory = Path.Combine(FileService.RootPath,"log", Assembly.GetEntryAssembly()?.GetName().Name ?? "App");
+        if (!DebugService.DoFileLog) return;
+        
         if(!Directory.Exists(directory)) Directory.CreateDirectory(directory);
         
         _fileStream = File.Open(Path.Combine(directory,$"{Category}.log"), FileMode.Create, FileAccess.Write, FileShare.Read);
@@ -64,7 +89,7 @@ internal class ServiceLogger : ILogger
         if (Childs.TryGetValue(category, out var logger))
             return logger;
         
-        logger = new ServiceLogger(category);
+        logger = new ServiceLogger(category, _directory);
         logger.Root = this;
         Childs.Add(category, logger);
         return logger;
@@ -72,8 +97,10 @@ internal class ServiceLogger : ILogger
     
     public void Log(LoggerCategory loggerCategory, string message)
     {
-        var output =
-            $"[{DateTime.Now.ToUniversalTime():yyyy-MM-dd HH:mm:ss}][{Enum.GetName(loggerCategory)}][{Category}]: {message}";
+        var output = DebugService.DoFileLog 
+            ? $"[{DateTime.Now.ToUniversalTime():yyyy-MM-dd HH:mm:ss}][{Enum.GetName(loggerCategory)}][{Category}]: {message}"
+            : message;
+        
         Console.WriteLine(output);
         
         LogToFile(output);
@@ -81,6 +108,7 @@ internal class ServiceLogger : ILogger
 
     private void LogToFile(string output)
     {
+        if(!DebugService.DoFileLog) return;
         Root?.LogToFile(output);
         _streamWriter.WriteLine(output);
         _streamWriter.Flush();
@@ -88,8 +116,10 @@ internal class ServiceLogger : ILogger
 
     public void Dispose()
     {
-        _fileStream.Dispose();
+        if (!DebugService.DoFileLog) return;
+        
         _streamWriter.Dispose();
+        _fileStream.Dispose();
         foreach (var (_, child) in Childs)
         {
             child.Dispose();
