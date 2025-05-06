@@ -19,7 +19,7 @@ public partial class MainWindow : Window
     
     private readonly HttpClient _httpClient = new HttpClient();
     public readonly FileApi FileApi = new FileApi(Path.Join(RootPath,"app"));
-    
+    private string LogStr = "";
     public MainWindow()
     {
         InitializeComponent();
@@ -74,12 +74,28 @@ public partial class MainWindow : Window
                 StandardOutputEncoding = Encoding.UTF8
             });
         }
+        catch(HttpRequestException e){
+            LogError(e);
+            Log("Проблемы с интернет-соединением...");
+            var logPath = Path.Join(RootPath,"updateResloverError.txt");
+            File.WriteAllText(logPath, LogStr);
+            Process.Start(new ProcessStartInfo(){
+                FileName = "notepad",
+                Arguments = logPath
+            });
+        }
         catch (Exception e)
         {
-            Log("Error! " + e.Message);
+            LogError(e);
+            var logPath = Path.Join(RootPath,"updateResloverError.txt");
+            File.WriteAllText(logPath, LogStr);
+            Process.Start(new ProcessStartInfo(){
+                FileName = "notepad",
+                Arguments = logPath
+            });
         }
         
-        Thread.Sleep(2000);
+        Thread.Sleep(4000);
         
         Environment.Exit(0);
     }
@@ -121,16 +137,26 @@ public partial class MainWindow : Window
 
         return new ManifestEnsureInfo(toDownload, toDelete, filesExist);
     }
-
-    private void Log(string message, int percentage = 0)
+    private void LogError(Exception e){
+        Log($"{e.GetType().Name}: "+ e.Message);
+        Log(e.StackTrace);
+        if(e.InnerException != null) 
+            LogError(e.InnerException);
+    }
+    private void Log(string? message, int percentage = 0)
     {
+        if(message is null) return;
+
         ProgressLabel.Content = message;
         if (percentage == 0)
             PercentLabel.Content = "";
         else
             PercentLabel.Content = percentage + "%";
         
-        Console.WriteLine(message);
+        var messageOut = $"[{DateTime.Now.ToUniversalTime():yyyy-MM-dd HH:mm:ss}]: {message} {PercentLabel.Content}";
+        Console.WriteLine(messageOut);
+        LogStr += messageOut + "\n";
+
     }
 
     private void Save(HashSet<LauncherManifestEntry> entries)
