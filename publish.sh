@@ -1,3 +1,4 @@
+#!/bin/sh
 cd "$(dirname "$0")"
 
 dotnet publish -c Release -r win-x64 -o ./publish -p:IncludeNativeLibrariesForSelfExtract=true Nebula.UpdateResolver
