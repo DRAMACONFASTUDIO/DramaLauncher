@@ -59,6 +59,13 @@
     </Target>
 
     <ItemGroup>
+        <None Remove="Version.txt" />
+        <EmbeddedResource Include="Version.txt">
+            <LogicalName>Nebula.Launcher.Version.txt</LogicalName>
+        </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\Nebula.Shared\Nebula.Shared.csproj"/>
         <ProjectReference Include="..\Nebula.SourceGenerators\Nebula.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>

@@ -87,7 +87,7 @@ public static class ConfigurationStandalone
         }
         catch (Exception e)
         {
-            
+            Console.WriteLine(e.Message);
         }
     }
 

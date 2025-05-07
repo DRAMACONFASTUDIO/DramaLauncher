@@ -1,9 +1,9 @@
 name: Publish launcher manifest and files
 
 on:
-  workflow_dispatch:
-  # schedule:
-  # - cron: '0 10 * * *'
+  push:
+    tags:
+    - 'v*'
 
 jobs:
   build:
@@ -20,6 +20,8 @@ jobs:
           dotnet-version: 9.0.x
       - name: Install dependencies
         run: dotnet restore
+      - name: Set version
+        run: echo "${{ github.ref }}" > ./Nebula.Launcher/Version.txt
       - name: Build whole project
         run: dotnet build --configuration Release
       - name: Package launcher files

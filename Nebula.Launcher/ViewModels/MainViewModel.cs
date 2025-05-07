@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -29,6 +30,7 @@ public partial class MainViewModel : ViewModelBase
 
     private readonly List<PopupViewModelBase> _viewQueue = new();
 
+    [ObservableProperty] private string _versionInfo = "dev";
     [ObservableProperty] private ViewModelBase _currentPage;
     [ObservableProperty] private PopupViewModelBase? _currentPopup;
     [ObservableProperty] private string _currentTitle = "Default";
@@ -57,6 +59,13 @@ public partial class MainViewModel : ViewModelBase
     protected override void Initialise()
     {
         _logger = DebugService.GetLogger(this);
+
+        using var stream = typeof(MainViewModel).Assembly
+                .GetManifestResourceStream("Nebula.Launcher.Version.txt")!;
+        using var streamReader = new StreamReader(stream);
+
+        VersionInfo = streamReader.ReadLine() ?? "dev";
+
         InitialiseInDesignMode();
 
         PopupMessageService.OnPopupRequired += OnPopupRequired;
@@ -145,7 +154,7 @@ public partial class MainViewModel : ViewModelBase
 
     public void OpenLink()
     {
-        Helper.OpenBrowser("https://cinka.ru/nebula-launcher/");
+        Helper.OpenBrowser("https://durenko.tatar/nebula");
     }
 
     private void OnPopupRequired(object viewModelBase)

@@ -117,10 +117,10 @@
                                 Foreground="#777777"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Center">
-                                https://cinka.ru/nebula-launcher/
+                                https://durenko.tatar/nebula/
                             </TextBlock>
                         </Button>
-                        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center">v0.08-a</TextBlock>
+                        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Text="{Binding VersionInfo}"/>
                     </Panel>
                 </Label>
             </Border>
