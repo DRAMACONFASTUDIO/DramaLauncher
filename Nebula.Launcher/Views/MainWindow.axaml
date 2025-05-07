@@ -4,7 +4,7 @@
     ExtendClientAreaTitleBarHeightHint="-1"
     ExtendClientAreaToDecorationsHint="True"
     Height="500"
-    Icon="/Assets/avalonia-logo.ico"
+    Icon="/Assets/nebula.ico"
     MinHeight="500"
     MinWidth="800"
     SystemDecorations="BorderOnly"
