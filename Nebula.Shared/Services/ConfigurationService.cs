@@ -33,13 +33,21 @@ public static class ConVarBuilder
 [ServiceRegister]
 public class ConfigurationService
 {
+    public delegate void OnConfigurationChangedDelegate<in T>(T value);
+    
     public IReadWriteFileApi ConfigurationApi { get; init; }
+    
     private readonly ILogger _logger;
 
     public ConfigurationService(FileService fileService, DebugService debugService)
     {
         _logger = debugService.GetLogger(this);
         ConfigurationApi = fileService.CreateFileApi("config");
+    }
+
+    private void SubscribeVarChanged<T>(ConVar<T> convar, OnConfigurationChangedDelegate<T> @delegate)
+    {
+        
     }
 
     

@@ -25,7 +25,8 @@ public partial class MainViewModel : ViewModelBase
         new ListItemTemplate(typeof(AccountInfoViewModel), "user", "Account", null),
         new ListItemTemplate(typeof(ServerListViewModel), "file", "Servers", false),
         new ListItemTemplate(typeof(ServerListViewModel), "star", "Favorites", true),
-        new ListItemTemplate(typeof(ContentBrowserViewModel), "folder", "Content", null)
+        new ListItemTemplate(typeof(ContentBrowserViewModel), "folder", "Content", null),
+        new ListItemTemplate(typeof(ConfigurationViewModel), "settings", "Settings", null)
     ];
 
     private readonly List<PopupViewModelBase> _viewQueue = new();
