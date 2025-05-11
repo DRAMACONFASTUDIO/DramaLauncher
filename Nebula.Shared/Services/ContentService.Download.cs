@@ -83,7 +83,7 @@ public partial class ContentService
             if (hashApi.TryOpen(item, out var stream))
             {
                 _logger.Log($"Unpack {item.Hash} to: {item.Path}");
-                otherApi.Save(item.Hash, stream);
+                otherApi.Save(item.Path, stream);
                 stream.Close();
             }
             else
