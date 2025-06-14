@@ -1,12 +1,12 @@
 using Avalonia.Controls;
-using ServerListViewModel = Nebula.Launcher.ViewModels.Pages.ServerListViewModel;
+using Nebula.Launcher.ViewModels.Pages;
 
 namespace Nebula.Launcher.Views.Pages;
 
-public partial class ServerListView : UserControl
+public partial class ServerOverviewView : UserControl
 {
     // This constructor is used when the view is created by the XAML Previewer
-    public ServerListView()
+    public ServerOverviewView()
     {
         InitializeComponent();
         
@@ -21,7 +21,7 @@ public partial class ServerListView : UserControl
     }
 
     // This constructor is used when the view is created via dependency injection
-    public ServerListView(ServerListViewModel viewModel)
+    public ServerOverviewView(ServerOverviewModel viewModel)
         : this()
     {
         DataContext = viewModel;
@@ -29,7 +29,7 @@ public partial class ServerListView : UserControl
 
     private void TextBox_OnTextChanged(object? sender, TextChangedEventArgs e)
     {
-        var context = (ServerListViewModel?)DataContext;
+        var context = (ServerOverviewModel?)DataContext;
         context?.OnSearchChange?.Invoke();
     }
 }

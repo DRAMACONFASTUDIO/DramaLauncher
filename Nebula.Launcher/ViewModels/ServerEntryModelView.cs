@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -10,6 +12,7 @@ using System.Windows.Input;
 using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Nebula.Launcher.ServerListProviders;
 using Nebula.Launcher.Services;
 using Nebula.Launcher.ViewModels.Pages;
 using Nebula.Launcher.ViewModels.Popup;
@@ -23,7 +26,7 @@ namespace Nebula.Launcher.ViewModels;
 
 [ViewModelRegister(typeof(ServerEntryView), false)]
 [ConstructGenerator]
-public partial class ServerEntryModelView : ViewModelBase
+public partial class ServerEntryModelView : ViewModelBase, IFilterConsumer
 {
     [ObservableProperty] private string _description = "Fetching info...";
     [ObservableProperty] private bool _expandInfo;
@@ -39,11 +42,11 @@ public partial class ServerEntryModelView : ViewModelBase
     [ObservableProperty] private bool _tagDataVisible;
 
     public LogPopupModelView CurrLog;
-    public Action? OnFavoriteToggle;
     public RobustUrl Address { get; private set; }
 
     [GenerateProperty] private AuthService AuthService { get; } = default!;
     [GenerateProperty] private ContentService ContentService { get; } = default!;
+    [GenerateProperty] private ConfigurationService ConfigurationService { get; } = default!;
     [GenerateProperty] private CancellationService CancellationService { get; } = default!;
     [GenerateProperty] private DebugService DebugService { get; } = default!;
     [GenerateProperty] private RunnerService RunnerService { get; } = default!;
@@ -51,6 +54,7 @@ public partial class ServerEntryModelView : ViewModelBase
     [GenerateProperty] private ViewHelperService ViewHelperService { get; } = default!;
     [GenerateProperty] private RestService RestService { get; } = default!;
     [GenerateProperty] private MainViewModel MainViewModel { get; } = default!;
+    [GenerateProperty] private FavoriteServerListProvider FavoriteServerListProvider { get; } = default!;
 
     public ServerStatus Status { get; private set; } =
         new(
@@ -116,8 +120,14 @@ public partial class ServerEntryModelView : ViewModelBase
         CurrLog = ViewHelperService.GetViewModel<LogPopupModelView>();
     }
 
-    public void ProcessFilter(ServerFilter serverFilter)
+    public void ProcessFilter(ServerFilter? serverFilter)
     {
+        if (serverFilter == null)
+        {
+            IsVisible = true;
+            return;
+        }
+        
         IsVisible = serverFilter.IsMatch(Status.Name, Tags);
     }
 
@@ -136,8 +146,15 @@ public partial class ServerEntryModelView : ViewModelBase
             SetStatus(serverStatus);
         else
             FetchStatus();
+        
+        IsFavorite = GetFavoriteEntries().Contains(Address.ToString());
 
         return this;
+    }
+    
+    private List<string> GetFavoriteEntries()
+    {
+        return ConfigurationService.GetConfigValue(LauncherConVar.Favorites)?.ToList() ?? [];
     }
 
     private async void FetchStatus()
@@ -157,12 +174,16 @@ public partial class ServerEntryModelView : ViewModelBase
 
     public void OpenContentViewer()
     {
-        MainViewModel.RequirePage<ContentBrowserViewModel>().Go(Address.ToString(), new ContentPath());
+        MainViewModel.RequirePage<ContentBrowserViewModel>().Go(Address, ContentPath.Empty);
     }
 
     public void ToggleFavorites()
     {
-        OnFavoriteToggle?.Invoke();
+        IsFavorite = !IsFavorite;
+        if(IsFavorite)
+            FavoriteServerListProvider.AddFavorite(this);
+        else
+            FavoriteServerListProvider.RemoveFavorite(this);
     }
 
     public void RunInstance()
@@ -188,7 +209,7 @@ public partial class ServerEntryModelView : ViewModelBase
 
                 await RunnerService.PrepareRun(buildInfo, loadingContext, CancellationService.Token);
 
-                var path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+                var path = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
 
                 Process = Process.Start(new ProcessStartInfo
                 {
@@ -372,4 +393,9 @@ public class LinkGoCommand : ICommand
     }
 
     public event EventHandler? CanExecuteChanged;
+}
+
+public interface IFilterConsumer
+{
+    public void ProcessFilter(ServerFilter? serverFilter);
 }

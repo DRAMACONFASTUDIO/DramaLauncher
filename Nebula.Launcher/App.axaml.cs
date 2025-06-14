@@ -1,5 +1,3 @@
-using System;
-using System.Globalization;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -8,7 +6,6 @@ using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using Nebula.Launcher.MessageBox;
-using Nebula.Launcher.ViewModels.ContentView;
 using Nebula.Launcher.Views;
 using Nebula.Shared;
 using Nebula.Shared.Services;
@@ -63,7 +60,6 @@ public class App : Application
             services.AddAvaloniaServices();
             services.AddServices();
             services.AddViews();
-            services.AddTransient<DecompilerContentView>();
 
             var serviceProvider = services.BuildServiceProvider();
             

@@ -10,7 +10,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:Nebula.Shared.Models;assembly=Nebula.Shared"
     xmlns:viewModels="clr-namespace:Nebula.Launcher.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models1="clr-namespace:Nebula.Launcher.Models">
     <Design.DataContext>
         <viewModels:MainViewModel />
     </Design.DataContext>
@@ -63,7 +64,7 @@
                                 Padding="0"
                                 SelectedItem="{Binding SelectedListItem}">
                                 <ListBox.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type models:ListItemTemplate}">
+                                    <DataTemplate DataType="{x:Type models1:ListItemTemplate}">
                                         <StackPanel Orientation="Horizontal" Spacing="19">
                                             <Svg
                                                 Height="40"

@@ -119,7 +119,7 @@ public partial class StringConfigurationViewModel : ViewModelBase , IConfigurati
     
     private string _oldText = string.Empty;
     
-    public ConfigContext<string> Context { get; set; }
+    public required ConfigContext<string> Context { get; set; }
     public void InitializeConfig()
     {
         ConfigName = Context.ConVar.Name;

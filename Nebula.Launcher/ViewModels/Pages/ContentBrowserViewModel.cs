@@ -1,397 +1,462 @@
 using System;
-using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
+using Nebula.Launcher.Models;
 using Nebula.Launcher.Services;
-using Nebula.Launcher.ViewModels.ContentView;
 using Nebula.Launcher.ViewModels.Popup;
+using Nebula.Launcher.Views;
 using Nebula.Launcher.Views.Pages;
 using Nebula.Shared.FileApis;
 using Nebula.Shared.Models;
 using Nebula.Shared.Services;
-using Nebula.Shared.Services.Logging;
 using Nebula.Shared.Utils;
 
 namespace Nebula.Launcher.ViewModels.Pages;
 
 [ViewModelRegister(typeof(ContentBrowserView))]
 [ConstructGenerator]
-public sealed partial class ContentBrowserViewModel : ViewModelBase , IViewModelPage
+public sealed partial class ContentBrowserViewModel : ViewModelBase, IContentHolder
 {
-    private readonly List<ContentEntry> _root = new();
-
-    private readonly List<string> _history = new();
-
-    [ObservableProperty] private string _message = "";
-    [ObservableProperty] private string _searchText = "";
-
-    private ContentEntry? _selectedEntry;
-    private ILogger _logger;
+    [ObservableProperty] private IContentEntry _currentEntry;
     [ObservableProperty] private string _serverText = "";
-    [ObservableProperty] private ContentViewBase? _contentView;
-    public bool IsCustomContenView => ContentView != null;
-
-
+    [ObservableProperty] private string _searchText = "";
     [GenerateProperty] private ContentService ContentService { get; } = default!;
     [GenerateProperty] private CancellationService CancellationService { get; } = default!;
     [GenerateProperty] private FileService FileService { get; } = default!;
     [GenerateProperty] private DebugService DebugService { get; } = default!;
     [GenerateProperty] private PopupMessageService PopupService { get; } = default!;
-    [GenerateProperty] private HubService HubService { get; } = default!;
-    [GenerateProperty] private IServiceProvider ServiceProvider {get;}
+    [GenerateProperty] private IServiceProvider ServiceProvider { get; }
     [GenerateProperty, DesignConstruct] private ViewHelperService ViewHelperService { get; } = default!;
-
-    public ObservableCollection<ContentEntry> Entries { get; } = new();
-
-    private Dictionary<string, Type> _contentContainers = new();
-
-    public ContentEntry? SelectedEntry
-    {
-        get => _selectedEntry;
-        set
-        {
-            var oldSearchText = SearchText;
-            SearchText = value?.GetPath().ToString() ?? "";
-
-            ContentView = null;
-            Entries.Clear();
-            _selectedEntry = value;
-
-            if (value == null) return;
-
-            if(value.TryOpen(out var stream, out var item)){
-
-                var ext = Path.GetExtension(item.Value.Path);
-                var myTempFile = Path.Combine(Path.GetTempPath(), "tempie" + ext);
-
-                if(TryGetContentViewer(ext, out var contentViewBase)){
-                    _logger.Debug($"Opening custom context:{item.Value.Path}");
-                    contentViewBase.InitialiseWithData(value.GetPath(), stream, value);
-                    stream.Dispose();
-                    ContentView = contentViewBase;
-                    return;
-                }
-
-                var sw = new FileStream(myTempFile, FileMode.Create, FileAccess.Write, FileShare.None);
-                stream.CopyTo(sw);
-
-                sw.Dispose();
-                stream.Dispose();
-
-                var startInfo = new ProcessStartInfo(myTempFile)
-                {
-                    UseShellExecute = true
-                };
-
-                
-                _logger.Log("Opening " + myTempFile);
-                Process.Start(startInfo);
-
-                return;
-            }
-            
-            if(SearchText.Length > oldSearchText.Length) 
-                AppendHistory(oldSearchText);
-
-            foreach (var entryCh in value.Childs) Entries.Add(entryCh);
-        }
-    }
-
-    private bool TryGetContentViewer(string type,[NotNullWhen(true)] out ContentViewBase? contentViewBase){
-        contentViewBase = null;
-        if(!_contentContainers.TryGetValue(type, out var contentViewType) || 
-           !contentViewType.IsAssignableTo(typeof(ContentViewBase))) 
-            return false;
-        
-        contentViewBase = (ContentViewBase)ServiceProvider.GetService(contentViewType)!;
-        return true;
-    }
-
-
-    protected override void InitialiseInDesignMode()
-    {
-        var a = new ContentEntry(this, "A:", "A", "", default!);
-        var b = new ContentEntry(this, "B", "B", "", default!);
-        a.TryAddChild(b);
-        Entries.Add(a);
-    }
-
-    protected override void Initialise()
-    {
-        _logger = DebugService.GetLogger(this);
-        FillRoot(HubService.ServerList);
-
-        HubService.HubServerChangedEventArgs += HubServerChangedEventArgs;
-        HubService.HubServerLoaded += GoHome;
-
-        if (!HubService.IsUpdating) GoHome();
-
-        _contentContainers.Add(".dll",typeof(DecompilerContentView));
-    }
-
-    private void GoHome()
-    {
-        SelectedEntry = null;
-        foreach (var entry in _root) Entries.Add(entry);
-    }
-
-    private void HubServerChangedEventArgs(HubServerChangedEventArgs obj)
-    {
-        if (obj.Action == HubServerChangeAction.Clear) _root.Clear();
-        if (obj.Action == HubServerChangeAction.Add) FillRoot(obj.Items);
-    }
-
-    private void FillRoot(IEnumerable<ServerHubInfo> infos)
-    {
-        foreach (var info in infos) 
-            _root.Add(new ContentEntry(this, info.StatusData.Name, info.Address, info.Address, default!));
-    }
-
-    public void Go(string server, ContentPath path)
-    {
-        ServerText = server;
-        Go(path);
-    }
-
-    public async void Go(ContentPath path)
-    {
-        if (path.Pathes.Count > 0 && (path.Pathes[0].StartsWith("ss14://") || path.Pathes[0].StartsWith("ss14s://")))
-        {
-            ServerText = path.Pathes[0];
-            path = new ContentPath("");
-        }
-
-        if (string.IsNullOrEmpty(ServerText))
-        {
-            SearchText = "";
-            GoHome();
-            return;
-        }
-
-        if (ServerText != SelectedEntry?.ServerName) SelectedEntry = await CreateEntry(ServerText);
-
-        _logger.Debug("Going to:" + path.Path);
-
-        var oriPath = path.Clone();
-        try
-        {
-            if (SelectedEntry == null || !SelectedEntry.GetRoot().TryGetEntry(path, out var centry))
-                throw new Exception("Not found! " + oriPath.Path);
-
-            SelectedEntry = centry;
-        }
-        catch (Exception e)
-        {
-            PopupService.Popup(e);
-        }
-    }
 
 
     public void OnBackEnter()
     {
-        Go(new ContentPath(GetHistory()));
-    }
-
-    public void OnGoEnter()
-    {
-        Go(new ContentPath(SearchText));
+        CurrentEntry.Parent?.GoCurrent();
     }
 
     public void OnUnpack()
     {
-        if (SelectedEntry == null) return;
+        if(CurrentEntry is not ServerFolderContentEntry serverEntry) 
+            return;
+        
         var myTempDir = FileService.EnsureTempDir(out var tmpDir);
         
         var loading = ViewHelperService.GetViewModel<LoadingContextViewModel>();
         loading.LoadingName = "Unpacking entry";
         PopupService.Popup(loading);
 
-        Task.Run(() => ContentService.Unpack(SelectedEntry.FileApi, myTempDir, loading));
+        Task.Run(() => ContentService.Unpack(serverEntry.FileApi, myTempDir, loading));
         var startInfo = new ProcessStartInfo(){
             FileName = "explorer.exe",
             Arguments = tmpDir,
         };
-        _logger.Log("Opening " + tmpDir);
+      
         Process.Start(startInfo);
     }
 
-    private async Task<ContentEntry> CreateEntry(string serverUrl)
+    public void OnGoEnter()
     {
-        var loading = ViewHelperService.GetViewModel<LoadingContextViewModel>();
-        loading.LoadingName = "Loading entry";
-        PopupService.Popup(loading);
-
-        var rurl = serverUrl.ToRobustUrl();
-        var info = await ContentService.GetBuildInfo(rurl, CancellationService.Token);
-        var hashApi = await ContentService.EnsureItems(info.RobustManifestInfo, loading,
-            CancellationService.Token);
-
-        var rootEntry = new ContentEntry(this, "", "", serverUrl, hashApi);
-
-        foreach (var item in hashApi.Manifest.Values)
+        if (string.IsNullOrWhiteSpace(ServerText))
         {
-            var path = new ContentPath(item.Path);
-            rootEntry.CreateItem(path, item);
+            SetHubRoot();
+            SearchText = string.Empty;
+            return;
         }
 
-        loading.Dispose();
-
-        return rootEntry;
+        try
+        {
+            var cur = ServiceProvider.GetService<ServerFolderContentEntry>()!;
+            cur.Init(this, ServerText.ToRobustUrl());
+            var curContent = cur.Go(new ContentPath(SearchText));
+            if(curContent == null) 
+                throw new NullReferenceException($"{SearchText} not found in {ServerText}");
+            
+            CurrentEntry = curContent;
+        }
+        catch (Exception e)
+        {
+            PopupService.Popup(e);
+            ServerText = string.Empty;
+            SearchText = string.Empty;
+            SetHubRoot();
+        }
     }
 
-    private void AppendHistory(string str)
+    partial void OnCurrentEntryChanged(IContentEntry value)
     {
-        if (_history.Count >= 10) _history.RemoveAt(9);
-        _history.Insert(0, str);
+        SearchText = value.FullPath.ToString();
+        if (value.GetRoot() is ServerFolderContentEntry serverEntry)
+        {
+            ServerText = serverEntry.ServerUrl.ToString();
+        }
+    }
+    
+    protected override void InitialiseInDesignMode()
+    {
+        var root = ViewHelperService.GetViewModel<FolderContentEntry>();
+        root.Init(this);
+        var child = root.AddFolder("Biba");
+        child.AddFolder("Boba");
+        child.AddFolder("Buba");
+        CurrentEntry = root;
     }
 
-    private string GetHistory()
+    protected override void Initialise()
     {
-        if (_history.Count == 0) return "";
-        var h = _history[0];
-        _history.RemoveAt(0);
-        return h;
+        SetHubRoot();
     }
 
-    public void OnPageOpen(object? args)
+    public void SetHubRoot()
     {
+        var root = ViewHelperService.GetViewModel<ServerListContentEntry>();
+        root.InitHubList(this);
+        CurrentEntry = root;
+    }
+
+    public void Go(RobustUrl url, ContentPath path)
+    {
+        ServerText = url.ToString();
+        SearchText = path.ToString();
+        OnGoEnter();
     }
 }
 
-public class ContentEntry
+public interface IContentHolder
 {
-    private readonly Dictionary<string, ContentEntry> _childs = new();
+    public IContentEntry CurrentEntry { get; set; }
+}
+
+public interface IContentEntry
+{
+    public IContentHolder Holder { get; }
     
-    private readonly ContentBrowserViewModel _viewModel;
-    public readonly HashApi FileApi;
-    public readonly RobustManifestItem? Item;
-
-    internal ContentEntry(ContentBrowserViewModel viewModel, string name, string pathName, string serverName, HashApi fileApi, RobustManifestItem? item = null)
+    public IContentEntry? Parent { get; set; }
+    public string? Name { get; }
+    public string IconPath { get; }
+    public ContentPath FullPath => Parent?.FullPath.With(Name) ?? new ContentPath(Name);
+    
+    public IContentEntry? Go(ContentPath path);
+    
+    public void GoCurrent()
     {
+        var entry = Go(ContentPath.Empty);
+        if(entry is not null) Holder.CurrentEntry = entry;
+    }
+    
+    public IContentEntry GetRoot()
+    {
+        if (Parent is null) return this;
+        return Parent.GetRoot();
+    }
+}
+
+
+public sealed class LazyContentEntry : IContentEntry
+{
+    public IContentHolder Holder { get; set; }
+    public IContentEntry? Parent { get; set; }
+    public string? Name { get; }
+    public string IconPath { get; }
+
+    private readonly IContentEntry _lazyEntry;
+    private readonly Action _lazyEntryInit;
+
+    public LazyContentEntry (IContentHolder holder,string name, IContentEntry entry, Action lazyEntryInit)
+    {
+        Holder = holder;
         Name = name;
-        ServerName = serverName;
-        PathName = pathName;
-        _viewModel = viewModel;
-        FileApi = fileApi;
-        Item = item;
+        IconPath = entry.IconPath;
+        _lazyEntry = entry;
+        _lazyEntryInit = lazyEntryInit;
     }
-
-    public bool IsDirectory => Item == null;
-
-    public string Name { get; private set; }
-    public string PathName { get; }
-    public string ServerName { get; }
-    public string IconPath { get; set; } = "/Assets/svg/folder.svg";
-
-    public ContentEntry? Parent { get; private set; }
-    public bool IsRoot => Parent == null;
-
-    //TODO: Remove LINQ later...
-    public IReadOnlyList<ContentEntry> Childs => _childs.Values.OrderBy(v => v,new ContentComparer()).ToList();
-
-    public bool TryOpen([NotNullWhen(true)] out Stream? stream,[NotNullWhen(true)] out RobustManifestItem? item){
-        stream = null;
-        item = null;
-        if(Item is null || !FileApi.TryOpen(Item.Value, out stream))
-            return false;
-
-        item = Item;
-        return true;
-    }
-
-    public bool TryGetChild(string name, [NotNullWhen(true)] out ContentEntry? child)
+    public IContentEntry? Go(ContentPath path)
     {
-        return _childs.TryGetValue(name, out child);
+        _lazyEntryInit?.Invoke();
+        return _lazyEntry;
+    }
+}
+
+public sealed class ExtContentExecutor
+{
+    public ServerFolderContentEntry _root;
+    private DecompilerService _decompilerService;
+
+    public ExtContentExecutor(ServerFolderContentEntry root, DecompilerService decompilerService)
+    {
+        _root = root;
+        _decompilerService = decompilerService;
     }
 
-    public bool TryAddChild(ContentEntry contentEntry)
+    public bool TryExecute(RobustManifestItem manifestItem)
     {
-        if (_childs.TryAdd(contentEntry.PathName, contentEntry))
+        var ext = Path.GetExtension(manifestItem.Path);
+
+        if (ext == ".dll")
         {
-            contentEntry.Parent = this;
+            _decompilerService.OpenServerDecompiler(_root.ServerUrl);
             return true;
         }
 
         return false;
     }
+}
 
-    public ContentPath GetPath()
+
+public sealed partial class ManifestContentEntry : IContentEntry
+{
+    public IContentHolder Holder { get; set; } = default!;
+    public IContentEntry? Parent { get; set; }
+    public string? Name { get; set; }
+    public string IconPath => "/Assets/svg/file.svg";
+    
+    private RobustManifestItem _manifestItem;
+    private HashApi _hashApi = default!;
+    private ExtContentExecutor _extContentExecutor = default!;
+
+    public void Init(IContentHolder holder, RobustManifestItem manifestItem, HashApi api, ExtContentExecutor executor)
     {
-        if (Parent != null)
+        Holder = holder;
+        Name = new ContentPath(manifestItem.Path).GetName();
+        _manifestItem = manifestItem;
+        _hashApi = api;
+        _extContentExecutor = executor;
+    }
+    
+    public IContentEntry? Go(ContentPath path)
+    {
+        if (_extContentExecutor.TryExecute(_manifestItem)) 
+            return null;
+        
+        var ext = Path.GetExtension(_manifestItem.Path);
+        
+        try
         {
-            var path = Parent.GetPath();
-            path.Pathes.Add(PathName);
-            return path;
+            if (!_hashApi.TryOpen(_manifestItem, out var stream))
+                return null;
+
+
+            var myTempFile = Path.Combine(Path.GetTempPath(), "tempie" + ext);
+
+
+            var sw = new FileStream(myTempFile, FileMode.Create, FileAccess.Write, FileShare.None);
+            stream.CopyTo(sw);
+
+            sw.Dispose();
+            stream.Dispose();
+
+            var startInfo = new ProcessStartInfo(myTempFile)
+            {
+                UseShellExecute = true
+            };
+
+            Process.Start(startInfo);
         }
-
-        return new ContentPath([PathName]);
-    }
-
-    public ContentEntry GetOrCreateDirectory(ContentPath rootPath)
-    {
-        if (rootPath.Pathes.Count == 0) return this;
-
-        var fName = rootPath.GetNext();
-
-        if (!TryGetChild(fName, out var child))
+        catch (Exception e)
         {
-            child = new ContentEntry(_viewModel, fName, fName, ServerName, FileApi);
-            TryAddChild(child);
+            _extContentExecutor._root.PopupService.Popup(e);
         }
-
-        return child.GetOrCreateDirectory(rootPath);
-    }
-
-    public ContentEntry GetRoot()
-    {
-        if (Parent == null) return this;
-        return Parent.GetRoot();
-    }
-
-    public ContentEntry CreateItem(ContentPath path, RobustManifestItem item)
-    {
-        var dir = path.GetDirectory();
-        var dirEntry = GetOrCreateDirectory(dir);
-
-        var name = path.GetName();
-        var entry = new ContentEntry(_viewModel, name, name, ServerName, FileApi, item);
-
-        dirEntry.TryAddChild(entry);
-        entry.IconPath = "/Assets/svg/file.svg";
-        return entry;
-    }
-
-    public bool TryGetEntry(ContentPath path, out ContentEntry? entry)
-    {
-        entry = null;
-
-        if (path.Pathes.Count == 0)
-        {
-            entry = this;
-            return true;
-        }
-
-        var fName = path.GetNext();
-
-        if (!TryGetChild(fName, out var child)) return false;
-
-        return child.TryGetEntry(path, out entry);
-    }
-
-    public void OnPathGo()
-    {
-        _viewModel.Go(GetPath());
+        return null;
     }
 }
 
-public struct ContentPath
+[ViewModelRegister(typeof(FileContentEntryView), false), ConstructGenerator]
+public sealed partial class FolderContentEntry : BaseFolderContentEntry
 {
+    [GenerateProperty, DesignConstruct] public override ViewHelperService ViewHelperService { get; } = default!;
+    
+    public FolderContentEntry AddFolder(string folderName)
+    {
+        var folder = ViewHelperService.GetViewModel<FolderContentEntry>();
+        folder.Init(Holder, folderName);
+        return AddChild(folder);
+    }
+
+    protected override void InitialiseInDesignMode() { }
+    protected override void Initialise() { }
+}
+
+[ViewModelRegister(typeof(FileContentEntryView), false), ConstructGenerator]
+public sealed partial class ServerFolderContentEntry : BaseFolderContentEntry
+{
+    [GenerateProperty, DesignConstruct] public override ViewHelperService ViewHelperService { get; } = default!;
+    [GenerateProperty] public ContentService ContentService { get; } = default!;
+    [GenerateProperty] public CancellationService CancellationService { get; } = default!;
+    [GenerateProperty] public PopupMessageService PopupService { get; } = default!;
+    [GenerateProperty] public DecompilerService DecompilerService { get; } = default!;
+    
+    public RobustUrl ServerUrl { get; private set; }
+
+    public HashApi FileApi { get; private set; } = default!;
+    
+    private ExtContentExecutor _contentExecutor = default!;
+    
+    public void Init(IContentHolder holder, RobustUrl serverUrl)
+    {
+        base.Init(holder);
+        _contentExecutor = new ExtContentExecutor(this, DecompilerService);
+        IsLoading = true;
+        var loading = ViewHelperService.GetViewModel<LoadingContextViewModel>();
+        loading.LoadingName = "Loading entry";
+        PopupService.Popup(loading);
+        ServerUrl = serverUrl;
+
+        Task.Run(async () =>
+        {
+            var buildInfo = await ContentService.GetBuildInfo(serverUrl, CancellationService.Token);
+            FileApi = await ContentService.EnsureItems(buildInfo.RobustManifestInfo, loading,
+                CancellationService.Token);
+
+            foreach (var (path, item) in FileApi.Manifest)
+            {
+                CreateContent(new ContentPath(path), item);
+            }
+
+            IsLoading = false;
+            loading.Dispose();
+        });
+    }
+
+    public ManifestContentEntry CreateContent(ContentPath path, RobustManifestItem manifestItem)
+    {
+        var pathDir = path.GetDirectory();
+        BaseFolderContentEntry parent = this;
+        
+        while (pathDir.TryNext(out var dirPart))
+        {
+            if (!parent.TryGetChild(dirPart, out var folderContentEntry))
+            {
+                folderContentEntry = ViewHelperService.GetViewModel<FolderContentEntry>();
+                ((FolderContentEntry)folderContentEntry).Init(Holder, dirPart);
+                parent.AddChild(folderContentEntry);
+            }
+            
+            parent = folderContentEntry as BaseFolderContentEntry ?? throw new InvalidOperationException();
+        }
+        
+        var manifestContent = new ManifestContentEntry();
+        manifestContent.Init(Holder, manifestItem, FileApi, _contentExecutor);
+        
+        parent.AddChild(manifestContent);
+        
+        return manifestContent;
+    }
+    
+    protected override void InitialiseInDesignMode() { }
+    protected override void Initialise() { }
+}
+
+[ViewModelRegister(typeof(FileContentEntryView), false), ConstructGenerator]
+public sealed partial class ServerListContentEntry : BaseFolderContentEntry
+{
+    [GenerateProperty, DesignConstruct] public override ViewHelperService ViewHelperService { get; } = default!;
+    [GenerateProperty] public ConfigurationService ConfigurationService { get; } = default!;
+    [GenerateProperty] public IServiceProvider ServiceProvider { get; } = default!;
+    [GenerateProperty] public RestService RestService { get; } = default!;
+
+    
+    public void InitHubList(IContentHolder holder)
+    {
+        base.Init(holder);
+
+        var servers = ConfigurationService.GetConfigValue(LauncherConVar.Hub)!;
+
+        foreach (var server in servers)
+        {
+            var serverFolder = ServiceProvider.GetService<ServerListContentEntry>()!;
+            var serverLazy = new LazyContentEntry(Holder, server.Name , serverFolder, () => serverFolder.InitServerList(Holder, server));
+            AddChild(serverLazy);
+        }
+    }
+
+    public async void InitServerList(IContentHolder holder, ServerHubRecord hubRecord)
+    {
+        base.Init(holder, hubRecord.Name);
+
+        IsLoading = true;
+        var servers =
+            await RestService.GetAsync<List<ServerHubInfo>>(new Uri(hubRecord.MainUrl), CancellationToken.None);
+
+        foreach (var server in servers)
+        {
+            var serverFolder = ServiceProvider.GetService<ServerFolderContentEntry>()!;
+            var serverLazy = new LazyContentEntry(Holder, server.StatusData.Name , serverFolder, () => serverFolder.Init(Holder, server.Address.ToRobustUrl()));
+            AddChild(serverLazy);
+        }
+
+        IsLoading = true;
+    }
+
+  
+
+    protected override void InitialiseInDesignMode()
+    {
+    }
+
+    protected override void Initialise()
+    {
+    }
+}
+
+public abstract class BaseFolderContentEntry : ViewModelBase, IContentEntry
+{
+    public bool IsLoading { get; set; } = false;
+    public abstract ViewHelperService ViewHelperService { get; }
+    
+    public ObservableCollection<IContentEntry> Entries { get; } = [];
+
+    private Dictionary<string, IContentEntry> _childs = [];
+
+    public string IconPath => "/Assets/svg/folder.svg";
+    public IContentHolder Holder { get; private set; }
+    public IContentEntry? Parent { get; set; }
+    public string? Name { get; private set; }
+    
+    public IContentEntry? Go(ContentPath path)
+    {
+        if (path.IsEmpty()) return this;
+        if (_childs.TryGetValue(path.GetNext(), out var child)) 
+            return child.Go(path);
+        
+        return null;
+    }
+
+    public void Init(IContentHolder holder, string? name = null)
+    {
+        Name = name;
+        Holder = holder;
+    }
+
+    public T AddChild<T>(T child) where T: IContentEntry
+    {
+        if(child.Name is null) throw new InvalidOperationException();
+        
+        child.Parent = this;
+        
+        _childs.Add(child.Name, child);
+        Entries.Add(child);
+
+        return child;
+    }
+
+    public bool TryGetChild(string name,[NotNullWhen(true)] out IContentEntry? child)
+    {
+        return _childs.TryGetValue(name, out child);
+    }
+}
+
+
+public struct ContentPath : IEquatable<ContentPath>
+{
+    public static readonly ContentPath Empty = new();
+    
     public List<string> Pathes { get; }
 
     public ContentPath()
@@ -404,17 +469,23 @@ public struct ContentPath
         Pathes = pathes;
     }
 
-    public ContentPath(string path)
+    public ContentPath(string? path)
     {
         Pathes = string.IsNullOrEmpty(path)
             ? new List<string>()
-            : path.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+            : path.Split(['/'], StringSplitOptions.RemoveEmptyEntries).ToList();
+    }
+
+    public ContentPath With(string? name)
+    {
+        if (name != null) return new ContentPath([..Pathes, name]);
+        return new ContentPath(Pathes);
     }
 
     public ContentPath GetDirectory()
     {
         if (Pathes.Count == 0)
-            return this; // Root remains root when getting the directory.
+            return this;
 
         var directoryPathes = Pathes.Take(Pathes.Count - 1).ToList();
         return new ContentPath(directoryPathes);
@@ -439,6 +510,14 @@ public struct ContentPath
         return string.IsNullOrWhiteSpace(nextName) ? GetNext() : nextName;
     }
 
+    public bool TryNext([NotNullWhen(true)]out string? part)
+    {
+        part = null;
+        if (Pathes.Count == 0) return false;
+        part = GetNext();
+        return true;
+    }
+
     public ContentPath Clone()
     {
         return new ContentPath(new List<string>(Pathes));
@@ -450,19 +529,35 @@ public struct ContentPath
     {
         return Path;
     }
+
+    public bool IsEmpty()
+    {
+        return Pathes.Count == 0;
+    }
+
+    public bool Equals(ContentPath other)
+    {
+        return Pathes.Equals(other.Pathes);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is ContentPath other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return Pathes.GetHashCode();
+    }
 }
 
-public sealed class ContentComparer : IComparer<ContentEntry>
+public sealed class ContentComparer : IComparer<IContentEntry>
 {
-    public int Compare(ContentEntry? x, ContentEntry? y)
+    public int Compare(IContentEntry? x, IContentEntry? y)
     {
         if (ReferenceEquals(x, y)) return 0;
         if (y is null) return 1;
         if (x is null) return -1;
-        var iconComparison = string.Compare(x.IconPath, y.IconPath, StringComparison.Ordinal);
-        if (iconComparison != 0) return -iconComparison;
-        var nameComparison = string.Compare(x.Name, y.Name, StringComparison.Ordinal);
-        if (nameComparison != 0) return nameComparison;
-        return string.Compare(x.ServerName, y.ServerName, StringComparison.Ordinal);
+        return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
     }
 }

@@ -1,0 +1,52 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:pages="clr-namespace:Nebula.Launcher.ViewModels.Pages"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="pages:FolderContentEntry"
+             x:Class="Nebula.Launcher.Views.FileContentEntryView">
+    <Design.DataContext>
+        <pages:FolderContentEntry/>
+    </Design.DataContext>
+    
+    <ScrollViewer
+        Grid.Column="0"
+        Grid.ColumnSpan="4"
+        Grid.Row="1"
+        Margin="0,0,0,5">
+        <ItemsControl ItemsSource="{Binding Entries}" Padding="0,0,0,0">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type pages:IContentEntry}">
+                    <Button
+                        Command="{Binding GoCurrent}"
+                        CornerRadius="0"
+                        Height="30"
+                        HorizontalAlignment="Stretch">
+                           
+                        <StackPanel Orientation="Horizontal" Spacing="15">
+                            <Border
+                                Background="#00000000"
+                                BorderThickness="0,0,2,0"
+                                CornerRadius="0">
+                                <Svg
+                                    Height="15"
+                                    Margin="10,0,10,0"
+                                    Path="{Binding IconPath}" />
+                                <Border.BorderBrush>
+                                    <LinearGradientBrush EndPoint="100%,50%" StartPoint="0%,50%">
+                                        <GradientStop Color="#442222" Offset="0.0" />
+                                        <GradientStop Color="#222222" Offset="1.0" />
+                                    </LinearGradientBrush>
+                                </Border.BorderBrush>
+                            </Border>
+                            <Label>
+                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                            </Label>
+                        </StackPanel>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </ScrollViewer>
+</UserControl>

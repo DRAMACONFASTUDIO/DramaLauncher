@@ -12,22 +12,32 @@ public static class ServiceExt
 
     public static void AddServices(this IServiceCollection services, Assembly assembly)
     {
-        foreach (var (type, inference) in GetServicesWithHelpAttribute(assembly))
+        foreach (var (type, inference, isSingleton) in GetServicesWithHelpAttribute(assembly))
         {
             Console.WriteLine("[ServiceMng] ADD SERVICE " + type);
-            if (inference is null)
-                services.AddSingleton(type);
+            if (isSingleton)
+            {
+                if (inference is null)
+                    services.AddSingleton(type);
+                else
+                    services.AddSingleton(inference, type);
+            }
             else
-                services.AddSingleton(inference, type);
+            {
+                if (inference is null)
+                    services.AddTransient(type);
+                else
+                    services.AddTransient(inference, type);
+            }
         }
     }
 
-    private static IEnumerable<(Type, Type?)> GetServicesWithHelpAttribute(Assembly assembly)
+    private static IEnumerable<(Type, Type?, bool)> GetServicesWithHelpAttribute(Assembly assembly)
     {
         foreach (var type in assembly.GetTypes())
         {
             var attr = type.GetCustomAttribute<ServiceRegisterAttribute>();
-            if (attr is not null) yield return (type, attr.Inference);
+            if (attr is not null) yield return (type, attr.Inference, attr.IsSingleton);
         }
     }
 }

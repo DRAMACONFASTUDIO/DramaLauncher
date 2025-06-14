@@ -26,7 +26,7 @@ public partial class AddFavoriteViewModel : PopupViewModelBase
 
     [GenerateProperty] 
     public override PopupMessageService PopupMessageService { get; }
-    [GenerateProperty] private ServerListViewModel ServerListViewModel { get; }
+    [GenerateProperty] private ServerOverviewModel ServerOverviewModel { get; }
     [GenerateProperty] private DebugService DebugService { get; }
     public override string Title => "Add to favorite";
     public override bool IsClosable => true;
@@ -39,7 +39,6 @@ public partial class AddFavoriteViewModel : PopupViewModelBase
         try
         {
             var uri = IpInput.ToRobustUrl();
-            ServerListViewModel.AddFavorite(uri);
             Dispose();
         }
         catch (Exception e)

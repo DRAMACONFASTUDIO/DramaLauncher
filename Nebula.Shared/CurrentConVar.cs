@@ -24,13 +24,6 @@ public static class CurrentConVar
     public static readonly ConVar<string> RobustAssemblyName =
         ConVarBuilder.Build("engine.robustAssemblyName", "Robust.Client");
 
-    public static readonly ConVar<string[][]> Hub = ConVarBuilder.Build<string[][]>("launcher.hub", [
-        [
-            "https://hub.spacestation14.com/api/servers", 
-            "https://auth.fallback.spacestation14.com/"
-        ]
-    ]);
-
     public static readonly ConVar<Dictionary<string, EngineVersionInfo>> EngineManifestBackup =
         ConVarBuilder.Build<Dictionary<string, EngineVersionInfo>>("engine.manifest.backup");
     public static readonly ConVar<ModulesInfo> ModuleManifestBackup =

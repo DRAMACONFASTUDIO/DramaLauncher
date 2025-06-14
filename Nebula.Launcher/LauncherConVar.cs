@@ -1,3 +1,4 @@
+using Nebula.Launcher.Models;
 using Nebula.Launcher.ViewModels.Pages;
 using Nebula.Shared.Services;
 
@@ -21,6 +22,11 @@ public static class LauncherConVar
                 "https://auth.spacestation14.com/",
                 "https://auth.fallback.spacestation14.com/"
             ])
+    ]);
+    
+    public static readonly ConVar<ServerHubRecord[]> Hub = ConVarBuilder.Build<ServerHubRecord[]>("launcher.hub.v2", [
+        new ServerHubRecord("WizDen", "https://hub.spacestation14.com/api/servers", null),
+        new ServerHubRecord("AltHub","https://web.networkgamez.com/api/servers",null)
     ]);
 
     public static readonly ConVar<string> CurrentLang = ConVarBuilder.Build<string>("launcher.language", "en-US");

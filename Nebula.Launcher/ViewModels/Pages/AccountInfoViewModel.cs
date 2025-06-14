@@ -19,7 +19,7 @@ namespace Nebula.Launcher.ViewModels.Pages;
 
 [ViewModelRegister(typeof(AccountInfoView))]
 [ConstructGenerator]
-public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
+public partial class AccountInfoViewModel : ViewModelBase
 {
     [ObservableProperty] private bool _authMenuExpand;
 
@@ -255,11 +255,8 @@ public partial class AccountInfoViewModel : ViewModelBase, IViewModelPage
         ConfigurationService.SetConfigValue(LauncherConVar.AuthProfiles,
             Accounts.ToArray());
     }
-
-    public void OnPageOpen(object? args)
-    {
-    }
 }
+
 public sealed record ProfileAuthCredentials(
     string Login,
     string Password,

@@ -2,41 +2,50 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d"
-    x:Class="Nebula.Launcher.Views.Pages.ServerListView"
-    x:DataType="pages:ServerListViewModel"
+    x:Class="Nebula.Launcher.Views.Pages.ServerOverviewView"
+    x:DataType="pages:ServerOverviewModel"
     xmlns="https://github.com/avaloniaui"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="clr-namespace:Nebula.Launcher.ViewModels.Pages"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="clr-namespace:Nebula.Launcher.Controls">
+    xmlns:controls="clr-namespace:Nebula.Launcher.Controls"
+    xmlns:models="clr-namespace:Nebula.Launcher.Models">
 
     <Design.DataContext>
-        <pages:ServerListViewModel />
+        <pages:ServerOverviewModel />
     </Design.DataContext>
 
     <Grid
         ColumnDefinitions="*"
         Margin="0"
-        RowDefinitions="*,40">
-        <ScrollViewer
-            Grid.RowSpan="2"
-            Margin="5,0,0,10"
-            Padding="0,0,10,0">
-            <StackPanel Margin="0,0,0,30">
-                <ItemsControl ItemsSource="{Binding HubErrors}" Margin="10,0,10,0" />
-                <ItemsControl
-                    IsVisible="{Binding IsFavoriteMode}"
-                    ItemsSource="{Binding FavoriteServers}"
-                    Padding="0" />
-                <ItemsControl
-                    IsVisible="{Binding !IsFavoriteMode}"
-                    ItemsSource="{Binding Servers}"
-                    Padding="0" />
-            </StackPanel>
-        </ScrollViewer>
+        RowDefinitions="40,*,40">
         
-        <Border Grid.Row="0" 
+        <ListBox
+            Background="Transparent"
+            ItemsSource="{Binding Items}"
+            Padding="0"
+            SelectedItem="{Binding SelectedItem}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type models:ServerListTabTemplate}">
+                    <StackPanel Orientation="Horizontal" Spacing="19">
+                        <TextBlock Text="{Binding TabName}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        
+        <Border
+            Child="{Binding CurrentServerList}"
+            Grid.Row="1"
+            Grid.RowSpan="2" />
+        
+        <Border Grid.Row="1" 
                 Background="{StaticResource DefaultGrad}" 
                 Margin="0,0,0,0" CornerRadius="20,20,0,0"
                 VerticalAlignment="Bottom" 
@@ -51,11 +60,11 @@
             Background="{StaticResource DefaultGrad}"
             BoxShadow="0 2 25 0 #121212"
             CornerRadius="0"
-            Grid.Row="1" />
+            Grid.Row="2" />
 
         <Grid
             ColumnDefinitions="*,40,40,40"
-            Grid.Row="1"
+            Grid.Row="2"
             Margin="-25,0,0,0"
             RowDefinitions="*">
             <TextBox
@@ -64,12 +73,6 @@
                 TextChanged="TextBox_OnTextChanged"
                 VerticalAlignment="Center"
                 Watermark="Server name..." />
-            <Button
-                Command="{Binding AddFavoriteRequired}"
-                Grid.Column="1"
-                Padding="10">
-                <Svg IsVisible="{Binding IsFavoriteMode}" Path="/Assets/svg/star.svg" />
-            </Button>
             <Button
                 Command="{Binding FilterRequired}"
                 Grid.Column="2"

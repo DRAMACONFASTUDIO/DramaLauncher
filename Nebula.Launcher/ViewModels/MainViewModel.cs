@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Nebula.Launcher.Models;
 using Nebula.Launcher.Services;
 using Nebula.Launcher.ViewModels.Pages;
 using Nebula.Launcher.ViewModels.Popup;
@@ -22,11 +23,10 @@ public partial class MainViewModel : ViewModelBase
 {
     private readonly List<ListItemTemplate> _templates =
     [
-        new ListItemTemplate(typeof(AccountInfoViewModel), "user", "Account", null),
-        new ListItemTemplate(typeof(ServerListViewModel), "file", "Servers", false),
-        new ListItemTemplate(typeof(ServerListViewModel), "star", "Favorites", true),
-        new ListItemTemplate(typeof(ContentBrowserViewModel), "folder", "Content", null),
-        new ListItemTemplate(typeof(ConfigurationViewModel), "settings", "Settings", null)
+        new ListItemTemplate(typeof(AccountInfoViewModel), "user", "Account"),
+        new ListItemTemplate(typeof(ServerOverviewModel), "file", "Servers"),
+        new ListItemTemplate(typeof(ContentBrowserViewModel), "folder", "Content"),
+        new ListItemTemplate(typeof(ConfigurationViewModel), "settings", "Settings")
     ];
 
     private readonly List<PopupViewModelBase> _viewQueue = new();
@@ -93,19 +93,19 @@ public partial class MainViewModel : ViewModelBase
 
         if (!ViewHelperService.TryGetViewModel(value.ModelType, out var vmb)) return;
 
-        OpenPage(vmb, value.args, false);
+        OpenPage(vmb, false);
     }
 
-    public T RequirePage<T>() where T : ViewModelBase, IViewModelPage
+    public T RequirePage<T>() where T : ViewModelBase
     {
         if (CurrentPage is T vam) return vam;
         
         var page = ViewHelperService.GetViewModel<T>();
-        OpenPage(page, null);
+        OpenPage(page);
         return page;
     }
 
-    private void OpenPage(ViewModelBase obj, object? args, bool selectListView = true) 
+    private void OpenPage(ViewModelBase obj, bool selectListView = true) 
     {
         var tabItems = Items.Where(vm => vm.ModelType == obj.GetType());
 
@@ -116,11 +116,6 @@ public partial class MainViewModel : ViewModelBase
             {
                 SelectedListItem = listItemTemplates.First();
             }
-        }
-        
-        if (obj is IViewModelPage page)
-        {
-            page.OnPageOpen(args);
         }
         
         CurrentPage = obj;

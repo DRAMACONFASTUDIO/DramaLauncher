@@ -1,67 +1,74 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
 using Nebula.Launcher.Controls;
+using Nebula.Launcher.Models;
+using Nebula.Launcher.ServerListProviders;
 using Nebula.Launcher.Services;
-using Nebula.Launcher.ViewModels.Popup;
-using Nebula.Launcher.Views;
 using Nebula.Launcher.Views.Pages;
+using Nebula.Shared;
 using Nebula.Shared.Models;
 using Nebula.Shared.Services;
-using Nebula.Shared.Utils;
 
 namespace Nebula.Launcher.ViewModels.Pages;
 
-[ViewModelRegister(typeof(ServerListView))]
+[ViewModelRegister(typeof(ServerOverviewView))]
 [ConstructGenerator]
-public partial class ServerListViewModel : ViewModelBase, IViewModelPage
+public partial class ServerOverviewModel : ViewModelBase
 {
     [ObservableProperty] private string _searchText = string.Empty;
-
-    [ObservableProperty] private bool _isFavoriteMode;
     
     [ObservableProperty] private bool _isFilterVisible;
+
+    [ObservableProperty] private ServerListView _currentServerList = new ServerListView();
     
-    public ObservableCollection<ServerEntryModelView> Servers { get; }= new();
-    public ObservableCollection<Exception> HubErrors { get; } = new();
     public readonly ServerFilter CurrentFilter = new ServerFilter();
     
     public Action? OnSearchChange;
-    [GenerateProperty] private HubService HubService { get; }
+    
     [GenerateProperty] private PopupMessageService PopupMessageService { get; }
     [GenerateProperty] private CancellationService CancellationService { get; }
     [GenerateProperty] private DebugService DebugService { get; }
+    [GenerateProperty] private IServiceProvider ServiceProvider { get; }
+    [GenerateProperty] private ConfigurationService ConfigurationService { get; }
+    [GenerateProperty] private FavoriteServerListProvider FavoriteServerListProvider { get; }
     [GenerateProperty, DesignConstruct] private ViewHelperService ViewHelperService { get; }
     
-    private ServerViewContainer ServerViewContainer { get; set; } 
+    public ObservableCollection<ServerListTabTemplate> Items { get; private set; }
+    [ObservableProperty] private ServerListTabTemplate _selectedItem;
     
-    private List<ServerHubInfo> UnsortedServers { get; } = new();
+    [GenerateProperty, DesignConstruct] private ServerViewContainer ServerViewContainer { get; set; } 
+    
+    private Dictionary<string, ServerListView> _viewCache = [];
+    
 
     //Design think
     protected override void InitialiseInDesignMode()
     {
-        ServerViewContainer = new ServerViewContainer(this, ViewHelperService);
-        HubErrors.Add(new Exception("UVI"));
+        Items = new ObservableCollection<ServerListTabTemplate>([
+            new ServerListTabTemplate(new TestServerList(), "Test think"),
+            new ServerListTabTemplate(new TestServerList(), "Test think2")
+        ]);
+        SelectedItem = Items[0];
     }
 
     //real think
     protected override void Initialise()
     {
-        ServerViewContainer = new ServerViewContainer(this, ViewHelperService);
+        var tempItems = new List<ServerListTabTemplate>();
+        foreach (var record in ConfigurationService.GetConfigValue(LauncherConVar.Hub) ?? [])
+        {
+            tempItems.Add(new ServerListTabTemplate(ServiceProvider.GetService<HubServerListProvider>()!.With(record.MainUrl), record.Name));
+        }
         
-        foreach (var info in HubService.ServerList) UnsortedServers.Add(info);
-
-        HubService.HubServerChangedEventArgs += HubServerChangedEventArgs;
-        HubService.HubServerLoaded += UpdateServerEntries;
-        HubService.HubServerLoadingError += HubServerLoadingError;
-        OnSearchChange += OnChangeSearch;
-
-        if (!HubService.IsUpdating) UpdateServerEntries();
-        UpdateFavoriteEntries();
+        tempItems.Add(new ServerListTabTemplate(FavoriteServerListProvider, "Favorite"));
+        
+        Items = new ObservableCollection<ServerListTabTemplate>(tempItems);
+        
+        SelectedItem = Items[0];
     }
     
     public void ApplyFilter()
@@ -80,83 +87,45 @@ public partial class ServerListViewModel : ViewModelBase, IViewModelPage
             CurrentFilter.Tags.Remove(args.Tag);
         ApplyFilter();
     }
-
-    private void HubServerLoadingError(Exception obj)
-    {
-        HubErrors.Add(obj);
-    }
-
-    private void UpdateServerEntries()
-    {
-        foreach(var fav in Servers.ToList()){
-            Servers.Remove(fav);
-        }
-        
-        Task.Run(() =>
-        {
-            UnsortedServers.Sort(new ServerComparer());
-            foreach (var info in UnsortedServers)
-            {
-                var view = ServerViewContainer.Get(info.Address.ToRobustUrl(), info.StatusData);
-                Servers.Add(view);
-            }
-            ApplyFilter();
-        });
-    }
-
-    private void OnChangeSearch()
-    {
-        CurrentFilter.SearchText = SearchText;
-        ApplyFilter();
-    }
-
-    private void HubServerChangedEventArgs(HubServerChangedEventArgs obj)
-    {
-        if (obj.Action == HubServerChangeAction.Add)
-            foreach (var info in obj.Items)
-                UnsortedServers.Add(info);
-        if (obj.Action == HubServerChangeAction.Remove)
-            foreach (var info in obj.Items)
-                UnsortedServers.Remove(info);
-        if (obj.Action == HubServerChangeAction.Clear)
-        {
-            UnsortedServers.Clear();
-            ServerViewContainer.Clear();
-            UpdateFavoriteEntries();
-        }
-    }
-
+    
     public void FilterRequired()
     {
         IsFilterVisible = !IsFilterVisible;
     }
 
-    public void AddFavoriteRequired()
-    {
-        var p = ViewHelperService.GetViewModel<AddFavoriteViewModel>();
-        PopupMessageService.Popup(p);
-    }
-
     public void UpdateRequired()
     {
-        HubErrors.Clear();
-        Task.Run(HubService.UpdateHub);
+        CurrentServerList.RefreshFromProvider();
     }
 
-    public void OnPageOpen(object? args)
+    partial void OnSelectedItemChanged(ServerListTabTemplate value)
     {
-        if (args is bool fav)
+        if (!_viewCache.TryGetValue(value.TabName, out var view))
         {
-            IsFavoriteMode = fav;
+            view = ServerListView.TakeFrom(value.ServerListProvider);
+            _viewCache[value.TabName] = view;
         }
+        
+        CurrentServerList = view;
     }
+    
 }
 
-public class ServerViewContainer(
-    ServerListViewModel serverListViewModel,
-    ViewHelperService viewHelperService
-    )
+[ServiceRegister]
+public class ServerViewContainer
 {
+    private readonly ViewHelperService _viewHelperService;
+
+    public ServerViewContainer()
+    {
+        _viewHelperService = new ViewHelperService();
+    }
+
+    public ServerViewContainer(ViewHelperService viewHelperService)
+    {
+        _viewHelperService = viewHelperService;
+    }
+    
     private readonly Dictionary<string, ServerEntryModelView> _entries = new();
     
     public ICollection<ServerEntryModelView> Items => _entries.Values;
@@ -177,16 +146,12 @@ public class ServerViewContainer(
                 return entry;
             }
 
-            entry = viewHelperService.GetViewModel<ServerEntryModelView>().WithData(url, serverStatus);
+            entry = _viewHelperService.GetViewModel<ServerEntryModelView>().WithData(url, serverStatus);
             
             _entries.Add(url.ToString(), entry);
         }
         
-        entry.OnFavoriteToggle += () =>
-        {
-            if (entry.IsFavorite) serverListViewModel.RemoveFavorite(entry);
-            else serverListViewModel.AddFavorite(entry);
-        };
+        Console.WriteLine("LENGTH OF PENIS IS: " + _entries.Count);
         
         return entry;
     }

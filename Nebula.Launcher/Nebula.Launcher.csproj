@@ -42,6 +42,10 @@
           <DependentUpon>AddFavoriteView.axaml</DependentUpon>
           <SubType>Code</SubType>
         </Compile>
+        <Compile Update="Controls\ServerListView.axaml.cs">
+          <DependentUpon>ServerListView.axaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
     </ItemGroup>
 
     <Target Name="BuildCheck" AfterTargets="AfterBuild">
@@ -68,5 +72,9 @@
     <ItemGroup>
         <ProjectReference Include="..\Nebula.Shared\Nebula.Shared.csproj"/>
         <ProjectReference Include="..\Nebula.SourceGenerators\Nebula.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Controls\ServerListView.axaml" />
     </ItemGroup>
 </Project>
