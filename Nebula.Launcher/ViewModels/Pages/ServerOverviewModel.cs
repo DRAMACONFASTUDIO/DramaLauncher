@@ -151,8 +151,6 @@ public class ServerViewContainer
             _entries.Add(url.ToString(), entry);
         }
         
-        Console.WriteLine("LENGTH OF PENIS IS: " + _entries.Count);
-        
         return entry;
     }
 }
