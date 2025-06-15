@@ -69,8 +69,16 @@ public partial class ServerOverviewModel : ViewModelBase
         Items = new ObservableCollection<ServerListTabTemplate>(tempItems);
         
         SelectedItem = Items[0];
+        
+        OnSearchChange += SearchChangeEvent;
     }
-    
+
+    private void SearchChangeEvent()
+    {
+        CurrentFilter.SearchText = SearchText;
+        ApplyFilter();
+    }
+
     public void ApplyFilter()
     {
         foreach (var entry in ServerViewContainer.Items)
