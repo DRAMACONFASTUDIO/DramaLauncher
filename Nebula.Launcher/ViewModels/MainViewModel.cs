@@ -73,6 +73,12 @@ public partial class MainViewModel : ViewModelBase
         PopupMessageService.OnCloseRequired += OnPopupCloseRequired;
         
         CheckMigration();
+        
+        if (!VCRuntimeDllChecker.AreVCRuntimeDllsPresent())
+        {
+            OnPopupRequired("VC runtime dlls are not present on this computer. Install VC runtime dlls.");
+            Helper.OpenBrowser("https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170");
+        }
     }
 
     private void CheckMigration()
@@ -208,5 +214,30 @@ public partial class MainViewModel : ViewModelBase
         }
 
         CurrentPopup = viewModelBase;
+    }
+}
+
+public static class VCRuntimeDllChecker
+{
+    public static bool AreVCRuntimeDllsPresent()
+    {
+        if (!OperatingSystem.IsWindows()) return true;
+        
+        string systemDir = Environment.SystemDirectory;
+        string[] requiredDlls = {
+            "msvcp140.dll",
+            "vcruntime140.dll"
+        };
+
+        foreach (var dll in requiredDlls)
+        {
+            var path = Path.Combine(systemDir, dll);
+            if (!File.Exists(path))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
