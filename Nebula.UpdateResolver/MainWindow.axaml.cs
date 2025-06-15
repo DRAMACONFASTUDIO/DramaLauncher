@@ -23,6 +23,19 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        LogStandalone.OnLog += (message, percentage) =>
+        {
+            ProgressLabel.Content = message;
+            if (percentage == 0)
+                PercentLabel.Content = "";
+            else
+                PercentLabel.Content = percentage + "%";
+
+            var messageOut =
+                $"[{DateTime.Now.ToUniversalTime():yyyy-MM-dd HH:mm:ss}]: {message} {PercentLabel.Content}";
+            Console.WriteLine(messageOut);
+            LogStr += messageOut + "\n";
+        };
         Start();
     }
 
@@ -31,11 +44,11 @@ public partial class MainWindow : Window
         try
         {
             var info = await EnsureFiles();
-            Log("Downloading files...");
+            LogStandalone.Log("Downloading files...");
 
             foreach (var file in info.ToDelete)
             {
-                Log("Deleting " + file.Path);
+                LogStandalone.Log("Deleting " + file.Path);
                 FileApi.Remove(file.Path);
             }
 
@@ -55,30 +68,21 @@ public partial class MainWindow : Window
                 await using var stream = await response.Content.ReadAsStreamAsync();
                 FileApi.Save(file.Path, stream);
                 resolved++;
-                Log("Saving " + file.Path, (int)(resolved / (float)count * 100f));
+                LogStandalone.Log("Saving " + file.Path, (int)(resolved / (float)count * 100f));
 
                 loadedManifest.Add(file);
                 Save(loadedManifest);
             }
 
-            Log("Download finished. Running launcher...");
+            LogStandalone.Log("Download finished. Running launcher...");
 
-            var process = Process.Start(new ProcessStartInfo
-            {
-                FileName = "dotnet.exe",
-                Arguments = Path.Join(FileApi.RootPath, "Nebula.Launcher.dll"),
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                StandardOutputEncoding = Encoding.UTF8
-            });
+            await DotnetStandalone.Run(Path.Join(FileApi.RootPath, "Nebula.Launcher.dll"));
         }
         catch(HttpRequestException e){
-            LogError(e);
-            Log("Проблемы с интернет-соединением...");
+            LogStandalone.LogError(e);
+            LogStandalone.Log("Network connection error...");
             var logPath = Path.Join(RootPath,"updateResloverError.txt");
-            File.WriteAllText(logPath, LogStr);
+            await File.WriteAllTextAsync(logPath, LogStr);
             Process.Start(new ProcessStartInfo(){
                 FileName = "notepad",
                 Arguments = logPath
@@ -86,9 +90,9 @@ public partial class MainWindow : Window
         }
         catch (Exception e)
         {
-            LogError(e);
+            LogStandalone.LogError(e);
             var logPath = Path.Join(RootPath,"updateResloverError.txt");
-            File.WriteAllText(logPath, LogStr);
+            await File.WriteAllTextAsync(logPath, LogStr);
             Process.Start(new ProcessStartInfo(){
                 FileName = "notepad",
                 Arguments = logPath
@@ -102,7 +106,7 @@ public partial class MainWindow : Window
 
     private async Task<ManifestEnsureInfo> EnsureFiles()
     {
-        Log("Ensuring launcher manifest...");
+        LogStandalone.Log("Ensuring launcher manifest...");
         var manifest = await RestStandalone.GetAsync<LauncherManifest>(
             new Uri(ConfigurationStandalone.GetConfigValue(UpdateConVars.UpdateCacheUrl)! + "/manifest.json"), CancellationToken.None);
         
@@ -110,10 +114,10 @@ public partial class MainWindow : Window
         var toDelete = new HashSet<LauncherManifestEntry>();
         var filesExist = new HashSet<LauncherManifestEntry>();
         
-        Log("Manifest loaded!");
+        LogStandalone.Log("Manifest loaded!");
         if (ConfigurationStandalone.TryGetConfigValue(UpdateConVars.CurrentLauncherManifest, out var currentManifest))
         {
-            Log("Delta manifest loaded!");
+            LogStandalone.Log("Delta manifest loaded!");
             foreach (var file in currentManifest.Entries)
             {
                 if (!manifest.Entries.Contains(file))
@@ -133,31 +137,11 @@ public partial class MainWindow : Window
             toDownload = manifest.Entries;
         }
         
-        Log("Saving launcher manifest...");
+        LogStandalone.Log("Saving launcher manifest...");
 
         return new ManifestEnsureInfo(toDownload, toDelete, filesExist);
     }
-    private void LogError(Exception e){
-        Log($"{e.GetType().Name}: "+ e.Message);
-        Log(e.StackTrace);
-        if(e.InnerException != null) 
-            LogError(e.InnerException);
-    }
-    private void Log(string? message, int percentage = 0)
-    {
-        if(message is null) return;
-
-        ProgressLabel.Content = message;
-        if (percentage == 0)
-            PercentLabel.Content = "";
-        else
-            PercentLabel.Content = percentage + "%";
-        
-        var messageOut = $"[{DateTime.Now.ToUniversalTime():yyyy-MM-dd HH:mm:ss}]: {message} {PercentLabel.Content}";
-        Console.WriteLine(messageOut);
-        LogStr += messageOut + "\n";
-
-    }
+    
 
     private void Save(HashSet<LauncherManifestEntry> entries)
     {

@@ -28,4 +28,11 @@ public static class CurrentConVar
         ConVarBuilder.Build<Dictionary<string, EngineVersionInfo>>("engine.manifest.backup");
     public static readonly ConVar<ModulesInfo> ModuleManifestBackup =
         ConVarBuilder.Build<ModulesInfo>("module.manifest.backup");
+    
+    public static readonly ConVar<Dictionary<string,string>> DotnetUrl = ConVarBuilder.Build<Dictionary<string,string>>("dotnet.url",
+        new(){
+            {"win-x64", "https://builds.dotnet.microsoft.com/dotnet/Runtime/9.0.6/dotnet-runtime-9.0.6-win-x64.zip"},
+            {"win-x86", "https://builds.dotnet.microsoft.com/dotnet/Runtime/9.0.6/dotnet-runtime-9.0.6-win-x86.zip"},
+            {"linux-x64", "https://builds.dotnet.microsoft.com/dotnet/Runtime/9.0.6/dotnet-runtime-9.0.6-linux-x64.tar.gz"}
+        });
 }

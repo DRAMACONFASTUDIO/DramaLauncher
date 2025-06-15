@@ -39,6 +39,11 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase, IContentHol
 
     public void OnBackEnter()
     {
+        if (CurrentEntry.Parent is null)
+        {
+            SetHubRoot();
+            return;
+        }
         CurrentEntry.Parent?.GoCurrent();
     }
 
@@ -116,6 +121,8 @@ public sealed partial class ContentBrowserViewModel : ViewModelBase, IContentHol
 
     public void SetHubRoot()
     {
+        ServerText = string.Empty;
+        SearchText = string.Empty;
         var root = ViewHelperService.GetViewModel<ServerListContentEntry>();
         root.InitHubList(this);
         CurrentEntry = root;

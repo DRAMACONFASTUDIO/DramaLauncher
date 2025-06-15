@@ -55,6 +55,7 @@ public partial class ServerEntryModelView : ViewModelBase, IFilterConsumer
     [GenerateProperty] private RestService RestService { get; } = default!;
     [GenerateProperty] private MainViewModel MainViewModel { get; } = default!;
     [GenerateProperty] private FavoriteServerListProvider FavoriteServerListProvider { get; } = default!;
+    [GenerateProperty] private DotnetResolverService DotnetResolverService { get; } = default!;
 
     public ServerStatus Status { get; private set; } =
         new(
@@ -210,10 +211,10 @@ public partial class ServerEntryModelView : ViewModelBase, IFilterConsumer
                 await RunnerService.PrepareRun(buildInfo, loadingContext, CancellationService.Token);
 
                 var path = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
-
+                
                 Process = Process.Start(new ProcessStartInfo
                 {
-                    FileName = "dotnet.exe",
+                    FileName = await DotnetResolverService.EnsureDotnet(),
                     Arguments = Path.Join(path, "Nebula.Runner.dll"),
                     Environment =
                     {
