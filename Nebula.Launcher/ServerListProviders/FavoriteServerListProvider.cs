@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Layout;
+using Avalonia.Media;
 using Microsoft.Extensions.DependencyInjection;
 using Nebula.Launcher.ViewModels;
 using Nebula.Launcher.ViewModels.Pages;
+using Nebula.Launcher.ViewModels.Popup;
 using Nebula.Shared;
 using Nebula.Shared.Models;
 using Nebula.Shared.Services;
@@ -15,7 +20,7 @@ namespace Nebula.Launcher.ServerListProviders;
 public sealed partial class FavoriteServerListProvider : IServerListProvider, IServerListDirtyInvoker
 {
     [GenerateProperty] private ConfigurationService ConfigurationService { get; }
-    [GenerateProperty] private RestService RestService { get; }
+    [GenerateProperty] private IServiceProvider ServiceProvider { get; }
     [GenerateProperty] private ServerViewContainer ServerViewContainer { get; }
 
     private List<IFilterConsumer> _serverLists = [];
@@ -44,13 +49,15 @@ public sealed partial class FavoriteServerListProvider : IServerListProvider, IS
                 ServerViewContainer.Get(s.ToRobustUrl())
             )
         );
+        
+        _serverLists.Add(new AddFavoriteButton(ServiceProvider));
+        
         IsLoaded = true;
         OnLoaded?.Invoke();
     }
     
     public void AddFavorite(ServerEntryModelView entryModelView)
     {
-        entryModelView.IsFavorite = true;
         AddFavorite(entryModelView.Address);
     }
 
@@ -59,6 +66,7 @@ public sealed partial class FavoriteServerListProvider : IServerListProvider, IS
         var servers = GetFavoriteEntries();
         servers.Add(robustUrl.ToString());
         ConfigurationService.SetConfigValue(LauncherConVar.Favorites, servers.ToArray());
+        ServerViewContainer.Get(robustUrl).IsFavorite = true;
         Dirty?.Invoke();
     }
 
@@ -77,4 +85,27 @@ public sealed partial class FavoriteServerListProvider : IServerListProvider, IS
     
     private void Initialise(){}
     private void InitialiseInDesignMode(){}
+}
+
+public class AddFavoriteButton: Border, IFilterConsumer{
+
+    private Button _addFavoriteButton = new Button();
+    public AddFavoriteButton(IServiceProvider serviceProvider)
+    {
+        Margin = new Thickness(5, 5, 5, 20);
+        Background = new SolidColorBrush(Color.Parse("#222222"));
+        CornerRadius = new CornerRadius(20f);
+        _addFavoriteButton.HorizontalAlignment = HorizontalAlignment.Center;
+        _addFavoriteButton.Click += (sender, args) =>
+        {
+            serviceProvider.GetService<PopupMessageService>()!.Popup(
+                serviceProvider.GetService<AddFavoriteViewModel>()!);
+        };
+        _addFavoriteButton.Content = "Add Favorite";
+        Child = _addFavoriteButton;
+    }
+
+    public void ProcessFilter(ServerFilter? serverFilter)
+    {
+    }
 }

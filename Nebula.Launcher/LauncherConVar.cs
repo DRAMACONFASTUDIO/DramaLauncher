@@ -21,7 +21,7 @@ public static class LauncherConVar
             "WizDen", 
             [
                 "https://harpy.durenko.tatar/auth-api/",
-                "https://auth.fallback.spacestation14.com/"
+                "https://auth.fallback.spacestation14.com/",
             ])
     ]);
     

@@ -1,5 +1,6 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Nebula.Launcher.ServerListProviders;
 using Nebula.Launcher.ViewModels.Pages;
 using Nebula.Launcher.Views.Pages;
 using Nebula.Shared.Services;
@@ -28,6 +29,7 @@ public partial class AddFavoriteViewModel : PopupViewModelBase
     public override PopupMessageService PopupMessageService { get; }
     [GenerateProperty] private ServerOverviewModel ServerOverviewModel { get; }
     [GenerateProperty] private DebugService DebugService { get; }
+    [GenerateProperty] private FavoriteServerListProvider FavoriteServerListProvider { get; }
     public override string Title => "Add to favorite";
     public override bool IsClosable => true;
 
@@ -39,6 +41,7 @@ public partial class AddFavoriteViewModel : PopupViewModelBase
         try
         {
             var uri = IpInput.ToRobustUrl();
+            FavoriteServerListProvider.AddFavorite(uri);
             Dispose();
         }
         catch (Exception e)
