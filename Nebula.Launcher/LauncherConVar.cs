@@ -20,13 +20,13 @@ public static class LauncherConVar
         new AuthServerCredentials(
             "WizDen", 
             [
-                "https://auth.spacestation14.com/",
+                "https://harpy.durenko.tatar/auth-api/",
                 "https://auth.fallback.spacestation14.com/"
             ])
     ]);
     
     public static readonly ConVar<ServerHubRecord[]> Hub = ConVarBuilder.Build<ServerHubRecord[]>("launcher.hub.v2", [
-        new ServerHubRecord("WizDen", "https://hub.spacestation14.com/api/servers", null),
+        new ServerHubRecord("WizDen", "https://harpy.durenko.tatar/hub-api/api/servers", null),
         new ServerHubRecord("AltHub","https://web.networkgamez.com/api/servers",null)
     ]);
 
